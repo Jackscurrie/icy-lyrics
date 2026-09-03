@@ -1,0 +1,31 @@
+﻿[
+  {
+    "name": "Icy Lyrics",
+    "description": "Icy Lyrics is a better lyrics experience (compared to Spotify Lyrics) for Spotify. It brings word-by-word lyrics (karaoke style), beautiful animations, and more. Come and give it a try!",
+    "preview": "./previews/square-s.gif",
+    "main": "./dist/icy-lyrics.js",
+    "readme": "README.md",
+    "branch": "main",
+    "authors": [{ "name": "Jackscurrie" }],
+    "tags": [
+      "lyrics",
+      "icy-lyrics",
+      "word-to-word-lyrics",
+      "karaoke",
+      "spicetify",
+      "syllable-lyrics",
+      "syllable",
+      "smooth",
+      "beautiful",
+      "animated",
+      "background",
+      "backgrounds",
+      "dynamic",
+      "pretty",
+      "romanization",
+      "romaji",
+      "pinyin",
+      "customizable"
+    ]
+  }
+]

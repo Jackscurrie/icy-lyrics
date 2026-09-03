@@ -1,0 +1,45 @@
+name: Public source checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  extension:
+    name: Desktop extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+
+  android-play:
+    name: Android Play distribution
+    runs-on: ubuntu-latest
+    env:
+      ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - name: Verify and build only the public Play flavor
+        working-directory: android-v2
+        run: >-
+          ./gradlew --no-daemon
+          testPlayDebugUnitTest
+          lintPlayDebug
+          verifyPlayDistributionBoundary
+          bundlePlayRelease

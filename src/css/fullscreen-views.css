@@ -1,0 +1,1214 @@
+/* Four bounded fullscreen views. Imported by Fullscreen.ts after the shared
+   renderer styles so these overrides remain isolated from NPV and PiP. */
+
+#IcyLyricsPage.Fullscreen .ContentBox > .ViewControls {
+  height: 48px !important;
+  left: 50% !important;
+  opacity: 0 !important;
+  pointer-events: none;
+  position: absolute !important;
+  top: max(18px, 2.4cqh) !important;
+  translate: -50% 0;
+  visibility: hidden;
+  width: max-content !important;
+  z-index: 110;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--mixed .ContentBox > .ViewControls {
+  left: calc(var(--NowBarLeftSpacing) + var(--NowBarWidth) * 0.5) !important;
+  opacity: 0.82 !important;
+  pointer-events: auto;
+  top: max(12px, calc(50cqh - var(--NowBarWidth) * 0.625 - 58px)) !important;
+  visibility: visible;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--mixed:has(
+    .ContentBox .NowBar.RightSide.Active
+  )
+  .ContentBox
+  > .ViewControls {
+  left: calc(100cqw - var(--NowBarLeftSpacing) - var(--NowBarWidth) * 0.5) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--mixed .ContentBox > .ViewControls:hover,
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--mixed
+  .ContentBox
+  > .ViewControls:focus-within {
+  opacity: 1 !important;
+}
+
+#IcyLyricsPage .FullscreenViewToolbar {
+  display: none;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewToolbar {
+  display: block;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 75;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge {
+  background: transparent;
+  border: 0;
+  bottom: 0;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  width: min(13cqw, 176px);
+  z-index: 75;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--previous {
+  left: 0;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--next {
+  right: 0;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge:disabled {
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge::before {
+  content: "";
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  transition: opacity 240ms ease-out;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--previous::before {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.52), transparent);
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--next::before {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.52), transparent);
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge > span {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.72));
+  font-size: clamp(36px, 5cqh, 66px);
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  transition:
+    opacity 220ms ease-out,
+    translate 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  translate: 0 -50%;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--previous > span {
+  left: clamp(18px, 4cqw, 58px);
+  translate: -10px -50%;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge--next > span {
+  right: clamp(18px, 4cqw, 58px);
+  translate: 10px -50%;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge:is(:hover, :focus-visible)::before,
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge:is(:hover, :focus-visible) > span {
+  opacity: 1;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewEdge:is(:hover, :focus-visible) > span {
+  translate: 0 -50%;
+}
+
+#IcyLyricsPage.Fullscreen .FullscreenViewStatus {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar,
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .LyricsContainer,
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header,
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header .MediaBox,
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header .Metadata,
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header > .Timeline {
+  transition:
+    opacity 320ms ease-out,
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Geometry is committed once, then Fullscreen.ts performs a FLIP with the
+   compositor-owned translate/scale longhands. Never tween layout properties
+   here: width/height/top/left animation made rapid view changes visibly hitch. */
+#IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar {
+  box-sizing: border-box;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  :is(
+    .ContentBox .NowBar .Header .MediaBox,
+    .ContentBox .NowBar .Header .Metadata,
+    .ContentBox .NowBar .Header > .Timeline,
+    .ContentBox .LyricsContainer
+  ) {
+  transition: none !important;
+}
+
+/* Promote only the independent FLIP leaves, and only while a view switch is
+   active. Permanently promoting both parents and children wastes large GPU
+   layers and makes Chromium continuously resample nested artwork surfaces. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  :is(
+    .ContentBox .NowBar .Header .MediaBox,
+    .ContentBox .NowBar .Header .Metadata,
+    .ContentBox .NowBar .Header > .Timeline,
+    .ContentBox .LyricsContainer
+  ) {
+  backface-visibility: hidden;
+  will-change: opacity, translate, scale;
+}
+
+/* The actual animator-owned lyric nodes cross the mixed/focus boundary. Their
+   word animation remains untouched; this temporary leaf class only suppresses
+   competing root transitions while Fullscreen.ts applies a compositor FLIP. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  .LyricsContainer
+  .line.FullscreenViewFlipLine {
+  transition: none !important;
+  will-change: auto;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  .LyricsContainer
+  .line.FullscreenViewFlipVisual {
+  opacity: 1 !important;
+}
+
+/* View geometry lives on a carrier outside the renderer-owned line. This
+   prevents the fullscreen FLIP from competing with the line/word animator's
+   translate, scale, and !important opacity declarations. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  .IcyLyricsLineCarrier.FullscreenViewFlipCarrier {
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+}
+
+/* Keep the surrounding virtual list painted while focus rows cross the
+   boundary. Each non-focus carrier receives its own compositor fade/drift, so
+   the moving rows visibly leave and rejoin a live list instead of landing in
+   an empty view and revealing everything on the final frame. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning.FullscreenLyricsPresenting
+  .LyricsContent
+  .VirtualLyricsContainer {
+  opacity: 1 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  .IcyLyricsLineCarrier.FullscreenViewContextCarrier {
+  backface-visibility: hidden;
+  transition: none !important;
+  will-change: opacity, transform;
+}
+
+/* Reparenting the three animator-owned lines changes the scroll subtree while
+   the focus/list FLIP is staged. Chromium scroll anchoring (or an older smooth
+   scroll still decelerating) can otherwise adjust scrollTop behind WAAPI and
+   move every carrier's base coordinate halfway through the animation. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenViewTransitioning
+  .LyricsContainer
+  .simplebar-content-wrapper {
+  overflow-anchor: none;
+  scroll-behavior: auto !important;
+}
+
+/* Album art only / art with titles share the same centered shell. */
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .LyricsContainer {
+  opacity: 0 !important;
+  pointer-events: none;
+  transform: translate3d(8cqw, 0, 0) scale(0.97);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-only {
+  --FullscreenArtworkSize: min(98cqw, 98cqh);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles {
+  --FullscreenArtworkSize: min(92cqw, 78cqh);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .NowBar,
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .NowBar:is(.LeftSide, .RightSide).Active {
+  height: 100cqh !important;
+  left: calc(50cqw - var(--FullscreenArtworkSize) * 0.5) !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  padding-top: calc(50cqh - var(--FullscreenArtworkSize) * 0.5) !important;
+  right: auto !important;
+  top: 0 !important;
+  transform: none !important;
+  width: var(--FullscreenArtworkSize) !important;
+  z-index: 50;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles .ContentBox .NowBar,
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles
+  .ContentBox
+  .NowBar:is(.LeftSide, .RightSide).Active {
+  padding-top: calc(42cqh - var(--FullscreenArtworkSize) * 0.5) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .NowBar
+  .Header {
+  display: block !important;
+  height: 100cqh !important;
+  margin: 0 !important;
+  position: relative;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .NowBar
+  .Header
+  .MediaBox {
+  height: var(--FullscreenArtworkSize) !important;
+  isolation: isolate;
+  width: var(--FullscreenArtworkSize) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--artwork-only,
+    .FullscreenView--artwork-titles
+  )
+  .ContentBox
+  .NowBar
+  .Header
+  .MediaBox
+  .MediaImageContainer {
+  border-radius: clamp(18px, 2.4cqh, 34px);
+  box-shadow:
+    0 3cqh 8cqh -3cqh rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-only
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata {
+  container-type: inline-size;
+  height: auto !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  overflow: visible;
+  pointer-events: none;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata {
+  height: auto !important;
+  margin: clamp(10px, 1.7cqh, 22px) 0 0 !important;
+  max-height: 18cqh !important;
+  opacity: 1 !important;
+  width: var(--FullscreenArtworkSize) !important;
+}
+
+/* Regular fullscreen and artwork-with-titles wrap metadata at artwork width.
+   Upstream makes Metadata a fixed-height size container; after switching it to
+   intrinsic height, that containment collapses its cqh-based line heights to
+   zero. Keep only inline-size containment and use explicit text line heights. */
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata {
+  align-items: center !important;
+  container-type: inline-size;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(4px, 0.65cqh, 10px) !important;
+  justify-content: flex-start !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .SongName {
+  flex: 0 0 auto;
+  line-height: 1.12 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .Artists {
+  flex: 0 0 auto;
+  line-height: 1.25 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata,
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  :is(.SongName, .Artists),
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  :is(.SongName, .Artists)
+  > span {
+  -webkit-mask-image: none !important;
+  animation: none !important;
+  box-sizing: border-box;
+  height: auto !important;
+  mask-image: none !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  padding-inline: 0 !important;
+  text-align: center;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  width: 100% !important;
+  overflow-wrap: anywhere;
+}
+
+/* The title stays in normal flex flow, so the artist naturally follows either
+   a one- or two-line title instead of being pinned to a guessed Y offset. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata {
+  gap: clamp(3px, 0.5cqh, 8px) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .SongName {
+  font-size: clamp(1.8rem, 3.8cqh, 3.8rem) !important;
+  letter-spacing: -0.025em;
+  max-width: 100% !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .SongName
+  > span {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  display: -webkit-box !important;
+  overflow: hidden !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(.FullscreenView--mixed, .FullscreenView--artwork-titles)
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .Artists
+  > span {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  display: -webkit-box !important;
+  overflow: hidden !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--artwork-titles
+  .ContentBox
+  .NowBar
+  .Header
+  .Metadata
+  .Artists {
+  font-size: clamp(1rem, 2.1cqh, 1.65rem) !important;
+  max-width: 100% !important;
+  opacity: 0.76;
+}
+
+/* Lyrics-only focus stage. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics {
+  --LyricsLeftSidePadding: 10cqw !important;
+  --LyricsRightSidePadding: 10cqw !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics .ContentBox .NowBar {
+  opacity: 1 !important;
+  pointer-events: none;
+  transform: none !important;
+}
+
+/* Keep the NowBar box measurable in lyrics mode so every view switch has the
+   same FLIP topology. Only its independent leaves move/fade; a Timeline nested
+   inside MediaBox rides that parent and is intentionally not selected here. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .ContentBox
+  .NowBar
+  .Header
+  :is(.MediaBox, .Metadata),
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .ContentBox
+  .NowBar
+  .Header
+  > .Timeline {
+  opacity: 0 !important;
+  pointer-events: none;
+  transform: translate3d(-8cqw, 0, 0) scale(0.94) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics .ContentBox .LyricsContainer {
+  margin: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  width: 100cqw !important;
+  z-index: 30;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics .LyricsContainer .LyricsContent {
+  --DefaultLyricsSize: clamp(2.8rem, 6.2cqw, 7.8rem);
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  overflow: hidden !important;
+  pointer-events: none;
+  position: relative;
+}
+
+/* Credits remain available in the normal route and NPV, but are end-of-list
+   metadata rather than lyric lines and should never enter lyrics focus. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .LyricsContainer
+  .LyricsContent
+  :is(.Credits, .SongInfo, .LyricsProvider) {
+  display: none !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLyricsPresenting
+  .LyricsContent
+  .VirtualLyricsContainer {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+#IcyLyricsPage .FullscreenLyricsFocusStage {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 35;
+}
+
+#IcyLyricsPage .FullscreenLyricsFocusStage > .IcyLyricsLineCarrier {
+  height: 100%;
+  inset: 0;
+  pointer-events: none;
+  position: absolute !important;
+  width: 100%;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--lyrics,
+    .FullscreenViewTransitionFromLyrics
+  )
+  .FullscreenLyricsFocusStage
+  .line {
+  --focus-anchor-y: 0cqh;
+  --focus-secondary-y: 0cqh;
+  --focus-transition-y: 0cqh;
+  box-sizing: border-box;
+  justify-content: center !important;
+  left: 7cqw !important;
+  margin: 0 !important;
+  max-height: 0;
+  opacity: 0 !important;
+  overflow: hidden;
+  padding: 0 !important;
+  position: absolute !important;
+  right: 7cqw !important;
+  text-align: center !important;
+  top: 50cqh !important;
+  transform-origin: center;
+  transition:
+    opacity 320ms ease-out,
+    translate 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 450ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  translate: 0
+    calc(-50% + var(--focus-anchor-y) + var(--focus-secondary-y) + var(--focus-transition-y));
+  width: auto !important;
+  will-change: opacity, scale, translate;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--lyrics,
+    .FullscreenViewTransitionFromLyrics
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusPreviousLine {
+  --focus-anchor-y: -35cqh;
+  max-height: 24cqh !important;
+  opacity: 0.3 !important;
+  scale: 0.78 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--lyrics,
+    .FullscreenViewTransitionFromLyrics
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusCurrentLine {
+  --focus-anchor-y: -3.5cqh;
+  max-height: 44cqh !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  scale: 1.18 !important;
+  z-index: 5;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--lyrics,
+    .FullscreenViewTransitionFromLyrics
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusNextLine {
+  --focus-anchor-y: 35cqh;
+  max-height: 24cqh !important;
+  opacity: 0.3 !important;
+  scale: 0.78 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen:is(
+    .FullscreenView--lyrics,
+    .FullscreenViewTransitionFromLyrics
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine {
+  --focus-secondary-y: calc(var(--focus-bg-offset, 10cqh) + 12cqh);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 18%,
+    #000 44%,
+    #000 100%
+  );
+  font-size: 0.62em !important;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.28) 18%, #000 44%, #000 100%);
+  max-height: 18cqh !important;
+  opacity: 0.58 !important;
+  overflow: hidden !important;
+  scale: 0.94 !important;
+  z-index: 4;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusCurrentLine {
+  --focus-anchor-y: 0cqh;
+  height: auto !important;
+  line-height: var(--lyrics-line-height) !important;
+  max-height: 20cqh !important;
+  opacity: 0.62 !important;
+  overflow: visible !important;
+  scale: 1 !important;
+}
+
+/* Mixed.css collapses every inactive interlude to zero height. Keep a pinned
+   transition interlude measurable until its playback-clock fade reaches the
+   endpoint; the virtualizer still owns whether it remains mounted afterward. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.musical-line:is(.FocusTransitionIncoming, .FocusTransitionOutgoing) {
+  height: auto !important;
+  line-height: var(--lyrics-line-height) !important;
+  max-height: 20cqh !important;
+  overflow: visible !important;
+}
+
+/* Slightly larger and wider-spaced three-dot interludes in lyrics focus. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .FullscreenLyricsFocusStage
+  .line.musical-line
+  .dotGroup {
+  align-items: center;
+  display: inline-flex !important;
+  gap: calc(var(--dot-gap) * 1.25) !important;
+  justify-content: center;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics
+  .FullscreenLyricsFocusStage
+  .line.musical-line
+  .dotGroup
+  .dot {
+  --font-size: calc(var(--DefaultLyricsSize) * 1.3 * 1.15);
+}
+
+/* Reveal Mode keeps only the current group in the stage (JS) and hides each
+   timed word until its own animation begins. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  .line.FocusRevealCurrentLine {
+  --font-size: calc(var(--DefaultLyricsSize) * 1.3 * var(--fullscreen-reveal-fit, 1));
+  font-size: var(--font-size) !important;
+  left: 9cqw !important;
+  max-block-size: none;
+  max-height: none !important;
+  max-inline-size: 82cqw;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  right: 9cqw !important;
+  scale: 1 !important;
+  text-wrap: balance;
+  word-break: normal;
+}
+
+/* Compatibility during upgrades: once the progress hook is present it owns
+   the active line; older renderers still get the larger current lead. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage:not(:has(.FocusRevealCurrentLine))
+  .line.FocusCurrentLine:not(.FocusBackgroundLine) {
+  --font-size: calc(var(--DefaultLyricsSize) * 1.3 * var(--fullscreen-reveal-fit, 1));
+  font-size: var(--font-size) !important;
+  scale: 1 !important;
+}
+
+/* Timed word/letter wrappers used to preserve `nowrap` from the regular list,
+   so one wide token could paint beyond the focus-stage mask. Reveal mode owns
+   a much larger type size; let its groups wrap at the stage-safe width and, as
+   a last resort, break an exceptionally long token instead of clipping it. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  .line.FocusRevealCurrentLine
+  :is(.word-group, .word, .letterGroup) {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  .line.FocusRevealCurrentLine
+  :is(.word-group, .letterGroup) {
+  flex-wrap: wrap;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  :is(
+    .line.RevealTimed:not(:has(.word, .letterGroup, .dot)),
+    .word.RevealTimed,
+    .letterGroup.RevealTimed,
+    .dot.RevealTimed
+  ) {
+  opacity: clamp(0, calc(var(--reveal-progress, 0) * 5), 1) !important;
+  will-change: opacity;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine.RevealTimed {
+  opacity: calc(clamp(0, calc(var(--reveal-progress, 0) * 5), 1) * 0.58) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  :is(.word, .letterGroup).RevealNotSung:not(.RevealTimed) {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+  .FullscreenLyricsFocusStage
+  :is(.word, .letterGroup):is(.RevealActive, .RevealSung):not(.RevealTimed) {
+  visibility: visible;
+}
+
+/* Normal line changes use a four-part conveyor. All positions are driven by
+   the playback clock, written once per animation frame, and composed with the
+   renderer's word transforms through the independent `translate` longhand. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionDeparting {
+  --focus-transition-y: calc(
+    var(--fullscreen-line-transition-progress, 0) * var(--fullscreen-line-transition-direction, 1) *
+      -38cqh
+  );
+  opacity: calc(0.3 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming {
+  --focus-transition-y: calc(
+    (1 - var(--fullscreen-line-transition-progress, 1)) *
+      (3.5cqh + var(--fullscreen-line-transition-direction, 1) * 35cqh)
+  );
+  opacity: calc(0.3 + 0.7 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing {
+  --focus-transition-y: calc(
+    (1 - var(--fullscreen-line-transition-progress, 0)) *
+      (-3.5cqh + var(--fullscreen-line-transition-direction, 1) * 35cqh)
+  );
+  opacity: calc(0.3 + 0.7 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionEntering {
+  --focus-transition-y: calc(
+    (1 - var(--fullscreen-line-transition-progress, 1)) *
+      var(--fullscreen-line-transition-direction, 1) * 38cqh
+  );
+  opacity: calc(0.3 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming:not(.FocusBackgroundLine, .musical-line) {
+  scale: calc(0.78 + 0.4 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing:not(.FocusBackgroundLine, .musical-line) {
+  scale: calc(0.78 + 0.4 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionEntering:not(.FocusBackgroundLine, .musical-line),
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--line:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionDeparting:not(.FocusBackgroundLine, .musical-line) {
+  scale: 0.78 !important;
+}
+
+/* Entering an interlude evicts the older Previous row while the just-played
+   lyric settles from Current into Previous. The dots wait until that movement
+   is underway before settling at center; the already-visible next lyric keeps
+   its ordinary FocusNextLine endpoint and does not move. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--enter-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionDeparting {
+  --focus-transition-y: calc(var(--fullscreen-line-transition-progress, 0) * -38cqh);
+  opacity: calc(0.3 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--enter-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionDeparting:not(.FocusBackgroundLine) {
+  scale: 0.78 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--enter-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing {
+  --focus-transition-y: calc((1 - var(--fullscreen-line-transition-progress, 0)) * 31.5cqh);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--enter-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing:not(.FocusBackgroundLine) {
+  opacity: calc(0.3 + 0.7 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+  scale: calc(0.78 + 0.4 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--enter-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionIncoming {
+  --focus-transition-y: calc(
+    (1 - clamp(0, calc((var(--fullscreen-line-transition-progress, 0) - 0.42) * 1.724), 1)) * 10cqh
+  );
+  opacity: calc(
+    clamp(0, calc((var(--fullscreen-line-transition-progress, 0) - 0.42) * 1.724), 1) * 0.62
+  ) !important;
+  scale: calc(
+    0.88 + clamp(0, calc((var(--fullscreen-line-transition-progress, 0) - 0.42) * 1.724), 1) * 0.12
+  ) !important;
+}
+
+/* Leaving an interlude keeps the completed dots centered while they fade. The
+   parked next line moves into Current, the completed lead remains still in
+   Previous, and only the fresh Next line rises from below. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--exit-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionOutgoing {
+  --focus-transition-y: 0cqh;
+  opacity: calc(0.62 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+  scale: 1 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--exit-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming:not(.musical-line) {
+  --focus-transition-y: calc((1 - var(--fullscreen-line-transition-progress, 1)) * 38.5cqh);
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--exit-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming:not(.musical-line, .FocusBackgroundLine) {
+  opacity: calc(0.3 + 0.7 * var(--fullscreen-line-transition-progress, 1)) !important;
+  scale: calc(0.78 + 0.4 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--exit-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionEntering {
+  --focus-transition-y: calc((1 - var(--fullscreen-line-transition-progress, 1)) * 38cqh);
+  opacity: calc(0.3 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransition--exit-interlude:not(
+    .FullscreenRevealMode
+  )
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionEntering:not(.FocusBackgroundLine) {
+  scale: 0.78 !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics:not(.FullscreenRevealMode)
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine.FocusTransitionDeparting {
+  opacity: calc(0.58 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics:not(.FullscreenRevealMode)
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine:is(.FocusTransitionIncoming, .FocusTransitionEntering) {
+  opacity: calc(0.58 * var(--fullscreen-line-transition-progress, 1)) !important;
+}
+
+/* Reveal Mode has no persistent previous/next roles. Its two current-anchor
+   groups instead use a short centered drift and a complete crossfade. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming {
+  --focus-transition-y: calc(
+    (1 - var(--fullscreen-line-transition-progress, 1)) *
+      var(--fullscreen-line-transition-direction, 1) * 6cqh
+  );
+  opacity: var(--fullscreen-line-transition-progress, 1) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing {
+  --focus-transition-y: calc(
+    var(--fullscreen-line-transition-progress, 0) * var(--fullscreen-line-transition-direction, 1) *
+      -4cqh
+  );
+  opacity: calc(1 - var(--fullscreen-line-transition-progress, 0)) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionIncoming {
+  opacity: calc(var(--fullscreen-line-transition-progress, 1) * 0.62) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionOutgoing {
+  opacity: calc((1 - var(--fullscreen-line-transition-progress, 0)) * 0.62) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine.FocusTransitionIncoming {
+  opacity: calc(var(--fullscreen-line-transition-progress, 1) * 0.58) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line.FocusBackgroundLine.FocusTransitionOutgoing {
+  opacity: calc((1 - var(--fullscreen-line-transition-progress, 0)) * 0.58) !important;
+}
+
+/* Reveal keeps its active-only contract, but interlude handoffs still honor
+   the same staging: clear the lyric first, then let the dots settle at center. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransition--enter-interlude
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionOutgoing {
+  --focus-transition-y: calc(var(--fullscreen-line-transition-progress, 0) * -42cqh);
+  opacity: clamp(0, calc(1 - var(--fullscreen-line-transition-progress, 0) * 1.8), 1) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransition--enter-interlude
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionIncoming {
+  --focus-transition-y: calc(
+    (1 - clamp(0, calc((var(--fullscreen-line-transition-progress, 0) - 0.42) * 1.724), 1)) * 10cqh
+  );
+  opacity: calc(
+    clamp(0, calc((var(--fullscreen-line-transition-progress, 0) - 0.42) * 1.724), 1) * 0.62
+  ) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransition--exit-interlude
+  .FullscreenLyricsFocusStage
+  .line.musical-line.FocusTransitionOutgoing {
+  --focus-transition-y: 0cqh;
+  opacity: calc(0.62 * (1 - var(--fullscreen-line-transition-progress, 0))) !important;
+}
+
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenLineTransition--exit-interlude
+  .FullscreenLyricsFocusStage
+  .line.FocusTransitionIncoming:not(.musical-line) {
+  --focus-transition-y: calc((1 - var(--fullscreen-line-transition-progress, 1)) * 12cqh);
+  opacity: var(--fullscreen-line-transition-progress, 1) !important;
+}
+
+/* Progress is playback-clock-driven and rewritten every animation frame. A
+   CSS transition here would continually chase the newest value and visibly
+   lag behind the song. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenLineTransitionActive
+  .FullscreenLyricsFocusStage
+  .line:is(
+    .FocusTransitionDeparting,
+    .FocusTransitionIncoming,
+    .FocusTransitionOutgoing,
+    .FocusTransitionEntering
+  ) {
+  transition: none !important;
+}
+
+/* Playback-driven final-line outro. Variables are recalculated on each lyric
+   clock frame, so pause and seek are naturally deterministic. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenOutroActive
+  .FullscreenLyricsFocusStage
+  .line.FullscreenOutroLine {
+  opacity: var(--fullscreen-outro-opacity, 1) !important;
+  scale: var(--fullscreen-outro-scale, 1) !important;
+  rotate: var(--fullscreen-outro-rotation, 0deg) !important;
+  transition: none !important;
+}
+
+/* A very large positive playback offset can move the displayed final token
+   beyond the physical track end. The guaranteed last-375ms pop must still
+   contain the lyric instead of rotating an empty wrapper. Normal offsets have
+   already sung these tokens, so this rule is otherwise a no-op. */
+#IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode.FullscreenOutroActive
+  .FullscreenLyricsFocusStage
+  .line.FullscreenOutroLine
+  .RevealTimed {
+  opacity: 1 !important;
+  visibility: visible !important;
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #IcyLyricsPage.Fullscreen .FullscreenViewEdge::before,
+  #IcyLyricsPage.Fullscreen .FullscreenViewEdge > span,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header .MediaBox,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header .Metadata,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .NowBar .Header > .Timeline,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .ContentBox .LyricsContainer,
+  #IcyLyricsPage.IcyRenderer.Fullscreen .FullscreenLyricsFocusStage .line {
+    transition-duration: 80ms !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen .FullscreenLyricsFocusStage .line {
+    transition-property: opacity !important;
+    will-change: auto;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLineTransitionActive:not(.FullscreenRevealMode)
+    .FullscreenLyricsFocusStage
+    .line:is(
+      .FocusTransitionDeparting,
+      .FocusTransitionIncoming,
+      .FocusTransitionOutgoing,
+      .FocusTransitionEntering
+    ) {
+    --focus-transition-y: 0cqh;
+    transition: none !important;
+  }
+
+  /* Reduced motion commits positional/scale roles immediately and retains only
+     the playback-driven crossfade. */
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLineTransitionActive:not(.FullscreenRevealMode)
+    .FullscreenLyricsFocusStage
+    .line.FocusTransitionIncoming:not(.FocusBackgroundLine, .musical-line) {
+    opacity: calc(
+      0.3 + 0.7 * clamp(0, calc(var(--fullscreen-line-transition-progress, 1) * 5), 1)
+    ) !important;
+    scale: 1.18 !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLineTransitionActive:not(.FullscreenRevealMode)
+    .FullscreenLyricsFocusStage
+    .line.FocusTransitionOutgoing:not(.FocusBackgroundLine, .musical-line) {
+    opacity: calc(
+      0.3 + 0.7 * (1 - clamp(0, calc(var(--fullscreen-line-transition-progress, 0) * 5), 1))
+    ) !important;
+    scale: 0.78 !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLineTransitionActive:not(.FullscreenRevealMode)
+    .FullscreenLyricsFocusStage
+    .line.musical-line.FocusTransitionIncoming {
+    opacity: calc(
+      0.62 * clamp(0, calc(var(--fullscreen-line-transition-progress, 1) * 5), 1)
+    ) !important;
+    scale: 1 !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenLineTransitionActive:not(.FullscreenRevealMode)
+    .FullscreenLyricsFocusStage
+    .line.musical-line.FocusTransitionOutgoing {
+    opacity: calc(
+      0.62 * (1 - clamp(0, calc(var(--fullscreen-line-transition-progress, 0) * 5), 1))
+    ) !important;
+    scale: 0.78 !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line:is(.FocusTransitionIncoming, .FocusTransitionOutgoing) {
+    --focus-transition-y: 0cqh;
+    transition: none !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.FocusTransitionIncoming {
+    opacity: clamp(0, calc(var(--fullscreen-line-transition-progress, 1) * 5), 1) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.FocusTransitionOutgoing {
+    opacity: clamp(0, calc(1 - var(--fullscreen-line-transition-progress, 0) * 5), 1) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.musical-line.FocusTransitionIncoming {
+    opacity: calc(
+      clamp(0, calc(var(--fullscreen-line-transition-progress, 1) * 5), 1) * 0.62
+    ) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.musical-line.FocusTransitionOutgoing {
+    opacity: calc(
+      clamp(0, calc(1 - var(--fullscreen-line-transition-progress, 0) * 5), 1) * 0.62
+    ) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.FocusBackgroundLine.FocusTransitionIncoming {
+    opacity: calc(
+      clamp(0, calc(var(--fullscreen-line-transition-progress, 1) * 5), 1) * 0.58
+    ) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenRevealMode.FullscreenLineTransitionActive
+    .FullscreenLyricsFocusStage
+    .line.FocusBackgroundLine.FocusTransitionOutgoing {
+    opacity: calc(
+      clamp(0, calc(1 - var(--fullscreen-line-transition-progress, 0) * 5), 1) * 0.58
+    ) !important;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenView--lyrics.FullscreenRevealMode
+    .FullscreenLyricsFocusStage
+    .RevealTimed {
+    will-change: auto;
+  }
+
+  #IcyLyricsPage.IcyRenderer.Fullscreen.FullscreenOutroActive
+    .FullscreenLyricsFocusStage
+    .line.FullscreenOutroLine {
+    rotate: 0deg !important;
+    scale: 1 !important;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:itunes="http://music.apple.com/lyric"
+    itunes:timing="Word"
+    xml:lang="ja">
+  <head>
+    <metadata>
+      <meta key="songwriters" value="Ada Lovelace; Grace Hopper"/>
+    </metadata>
+  </head>
+  <body>
+    <div>
+      <p xml:id="line-1" begin="680" end="2400" ttm:agent="v2" romanLyric="Konnichiwa sekai">
+        <span begin="680" end="1200" romanWord="Konnichiwa">こんにちは </span>
+        <span begin="1200" end="1900" romanWord="sekai">世界</span>
+        <span ttm:role="x-bg" ttm:agent="v1" begin="1350" end="2250" romanLyric="hello">
+          <span begin="1350" end="1800">hello </span>
+          <span begin="1800" end="2200">again</span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>

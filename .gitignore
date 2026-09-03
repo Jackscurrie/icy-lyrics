@@ -1,0 +1,142 @@
+# Dependencies
+/node_modules/
+/jspm_packages/
+/bower_components/
+/web_modules/
+
+# JavaScript build output and reports
+/dist/
+/dist_legacy/
+/build/
+/builds/
+/coverage/
+/.nyc_output/
+*.lcov
+*.tsbuildinfo
+*.tgz
+
+# Logs and runtime files
+/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.pid
+*.pid.lock
+*.seed
+
+# Tool caches
+/.cache/
+/.parcel-cache/
+/.npm/
+/.eslintcache
+/.stylelintcache
+/.rpt2_cache/
+/.rts2_cache_cjs/
+/.rts2_cache_es/
+/.rts2_cache_umd/
+/.grunt/
+/.next/
+/.nuxt/
+/.svelte-kit/
+/.docusaurus/
+/.serverless/
+/.fusebox/
+/.webpack/
+/.temp/
+/.vuepress/dist/
+/.yarn/cache/
+/.yarn/unplugged/
+/.yarn/build-state.yml
+/.yarn/install-state.gz
+/.pnp.*
+/.tern-port
+/.vscode-test/
+/.node_repl_history
+.lock-wscript
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.jks
+*.keystore
+*.pkcs12
+*.p12
+*.pfx
+*.pem
+*.key
+**/signing.properties
+**/keystore.properties
+**/secrets.properties
+**/google-services.json
+**/service-account*.json
+**/firebase-adminsdk*.json
+
+# Local IDE, OS, and assistant metadata
+/.claude/
+/.codex/
+/.cursor/
+/.idea/
+/.vscode/
+/.gemini/
+/CLAUDE.md
+*.iml
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local Spicetify and development state
+/.spicetify/
+/public-storage/
+/__dev-scripts/
+
+# Components intentionally kept outside the public source tree
+/src/utils/SpicyHasher.ts
+/src/components/PopupModal/
+/src/packages/
+/src/components/cli-sync/
+/API_TERMS.md
+
+# Local archives and release/browser-profile artifacts
+/BACKUP/
+
+# The original Android prototype is not part of the public project.
+/android/
+
+# Keep only the preview referenced by manifest.json.
+/previews/*
+!/previews/square-s.gif
+
+# Android/Gradle generated and machine-local files
+/android-v2/.gradle/
+/android-v2/.kotlin/
+/android-v2/.idea/
+/android-v2/.emulator-data/
+/android-v2/.test-avd/
+/android-v2/local.properties
+/android-v2/**/build/
+/android-v2/**/.externalNativeBuild/
+/android-v2/**/.cxx/
+/android-v2/captures/
+*.apk
+*.aab
+*.apks
+*.aar
+
+# The optional personal flavor is supplied by a separate private repository.
+# These guards prevent an accidentally copied private module/source set from
+# entering the public repository.
+/local-private-feature/
+/android-v2/local-private-feature/
+/android-v2/private/
+/android-v2/personal/
+/android-v2/**/src/private/
+/android-v2/**/src/personal/
+/android-v2/gradle-local.properties
+/android-v2/private.properties

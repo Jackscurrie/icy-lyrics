@@ -1,0 +1,33 @@
+Icy Lyrics turns Spotify playback into a polished, full-screen lyrics experience for Android 13 and later.
+
+Follow synchronized lyrics in portrait or switch between four focused landscape layouts: album artwork, artwork with titles, a mixed artwork-and-lyrics view, or lyrics only. Smooth line, word, and syllable timing keeps the current lyric easy to follow, with support for background vocals, duet lanes, transliterations, right-to-left text, Reveal mode, and tap-to-seek.
+
+HIGHLIGHTS
+• Beautiful animated or static blurred artwork backgrounds, plus a plain-black option.
+• Playback controls and a responsive seek bar driven by Spotify’s Android media session.
+• Adjustable global lyric timing from -5000 ms to +5000 ms.
+• Optional remembered timing offsets for individual Bluetooth audio devices.
+• Import TTML files and keep them in a durable on-device local lyrics library.
+• Multiple lyric sources with clear source labels, including local TTML, LRCLIB, and optional Spicy Lyrics-powered lookup.
+• Portrait, split-screen, and landscape layouts designed for phones and larger displays.
+• Privacy-safe diagnostics with copy, share, and clear controls.
+
+REQUIREMENTS
+Icy Lyrics requires Android 13 or later and the Spotify Android app for now-playing detection and transport controls. On first use, Android asks you to grant notification-listener access so Icy Lyrics can read Spotify’s media session. Nearby-device permission is optional and is used only to identify the active Bluetooth output for per-device timing.
+
+A Spotify account connection is optional. Local TTML and LRCLIB work without it. Spicy Lyrics support is experimental, disabled by default, and requires a separately connected Spotify session. Icy Lyrics asks for explicit consent before sharing a short-lived Spotify access token with Spicy Lyrics for lyric requests.
+
+PRIVACY
+Imported TTML is stored locally on your device. Spotify credentials use Android Keystore-backed encryption. Diagnostics redact credentials and track identifiers, keep at most 200 events, and expire after seven days. Icy Lyrics does not treat Spotify as a direct lyrics endpoint. See the privacy policy for full details.
+
+Lyrics availability, accuracy, and timing depend on the selected third-party or local source. Some tracks may have no synchronized lyrics.
+
+ATTRIBUTION & LEGAL
+Icy Lyrics is developed by Jackscurrie. It is a modified, independently distributed fork of Spicy Lyrics by Spikerko. Original Spicy Lyrics work is Copyright (C) 2026 Spikerko; Icy Lyrics modifications made in 2026 are Copyright (C) 2026 Jackscurrie.
+
+Licensed under the GNU Affero General Public License, version 3 or (at your option) any later version.
+
+Icy Lyrics is an independent project. It is not affiliated with, endorsed by, or sponsored by Spicy Lyrics, Spikerko, Spotify, Apple, LRCLIB, or their respective owners or operators, and it is not an official release of any of them.
+
+Source & legal notices: https://jackscurrie.com/icy-lyrics/legal
+Privacy: https://jackscurrie.com/icy-lyrics/privacy

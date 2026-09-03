@@ -1,0 +1,176 @@
+﻿/* Base styles for all dynamic backgrounds */
+.icy-dynamic-bg {
+  height: 100%;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  transform-origin: center center;
+  filter: saturate(2.5) brightness(0.65);
+}
+
+body:has(.starrynight-bg-container) #main .icy-dynamic-bg:not(.StaticBackground),
+body:has(.glassify-bg .bg.animated) #main .icy-dynamic-bg:not(.StaticBackground) {
+  display: none !important;
+}
+
+aside .icy-dynamic-bg {
+  border-radius: var(--section-border-radius, 8px);
+}
+
+/* Container styles */
+.icy-dynamic-bg-in-this {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Special styling for side panel */
+aside .icy-dynamic-bg {
+  max-height: 100%;
+  max-width: 100%;
+}
+
+aside .icy-dynamic-bg {
+  filter: brightness(0.6) saturate(2.65);
+}
+
+@property --il-videocanvas-mask-stop {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 80%;
+}
+
+aside:has(.icy-dynamic-bg) video {
+  --il-videocanvas-mask-stop: 25%;
+  filter: brightness(0.9);
+  opacity: .95;
+  mask-image: linear-gradient(to bottom, transparent -5%, black 15%, black var(--il-videocanvas-mask-stop), transparent 100%);
+  transition: --il-videocanvas-mask-stop 1s cubic-bezier(0,0,0,1), filter 0.2s linear;
+}
+
+aside:has(.icy-dynamic-bg) .main-nowPlayingView-coverArtContainer:not(.XixZ4ftG53tYcM4KohE1, .yiy_EezkGycfPvS3) video,
+aside:has(.icy-dynamic-bg) .main-nowPlayingView-nowPlayingGrid > div:has(video):not(.yiy_EezkGycfPvS3, .XixZ4ftG53tYcM4KohE1) video {
+  --il-videocanvas-mask-stop: 80%;
+}
+
+aside:has(.icy-dynamic-bg) video:hover {
+  filter: brightness(0.95);
+}
+
+aside:has(.icy-dynamic-bg) .VideoPlayer__container video {
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+aside:has(.icy-dynamic-bg) .main-nowPlayingView-coverArtContainer :is(div, .E08D6ucrHuPJYzzGO7HG):has(video)::before,
+aside:has(.icy-dynamic-bg) .main-nowPlayingView-coverArtContainer :is(div, .E08D6ucrHuPJYzzGO7HG):has(video)::after,
+aside:has(.icy-dynamic-bg) div.Of__Db4QgB9osz_mFxhw:has(video)::before,
+aside:has(.icy-dynamic-bg) div.Of__Db4QgB9osz_mFxhw:has(video)::after,
+aside:has(.icy-dynamic-bg) div.UUydeXMsXVZofB0YAOgm:has(.main-trackInfo-container)::before,
+aside:has(.icy-dynamic-bg) div.main-nowPlayingView-contextItemInfo:has(.main-trackInfo-container)::before,
+aside:has(.icy-dynamic-bg) div.UUydeXMsXVZofB0YAOgm:has(.main-trackInfo-container)::after,
+aside:has(.icy-dynamic-bg) div.main-nowPlayingView-contextItemInfo:has(.main-trackInfo-container)::after,
+aside:has(.icy-dynamic-bg) :is(.main-nowPlayingView-nowPlayingWidget, .NowPlayingView) div:has(> .main-nowPlayingView-coverArtVisualEnhancement) :not(.main-nowPlayingView-coverArtVisualEnhancement):has(video)::before,
+aside:has(.icy-dynamic-bg) :is(.main-nowPlayingView-nowPlayingWidget, .NowPlayingView) div:has(> .main-nowPlayingView-coverArtVisualEnhancement) :not(.main-nowPlayingView-coverArtVisualEnhancement):has(video)::after {
+  display: none !important;
+}
+
+aside:has(.icy-dynamic-bg) > div,
+aside:has(.icy-dynamic-bg) .AAdBM1nhG73supMfnYX7,
+aside:has(.icy-dynamic-bg) .iHa_q9pq4un3VNRQgwTx {
+  z-index: 1;
+  position: relative;
+}
+
+/* Low quality mode styles - kept unchanged as requested */
+#IcyLyricsPage .icy-dynamic-bg.StaticBackground {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.5) saturate(1.25);
+  scale: 1;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.StaticBackground.Hidden {
+  opacity: 0;
+}
+
+/* Hide sidebar background when in fullscreen lyrics mode */
+body:has(#IcyLyricsPage.Fullscreen) .Root__right-sidebar
+  aside:is(.NowPlayingView, .icy-dynamic-bg-in-this)
+  .icy-dynamic-bg {
+  display: none;
+}
+
+.Root__right-sidebar
+  aside#Desktop_PanelContainer_Id:has(.icy-dynamic-bg)
+  .main-buddyFeed-scrollBarContainer {
+  z-index: 1;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.ColorBackground {
+  /* background-color: rgba(0, 0, 0, 0.25); */
+  /* background: linear-gradient(var(--ColorBackgroundRotation), var(--DesaturatedColor), var(--VibrantColor), var(--DarkVibrantColor), var(--BaseColor), var(--DesaturatedColor)); */
+  background-color: rgba(var(--MinContrastColor));
+  /* animation: ColorBackgroundBackgroundRotation 20s linear infinite; */
+  transition: background-color 1.5s;
+  filter: none;
+}
+
+/* @property --ColorBackgroundRotation {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+} */
+
+#IcyLyricsPage .icy-dynamic-bg.ColorBackground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 90%;
+  background-color: rgba(var(--HighContrastColor));
+  mask-image: linear-gradient(to top, transparent, black 145%);
+  z-index: 1;
+  transition: background-color 1.5s;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.ColorBackground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+  background: linear-gradient(to top, rgb(0, 0, 0), transparent);
+  z-index: 5;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.CanvasBackground {
+  width: 100%;
+  height: 100%;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.CanvasBackground video {
+  width: 100%;
+  height: 100%;
+}
+
+#IcyLyricsPage .icy-dynamic-bg.ColorBackground {
+  z-index: -1 !important;
+}
+
+.NowPlayingView:has(.icy-dynamic-bg) .main-nowPlayingView-headerCloseButton {
+  color: var(--spice-text);
+  opacity: .8 !important;
+}
+
+.NowPlayingView:has(.icy-dynamic-bg) .main-nowPlayingView-headerCloseButton:hover,
+.NowPlayingView:has(.icy-dynamic-bg) .main-nowPlayingView-headerCloseButton:focus {
+  opacity: 1 !important;
+}
