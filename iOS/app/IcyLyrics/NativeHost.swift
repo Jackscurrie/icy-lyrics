@@ -304,7 +304,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
                 guard let self, !self.closed, self.active, self.appRemote.isConnected,
                       self.connectionGeneration == generation, self.artworkURI == uri else { return }
                 guard let data = (image as? UIImage)?.pngData() else { self.artworkURI = nil; return }
-                self.controller.updateArtwork(data: data as NSData, forUri: uri)
+                self.controller.updateArtwork(data: data, forUri: uri)
             }
         }
     }

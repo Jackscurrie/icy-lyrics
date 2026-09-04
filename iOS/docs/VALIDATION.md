@@ -1,10 +1,16 @@
 # Validation status
 
-This file distinguishes code checks from rendered/device acceptance. No iOS simulator or device test has run from this Windows checkout. No IPA has been produced here.
+This file distinguishes code checks from rendered/device acceptance. Native Kotlin tests have now run on GitHub's iPhone simulator; Swift application tests, screenshot acceptance and device packaging remain pending. No IPA has been produced yet.
+
+## First macOS results
+
+[Run 33848815538](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33848815538), source revision `a95cf1d`, used Xcode 26.4.1 (17E202) and passed all 90 native Kotlin tests: 83 lyrics/parser/animation tests, 2 real SQLite/preferences persistence tests, and 5 UI math/shader tests. The simulator framework linked successfully. The same revision passed desktop and Android public CI.
+
+Xcode then reported one Swift artwork-bridging error (`NSData` passed where Swift imports `Data`). That cast has been removed; the full Swift application/simulator run must pass before it supplies release evidence. Earlier native runs exposed SnakeYAML's unsupported oversized-integer path, now avoided by a bounded integer constructor with strict shared regression coverage. No failed test was waived.
 
 ## Passed locally
 
-- Shared lyrics JVM verification: 80 tests, including original parser cases and portability/limits/Unicode cases.
+- Shared lyrics JVM verification: 83 tests, including original parser cases and portability/limits/Unicode/integer-boundary cases.
 - Android core lyrics regression: 73 original tests against extracted canonical code.
 - Android platform regression: 69 tests covering provider behavior, matching, local persistence, migrations/settings and timing.
 - Android app regression: 68 tests, including 11 new controller tests for stale imports, late provider responses, cancellation, queue promotion and settings races, plus 4 shared artwork-math tests.
@@ -16,7 +22,7 @@ This file distinguishes code checks from rendered/device acceptance. No iOS simu
 
 The capture harness uses 20 offline scenes with deterministic track/artwork/lyrics and a fixed frame time. It captures actual original Android production code from the frozen pre-extraction baseline and the extracted version. Capture/comparison results are generated under `tests/results`; a separate checked-in report records completed measurements. No baseline is created by simply treating the new iOS output as correct.
 
-Nineteen Swift OAuth/import tests are authored but have not executed here. A native shader-compilation test also remains a macOS gate. Android and iOS bind an import to the track present when the picker opens, so a song change while Files is open cannot attach the result to the newly playing song.
+Nineteen Swift OAuth/import tests are authored but have not executed successfully yet. The native shader-compilation test passed in the macOS run above. Android and iOS bind an import to the track present when the picker opens, so a song change while Files is open cannot attach the result to the newly playing song.
 
 ## macOS CI gates
 

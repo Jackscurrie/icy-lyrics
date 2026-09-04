@@ -2,7 +2,7 @@
 
 The Android V2 presentation is now canonical Kotlin/Compose source under `shared/ui`. Android compiles those same files with its original Android toolchain. This isolated build adds the iPhone adapters, Swift shell, and resignable IPA packaging. There is no App Store submission or paid Apple signing setup.
 
-**Status: source port implemented; Windows/Android checks passed; native iOS build and acceptance pending.** See [validation status](docs/VALIDATION.md). All 13 captured Android portrait scenarios match the original pixel-for-pixel after extraction, but no iOS simulator or physical-iPhone verification has been performed. An IPA must not be described as simulator-verified until the macOS job actually passes. Android-identical iPhone appearance remains an acceptance requirement.
+**Status: source port implemented; desktop/Android CI and 90 native Kotlin simulator tests passed; Swift application build and appearance acceptance pending.** See [validation status](docs/VALIDATION.md). All 13 archived Android portrait scenarios match the original pixel-for-pixel after extraction. The shared simulator framework now links, but the Swift application and its screenshot tests have not passed yet, and physical-iPhone testing has not started. An IPA must not be described as simulator-verified until the complete macOS job passes. Android-identical iPhone appearance remains an acceptance requirement.
 
 All new authored work is inside this folder. The only integrations outside it are edits to existing Android source/build files and the existing `.github/workflows/ci.yml`. Android's existing `play`/`personal` boundary, application ID, database opening, settings keys, launcher edits, and native MediaSession handling are retained.
 
