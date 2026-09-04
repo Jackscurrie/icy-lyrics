@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "evidence": "Actual unchanged Android fixture capture; not calculated values",
+  "sourcePath": "iOS/tests/results/android/native/ios-native-988275d1a1608382/baseline/portrait-long.json",
+  "sourceSha256": "6912333949e3468fb441f3869fa91d564b7753b1cbd8353f83470e195696b0f8",
+  "apiLevel": 36,
+  "composeUiVersion": "1.11.0",
+  "originalMeasurements": {
+    "density": 3,
+    "fontScale": 1.8,
+    "safeDrawingInsetsPx": [
+      0,
+      177,
+      0,
+      102
+    ],
+    "spToPx": {
+      "12": 64.8,
+      "14": 73.2,
+      "16": 78,
+      "18": 82.8,
+      "20": 92.399994,
+      "24": 98.399994,
+      "28": 102.399994,
+      "32": 109.98857,
+      "36": 121.16572,
+      "48": 154.69714,
+      "64": 199.4057
+    },
+    "fontScalingPolicy": "native Android LocalDensity; no replacement Density",
+    "widthPx": 1179,
+    "heightPx": 2556,
+    "scenario": "portrait-long",
+    "captureSurface": "Compose root; no resize or crop",
+    "osSafeDrawingInsetsPx": [
+      0,
+      72,
+      0,
+      72
+    ],
+    "osDensity": 3,
+    "osFontScale": 1.8,
+    "insetDispatch": "measured profile injected at content parent before Compose listener",
+    "profileId": "ios-native-988275d1a1608382"
+  },
+  "upstreamSource": {
+    "artifact": "androidx.compose.ui:ui-unit-android:1.11.0:sources",
+    "sha256": "c6e2ea6314bfc45e27c5f28fda333afe2ed76748a004eec95f86cbdab099a6ff",
+    "files": {
+      "androidMain/androidx/compose/ui/unit/AndroidDensity.android.kt": "dc5364115bb62acba184798ceb9c83cacf6e39a0531c0fe015e51f7d3b4f7c24",
+      "androidMain/androidx/compose/ui/unit/fontscaling/FontScaleConverter.android.kt": "4f98c04374adc68b69ddc8505f1012c834a759f36b30b84ed4fc5792092e76ad",
+      "androidMain/androidx/compose/ui/unit/fontscaling/FontScaleConverterFactory.android.kt": "1a79cbae080b41111e8e330f7d55554816d80f3145f798aeef065d25080907cc",
+      "androidMain/androidx/compose/ui/unit/fontscaling/FontScaleConverterTable.android.kt": "321b12704cb69b38d9ab61ed5981a922b22f456126033076c61982e353d3f73b",
+      "androidMain/androidx/compose/ui/unit/fontscaling/MathUtils.android.kt": "1bbd3c1f4d06c39f0f641fd40716caeb104122ee2a081a5916edd87dba3f1893"
+    }
+  }
+}

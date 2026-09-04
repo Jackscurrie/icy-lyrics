@@ -23,6 +23,9 @@ REFERENCE_SHA256 = "4e9435349de15a8c39092ae30496440d520f5b3748181ffa2602cb7c1387
 CATALOG = "kawarp-gpu-uniform-phases-v1"
 SIMCTL_SURFACE = "simctl framebuffer with measured UIKit child crop"
 XCUI_SURFACE = "XCUIElement screenshot of actual pixel-aligned UIKit child surface; no manual crop, resize, mask, or raster replacement"
+PROBE_FILES = ("input-artwork.png", "input-artwork.rgba", "processed-artwork.png", "processed-artwork.rgba",
+               "native-kawarp.sksl", "preparation.json", "native-draw.json")
+UUID_PATTERN = r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"
 
 
 def digest(data):
@@ -168,10 +171,116 @@ def validate_frame(frame, expected, run_id, contract):
     if scaled[2:] != [width, height]:
         raise ValueError("Native surface is not the exact pixel-aligned viewport")
     capture_rectangle(frame, expected)
-    if not any(layer.get("deviceName") not in (None, "", "missing")
+    evidence_version = native.get("metalEvidenceSchemaVersion")
+    if evidence_version is not None and (type(evidence_version) is not int or evidence_version != 1):
+        raise ValueError("Unsupported Metal layer evidence schema")
+    if evidence_version == 1:
+        before, after = frame.get("geometryMeasurementSequence"), frame.get("geometryMeasurementSequenceAfterCapture")
+        if (type(before) is not int or type(after) is not int or before <= 0 or after <= before
+                or frame.get("nativeGeometryStableDuringCapture") is not True):
+            raise ValueError("Missing fresh stable Metal geometry measurements around capture")
+    def verified_layer(layer):
+        if not isinstance(layer, dict):
+            return False
+        if evidence_version is None:
+            return True  # Preserve the earlier CAMetalLayer-only evidence contract.
+        if (layer.get("readerContractValid") is not True or layer.get("eligibleForProbe") is not True
+                or layer.get("hasDevice") is not True or layer.get("visible") is not True):
+            return False
+        if layer.get("reader") == "CAMetalLayer public properties":
+            return layer.get("requiresPresentedContents") is False
+        if layer.get("reader") == "CMPMetalLayer exported properties; CMP1.11.1":
+            return layer.get("requiresPresentedContents") is True and layer.get("contentsPresent") is True
+        return False
+    if not any(verified_layer(layer) and layer.get("deviceName") not in (None, "", "missing")
                and (layer.get("drawableWidthPx"), layer.get("drawableHeightPx")) == (width, height)
                for layer in native.get("metalLayers", [])):
         raise ValueError("No visible matching Metal layer/device; raster evidence cannot satisfy this probe")
+
+
+def partial_catalog(attachments):
+    """Resolve the catalog through the actual xcresult export manifest, never a guessed run ID."""
+    manifest = attachments / "manifest.json"
+    records = json.loads(manifest.read_text(encoding="utf-8"))
+    if not isinstance(records, list):
+        raise ValueError("Expected actual xcresult attachment manifest")
+    found = []
+    pattern = r"kawarp-gpu-catalog(?:_[0-9]+_" + UUID_PATTERN + r")?\.json"
+    for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get("attachments", []), list):
+            raise ValueError("Invalid actual attachment manifest record")
+        for attachment in record.get("attachments", []):
+            if not isinstance(attachment, dict):
+                raise ValueError("Invalid actual attachment record")
+            if not re.fullmatch(pattern, str(attachment.get("suggestedHumanReadableName", ""))):
+                continue
+            if (record.get("testIdentifier") != "KawarpGpuCaptureTests/testEightProductionShaderUniformPhasesOnUIKitMetal()"
+                    or attachment.get("isAssociatedWithFailure") is not False):
+                raise ValueError("Unrecognized actual GPU catalog attachment identity")
+            name = attachment.get("exportedFileName")
+            if not isinstance(name, str) or not name or any(c in name for c in "/\\:") or Path(name).suffix != ".json":
+                raise ValueError("Unsafe catalog attachment filename")
+            source = attachments / name
+            if source.is_symlink() or not source.is_file():
+                raise ValueError("Missing or linked actual catalog attachment")
+            found.append((source, attachment, json.loads(source.read_text(encoding="utf-8"))))
+    if len(found) != 1:
+        raise ValueError("Require one unambiguous actual GPU catalog in the manifest")
+    source, attachment, catalog = found[0]
+    contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
+    ids = [frame["id"] for frame in contract["frames"]]
+    if (not isinstance(catalog, dict) or catalog.get("catalog") != CATALOG or catalog.get("cases") != ids
+            or not re.fullmatch(UUID_PATTERN, str(catalog.get("runId", "")))
+            or catalog.get("appearanceParityVerified") is not False):
+        raise ValueError("Invalid actual GPU catalog/run identity")
+    return manifest, source, attachment, catalog
+
+
+def preserve_partial_diagnostics(attachments, container, output, failure):
+    """Copy only allowlisted probe files; never turn a failed run into frame evidence."""
+    attachments, container, output = Path(attachments), Path(container), Path(output)
+    manifest, source, attachment, catalog = partial_catalog(attachments)
+    container = container.resolve(strict=True)
+    if output.exists():
+        raise ValueError("Partial diagnostics output already exists; preserve it")
+    root = container / "Documents" / "KawarpGpuProbe" / catalog["runId"]
+    for parent in (container / "Documents", container / "Documents/KawarpGpuProbe", root):
+        if parent.is_symlink():
+            raise ValueError("Linked probe run directory is forbidden")
+    if not root.is_dir() or not root.resolve(strict=True).is_relative_to(container):
+        raise ValueError("Actual probe run directory is missing or escapes the isolated container")
+    output.mkdir(parents=True)
+    shutil.copyfile(source, output / "catalog-attachment.json")
+    report = {"catalog": CATALOG, "runId": catalog["runId"], "status": "partial-failed-run-diagnostics",
+              "completeEightFrameEvidence": False, "appearanceParityVerified": False,
+              "fullCollectionError": str(failure), "cases": [],
+              "manifest": {"path": str(manifest), "sha256": digest(manifest.read_bytes())},
+              "catalogAttachment": {"path": str(source), "sha256": digest(source.read_bytes()), "record": attachment},
+              "scope": "Allowlisted files from the actual isolated run only; missing/unready frames remain failed. No capture or parity is synthesized."}
+    for case_id in catalog["cases"]:
+        directory = root / case_id
+        row = {"id": case_id, "copied": [], "missing": [], "rejected": []}
+        report["cases"].append(row)
+        if directory.is_symlink() or (directory.exists() and not directory.resolve(strict=True).is_relative_to(root)):
+            row["rejected"].append("Linked or escaped case directory")
+            continue
+        if not directory.is_dir():
+            row["missing"] = list(PROBE_FILES)
+            continue
+        dest = output / case_id
+        dest.mkdir()
+        for name in PROBE_FILES:
+            path = directory / name
+            if path.is_symlink():
+                row["rejected"].append(name + ": symlink")
+            elif not path.is_file():
+                row["missing"].append(name)
+            else:
+                data = path.read_bytes()
+                (dest / name).write_bytes(data)
+                row["copied"].append({"name": name, "bytes": len(data), "sha256": digest(data)})
+    (output / "partial-diagnostics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return report
 
 
 def difference(actual, reference):
@@ -232,8 +341,7 @@ def collect(attachments, container, output):
             dest = output / case_id
             dest.mkdir()
             # Explicit allowlist: never recursively export the app container.
-            for name in ("input-artwork.png", "input-artwork.rgba", "processed-artwork.png", "processed-artwork.rgba",
-                         "native-kawarp.sksl", "preparation.json", "native-draw.json"):
+            for name in PROBE_FILES:
                 source = directory / name
                 if source.is_symlink() or not source.is_file():
                     raise ValueError(f"Missing or linked diagnostic file: {name}")
@@ -282,7 +390,17 @@ def main():
     parser.add_argument("--container", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    report = collect(args.attachments, args.container, args.output)
+    try:
+        report = collect(args.attachments, args.container, args.output)
+    except (ValueError, OSError, KeyError) as failure:
+        diagnostic_output = args.output.with_name(args.output.name + "-partial-diagnostics")
+        try:
+            partial = preserve_partial_diagnostics(args.attachments, args.container, diagnostic_output, failure)
+            print(json.dumps({"partialDiagnostics": str(diagnostic_output), "status": partial["status"],
+                              "fullCollectionError": str(failure), "completeEightFrameEvidence": False}))
+        except (ValueError, OSError, KeyError) as diagnostic_failure:
+            print(json.dumps({"partialDiagnosticsError": str(diagnostic_failure), "fullCollectionError": str(failure)}))
+        raise  # Keep the real failed collector exit status and strict full-evidence gates.
     print(json.dumps({key: value for key, value in report.items() if key != "frames"}, indent=2))
 
 

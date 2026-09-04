@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.test.SkikoComposeUiTest
 import androidx.compose.ui.unit.Density
+import com.icy.lyrics.ui.androidFontScalingDensity
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlin.time.Duration.Companion.minutes
@@ -28,7 +29,7 @@ internal fun runAndroidReferenceUiTest(
 ): TestResult = SkikoComposeUiTest(
   width = profile.widthPx,
   height = profile.heightPx,
-  density = Density(profile.density, profile.fontScale),
+  density = androidFontScalingDensity(Density(profile.density, profile.fontScale)),
   // The preserved Android createAndroidComposeRule harness uses the original unconfined dispatcher.
   // Retain both this dispatcher and its original clock mode. New v2 defaults must not change it.
   effectContext = UnconfinedTestDispatcher(),

@@ -191,7 +191,7 @@ fun LyricsCanvas(
   val textMeasurer = rememberIcyTextMeasurer(cacheSize = 48)
   val hitRegions = remember(document, focusPresentation) { LyricHitRegions() }
   val currentOnSeek = rememberUpdatedState(onSeek)
-  val layoutCache = remember(document, focusPresentation) { LyricLayoutCache() }
+  val layoutCache = remember(document, focusPresentation, textMeasurer) { LyricLayoutCache() }
   val scrollAnchorIndex = scene.playbackAnchorIndex()
   val scrollAnchor = remember(document) { Animatable(scrollAnchorIndex.toFloat()) }
   val currentScrollAnchorIndex = rememberUpdatedState(scrollAnchorIndex)
@@ -1134,7 +1134,9 @@ private fun DrawScope.drawFixedLayoutTokens(
       tokenTopLeft.x + tokenLayout.size.width / 2f,
       tokenTopLeft.y + tokenLayout.size.height / 2f,
     )
-    val tokenYOffsetPx = animation.yOffsetFontUnits.toFloat() * baseFontSize.toPx()
+    // DrawScope forwards density numbers, but not custom SP/DP conversions.
+    // Use the same Density that measured this line on both platforms.
+    val tokenYOffsetPx = animation.yOffsetFontUnits.toFloat() * with(layout.layoutInput.density) { baseFontSize.toPx() }
     withTransform({
       translate(0f, tokenYOffsetPx)
       scale(animation.scale.toFloat(), animation.scale.toFloat(), pivot)
@@ -1237,7 +1239,7 @@ private fun DrawScope.drawFixedLayoutLetters(
       letterTopLeft.x + letterLayout.size.width / 2f,
       letterTopLeft.y + letterLayout.size.height / 2f,
     )
-    val yOffsetPx = animation.yOffsetFontUnits.toFloat() * baseFontSize.toPx() * 2f
+    val yOffsetPx = animation.yOffsetFontUnits.toFloat() * with(layout.layoutInput.density) { baseFontSize.toPx() } * 2f
     withTransform({
       translate(0f, yOffsetPx)
       scale(animation.scale.toFloat(), animation.scale.toFloat(), pivot)

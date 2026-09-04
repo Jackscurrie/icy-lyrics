@@ -36,7 +36,10 @@ final class KawarpGpuCaptureTests: XCTestCase {
             XCTAssertEqual(readiness, .completed, "Requires actual matching Compose draw and visible Metal drawable")
             let surface = app.descendants(matching: .any).matching(identifier: "icy-kawarp-surface").firstMatch
             XCTAssertTrue(surface.waitForExistence(timeout: 5))
-            guard var details = metadata(marker) else { XCTFail("Missing draw metadata"); return }
+            guard var details = metadata(marker), details["ready"] as? Bool == true,
+                  let measurementBefore = details["geometryMeasurementSequence"] as? Int else {
+                XCTFail("Missing fresh draw metadata"); return
+            }
             guard let geometry = details["nativeGeometry"] as? [String: Any],
                   let bounds = geometry["windowBoundsPoints"] as? [Double], bounds.count == 4,
                   let scale = geometry["screenScale"] as? Double else {
@@ -49,6 +52,8 @@ final class KawarpGpuCaptureTests: XCTestCase {
                 width: expectedWidth, height: expectedHeight, in: self)
             guard let current = metadata(marker), current["ready"] as? Bool == true,
                   current["id"] as? String == caseID, current["runId"] as? String == runID,
+                  let measurementAfter = current["geometryMeasurementSequence"] as? Int,
+                  measurementAfter > measurementBefore,
                   (current["nativeGeometrySha256"] as? String) == (details["nativeGeometrySha256"] as? String),
                   (current["configurationSha256"] as? String) == (details["configurationSha256"] as? String) else {
                 throw NativeDisplayCapture.CaptureError.invalid("GPU draw changed during native capture")
@@ -63,6 +68,8 @@ final class KawarpGpuCaptureTests: XCTestCase {
             details["capturePngSha256"] = SHA256.hash(data: png).map { String(format: "%02x", $0) }.joined()
             details["captureSurface"] = "simctl framebuffer with measured UIKit child crop"
             details["nativeCapture"] = native.response
+            details["geometryMeasurementSequenceAfterCapture"] = measurementAfter
+            details["nativeGeometryStableDuringCapture"] = true
             details["cropPolicy"] = "Retain full native PNG; collector extracts every pixel of the measured integral child viewport without resampling"
             details["xcuiSurfaceFramePoints"] = [surface.frame.minX, surface.frame.minY, surface.frame.width, surface.frame.height]
             attachPNG(png, name: caseID)

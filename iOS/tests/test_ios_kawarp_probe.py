@@ -7,6 +7,7 @@ import struct
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -139,6 +140,134 @@ class KawarpProbeContractTests(unittest.TestCase):
                 self.seal(frame)
                 with self.assertRaisesRegex(ValueError, "Metal"):
                     probe.validate_frame(frame, self.expected, self.run_id, self.contract)
+
+    def modern_frame(self, *, cmp=True):
+        frame = self.frame()
+        frame.update(geometryMeasurementSequence=2, geometryMeasurementSequenceAfterCapture=3,
+                     nativeGeometryStableDuringCapture=True)
+        native = frame["nativeGeometry"]
+        native["metalEvidenceSchemaVersion"] = 1
+        native["metalLayers"][0].update(readerContractValid=True, eligibleForProbe=True, hasDevice=True,
+            visible=True, requiresPresentedContents=cmp, contentsPresent=cmp,
+            reader="CMPMetalLayer exported properties; CMP1.11.1" if cmp else "CAMetalLayer public properties")
+        self.seal(frame)
+        return frame
+
+    def test_pinned_cmp_layer_requires_actual_device_drawable_and_presented_contents(self):
+        for cmp in (False, True):
+            probe.validate_frame(self.modern_frame(cmp=cmp), self.expected, self.run_id, self.contract)
+        for key, value in (("hasDevice", False), ("deviceName", "missing"), ("drawableWidthPx", 512),
+                           ("contentsPresent", False), ("visible", False), ("eligibleForProbe", False),
+                           ("readerContractValid", False), ("reader", "guessed Metal renderer"),
+                           ("requiresPresentedContents", False)):
+            with self.subTest(key=key):
+                frame = self.modern_frame()
+                frame["nativeGeometry"]["metalLayers"][0][key] = value
+                self.seal(frame)
+                with self.assertRaisesRegex(ValueError, "Metal"):
+                    probe.validate_frame(frame, self.expected, self.run_id, self.contract)
+
+    def test_modern_geometry_requires_a_new_actual_measurement_after_capture(self):
+        for key, value in (("geometryMeasurementSequence", True), ("geometryMeasurementSequence", 0),
+                           ("geometryMeasurementSequenceAfterCapture", 2), ("geometryMeasurementSequenceAfterCapture", None),
+                           ("nativeGeometryStableDuringCapture", False)):
+            with self.subTest(key=key, value=value):
+                frame = self.modern_frame()
+                frame[key] = value
+                with self.assertRaisesRegex(ValueError, "fresh stable"):
+                    probe.validate_frame(frame, self.expected, self.run_id, self.contract)
+
+    def partial_environment(self, root):
+        attachments = root / "attachments"
+        attachments.mkdir()
+        filename = "CFCB1B1F-3597-4305-B5A4-84A4B187C3BF.json"
+        record = {"testIdentifier": "KawarpGpuCaptureTests/testEightProductionShaderUniformPhasesOnUIKitMetal()",
+                  "attachments": [{"exportedFileName": filename, "isAssociatedWithFailure": False,
+                    "suggestedHumanReadableName": "kawarp-gpu-catalog_0_2E554FDD-177A-47E6-A5B6-24BA8D71DAF3.json"}]}
+        (attachments / "manifest.json").write_text(json.dumps([record]))
+        catalog = {"catalog": probe.CATALOG, "runId": self.run_id,
+                   "cases": [item["id"] for item in self.contract["frames"]], "appearanceParityVerified": False}
+        (attachments / filename).write_text(json.dumps(catalog))
+        container = root / "container"
+        case = container / "Documents/KawarpGpuProbe" / self.run_id / catalog["cases"][0]
+        case.mkdir(parents=True)
+        return attachments, container, case, record, catalog
+
+    def test_partial_failed_run_preserves_only_actual_allowlisted_bytes_and_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            attachments, container, case, _, _ = self.partial_environment(root)
+            original = b'\x00unchanged preprocessing diagnostic\xff'
+            (case / "processed-artwork.rgba").write_bytes(original)
+            draw = b'{"ready":false,"reason":"no layer observed"}'
+            (case / "native-draw.json").write_bytes(draw)
+            (case / "private.txt").write_text("not probe evidence")
+            (container / "owner-private.txt").write_text("never exported")
+            output = root / "evidence-partial-diagnostics"
+            report = probe.preserve_partial_diagnostics(attachments, container, output, "Require exactly eight actual frame attachments")
+            self.assertEqual("partial-failed-run-diagnostics", report["status"])
+            self.assertFalse(report["completeEightFrameEvidence"])
+            self.assertFalse(report["appearanceParityVerified"])
+            self.assertIn("eight", report["fullCollectionError"])
+            self.assertEqual(original, (output / case.name / "processed-artwork.rgba").read_bytes())
+            self.assertEqual(draw, (output / case.name / "native-draw.json").read_bytes())
+            self.assertEqual({"native-draw.json", "processed-artwork.rgba"}, {x["name"] for x in report["cases"][0]["copied"]})
+            self.assertEqual(probe.digest(original), next(x["sha256"] for x in report["cases"][0]["copied"] if x["name"] == "processed-artwork.rgba"))
+            self.assertTrue(all(row["missing"] == list(probe.PROBE_FILES) for row in report["cases"][1:]))
+            self.assertFalse((output / "comparison.json").exists())
+            self.assertEqual([], list(output.rglob("private.txt")) + list(output.rglob("owner-private.txt")))
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                probe.preserve_partial_diagnostics(attachments, container, output, "another failure")
+
+    def test_partial_catalog_rejects_wrong_missing_duplicate_or_unsafe_manifest_identity(self):
+        for variant in ("missing", "duplicate", "wrong-test", "failure-attachment", "unsafe-path", "wrong-cases", "wrong-run"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                attachments, container, _, record, catalog = self.partial_environment(root)
+                filename = record["attachments"][0]["exportedFileName"]
+                records = [record]
+                if variant == "missing": records = []
+                elif variant == "duplicate": records.append(deepcopy(record))
+                elif variant == "wrong-test": record["testIdentifier"] = "AnotherTest/testSomething()"
+                elif variant == "failure-attachment": record["attachments"][0]["isAssociatedWithFailure"] = True
+                elif variant == "unsafe-path": record["attachments"][0]["exportedFileName"] = "../catalog.json"
+                elif variant == "wrong-cases": catalog["cases"] = catalog["cases"][:-1]
+                elif variant == "wrong-run": catalog["runId"] = "guessed-run"
+                (attachments / "manifest.json").write_text(json.dumps(records))
+                (attachments / filename).write_text(json.dumps(catalog))
+                with self.assertRaises(ValueError):
+                    probe.preserve_partial_diagnostics(attachments, container, root / "output", "capture failed")
+                self.assertFalse((root / "output").exists())
+
+    def test_partial_cannot_use_another_runs_files_or_linked_probe_data(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            attachments, container, case, _, catalog = self.partial_environment(root)
+            other = case.parent.with_name("AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")
+            case.parent.rename(other)
+            with self.assertRaisesRegex(ValueError, "run directory is missing"):
+                probe.preserve_partial_diagnostics(attachments, container, root / "output", "capture failed")
+            other.rename(case.parent)
+            outside = root / "private.txt"
+            outside.write_text("never copied")
+            try:
+                (case / "input-artwork.png").symlink_to(outside)
+            except OSError:
+                self.skipTest("Host does not permit creating test symlinks")
+            report = probe.preserve_partial_diagnostics(attachments, container, root / "output", "capture failed")
+            self.assertEqual(["input-artwork.png: symlink"], report["cases"][0]["rejected"])
+            self.assertFalse((root / "output" / case.name / "input-artwork.png").exists())
+
+    def test_cli_preserves_partial_diagnostics_and_still_raises_original_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            attachments, container, case, _, _ = self.partial_environment(root)
+            (case / "native-draw.json").write_text('{"ready":false}')
+            args = ["collect_ios_kawarp.py", "--attachments", str(attachments), "--container", str(container), "--output", str(root / "evidence")]
+            with patch.object(sys, "argv", args), patch("builtins.print"), self.assertRaisesRegex(ValueError, "exactly eight"):
+                probe.main()
+            report = json.loads((root / "evidence-partial-diagnostics/partial-diagnostics.json").read_text())
+            self.assertFalse(report["completeEightFrameEvidence"])
 
     def test_changed_uniform_bytes_shader_and_geometry_hash_are_rejected(self):
         for kind in ("uniform", "shader", "geometry"):

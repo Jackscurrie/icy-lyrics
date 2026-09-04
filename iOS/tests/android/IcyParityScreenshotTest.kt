@@ -34,6 +34,16 @@ class IcyParityScreenshotTest {
     val ids = scenario?.let(::listOf) ?: if (landscape) IcyParityFixtures.landscapeIds else IcyParityFixtures.portraitIds
     var current by mutableStateOf(ids.first())
     compose.mainClock.autoAdvance = false
+    if (profile != null) {
+      // The owned emulator changed rotation when the test activity started,
+      // after the shell set user_rotation. Pin only this
+      // measured-profile activity; all actual geometry checks remain below.
+      compose.activityRule.scenario.onActivity {
+        it.requestedOrientation = if (landscape)
+          android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else
+          android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+      }
+    }
     compose.waitUntil(timeoutMillis = 10_000) {
       val metrics = compose.activity.resources.displayMetrics
       (metrics.widthPixels > metrics.heightPixels) == landscape

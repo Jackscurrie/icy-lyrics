@@ -81,34 +81,36 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
   }
 
   fun makeViewController(): UIViewController = ComposeUIViewController {
-    CompositionLocalProvider(LocalIcyUiPlatform provides uiPlatform) {
-      val state by controller.state.collectAsState()
-      BoxWithConstraints {
-        val landscape = maxWidth > maxHeight
-        LaunchedEffect(landscape) { controller.setLandscape(landscape) }
-        IcyLyricsApp(
-          state = state, isLandscape = landscape,
-          onOpenNotificationAccess = { host.connectSpotify(false) },
-          onRequestBluetoothPermission = { showError("Automatic Spotify Bluetooth output identification is unavailable on this iPhone. Global timing remains active.") },
-          onPickTtml = { if (pendingImport == null) { pendingImport = controller.prepareImport(); if (pendingImport != null) host.pickTtml() } },
-          onNavigate = controller::navigate, onStepLandscape = controller::stepLandscape,
-          onShowArtworkControls = controller::showArtworkControls, onPlayPause = controller::playPause,
-          onPrevious = controller::previous, onNext = controller::next, onSeek = controller::seekTo,
-          onReload = controller::reloadLyrics, onGlobalTimingOffset = { controller.setGlobalTimingOffset(it) },
-          onBluetoothTimingOffset = { controller.setBluetoothTimingOffset(it) },
-          onRememberBluetoothOffsets = { controller.setRememberBluetoothOffsets(it) },
-          onMixedMediaSide = { controller.setMixedMediaSide(it) }, onBackgroundStyle = { controller.setBackgroundStyle(it) },
-          onBackgroundEnabled = { controller.setBackgroundEnabled(it) }, onKeepScreenAwake = { controller.setKeepScreenAwake(it) },
-          onUseLocalTtml = { controller.setUseLocalTtml(it) }, onRevealEnabled = { controller.setRevealEnabled(it) },
-          onSourceStrategy = { controller.setSourceStrategy(it) }, onDebugEnabled = { controller.setDebugEnabled(it) },
-          onSpicyEnabled = ::setSpicyEnabled,
-          onSpicyTokenSharingConsent = ::setSpicyConsent,
-          onConnectSpotify = { host.connectSpotify(false) }, onCancelSpotifyAuthorization = host::cancelSpotifyAuthorization,
-          onDisconnectSpotify = host::disconnectSpotify, onLrclibEnabled = { controller.setLrclibEnabled(it) },
-          onShareDiagnostics = { host.shareDiagnostics(controller.state.value.diagnostics.asText()) },
-          onClearDiagnostics = { controller.clearDiagnostics() }, onDeleteSavedLyrics = { controller.deleteSavedLyrics(it) },
-          onDismissMessage = controller::clearTransientMessage,
-        )
+    ProvideAndroidFontScaling {
+      CompositionLocalProvider(LocalIcyUiPlatform provides uiPlatform) {
+        val state by controller.state.collectAsState()
+        BoxWithConstraints {
+          val landscape = maxWidth > maxHeight
+          LaunchedEffect(landscape) { controller.setLandscape(landscape) }
+          IcyLyricsApp(
+            state = state, isLandscape = landscape,
+            onOpenNotificationAccess = { host.connectSpotify(false) },
+            onRequestBluetoothPermission = { showError("Automatic Spotify Bluetooth output identification is unavailable on this iPhone. Global timing remains active.") },
+            onPickTtml = { if (pendingImport == null) { pendingImport = controller.prepareImport(); if (pendingImport != null) host.pickTtml() } },
+            onNavigate = controller::navigate, onStepLandscape = controller::stepLandscape,
+            onShowArtworkControls = controller::showArtworkControls, onPlayPause = controller::playPause,
+            onPrevious = controller::previous, onNext = controller::next, onSeek = controller::seekTo,
+            onReload = controller::reloadLyrics, onGlobalTimingOffset = { controller.setGlobalTimingOffset(it) },
+            onBluetoothTimingOffset = { controller.setBluetoothTimingOffset(it) },
+            onRememberBluetoothOffsets = { controller.setRememberBluetoothOffsets(it) },
+            onMixedMediaSide = { controller.setMixedMediaSide(it) }, onBackgroundStyle = { controller.setBackgroundStyle(it) },
+            onBackgroundEnabled = { controller.setBackgroundEnabled(it) }, onKeepScreenAwake = { controller.setKeepScreenAwake(it) },
+            onUseLocalTtml = { controller.setUseLocalTtml(it) }, onRevealEnabled = { controller.setRevealEnabled(it) },
+            onSourceStrategy = { controller.setSourceStrategy(it) }, onDebugEnabled = { controller.setDebugEnabled(it) },
+            onSpicyEnabled = ::setSpicyEnabled,
+            onSpicyTokenSharingConsent = ::setSpicyConsent,
+            onConnectSpotify = { host.connectSpotify(false) }, onCancelSpotifyAuthorization = host::cancelSpotifyAuthorization,
+            onDisconnectSpotify = host::disconnectSpotify, onLrclibEnabled = { controller.setLrclibEnabled(it) },
+            onShareDiagnostics = { host.shareDiagnostics(controller.state.value.diagnostics.asText()) },
+            onClearDiagnostics = { controller.clearDiagnostics() }, onDeleteSavedLyrics = { controller.deleteSavedLyrics(it) },
+            onDismissMessage = controller::clearTransientMessage,
+          )
+        }
       }
     }
   }

@@ -98,7 +98,7 @@ class NativeBatchExtraction(unittest.TestCase):
     def test_mapped_batch_pairs_and_retains_original_framebuffer_attachment(self):
         case, records, raw = self.mapped_manifest()
         pairs, _, ignored = collect(self.manifest)
-        self.assertEqual(raw, pairs[case][0]["rawFramebuffer"]["path"])
+        self.assertEqual(raw.resolve(), pairs[case][0]["rawFramebuffer"]["path"])
         self.assertEqual([], ignored)
         report = self.run_batch(allow_partial=True)
         self.assertEqual([], report["rejections"])
