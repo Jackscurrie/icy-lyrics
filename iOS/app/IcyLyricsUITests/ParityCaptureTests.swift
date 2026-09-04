@@ -57,7 +57,8 @@ final class ParityCaptureTests: XCTestCase {
             let settling = expectation(description: "Post-draw settling interval")
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { settling.fulfill() }
             wait(for: [settling], timeout: 5)
-            guard var metadata = readMetadata(marker) else { XCTFail("Invalid fixture metadata"); return }
+            guard var metadata = readMetadata(marker), metadata["ready"] as? Bool == true,
+                  metadata["scenario"] as? String == scenario else { XCTFail("Invalid fixture metadata"); return }
             XCTAssertEqual(metadata["interfaceOrientationRawValue"] as? Int, expectedInterface.rawValue)
             XCTAssertEqual(metadata["timezone"] as? String, "America/Los_Angeles")
             if !extraArguments.isEmpty {
@@ -80,17 +81,23 @@ final class ParityCaptureTests: XCTestCase {
             metadata["settleDelayAfterDrawSeconds"] = 2
             let width = try XCTUnwrap(metadata["contentWidthPx"] as? Int)
             let height = try XCTUnwrap(metadata["contentHeightPx"] as? Int)
+            let mappingBefore = try XCTUnwrap(metadata["fixedCoordinateMapping"] as? [String: Any])
+            let mappingBeforeBytes = try JSONSerialization.data(withJSONObject: mappingBefore, options: [.sortedKeys])
             let native = try NativeDisplayCapture.capture(name: name, metadata: metadata,
                                                           width: width, height: height, in: self)
             guard let current = readMetadata(marker), current["ready"] as? Bool == true,
                   current["scenario"] as? String == scenario,
                   current["interfaceOrientationRawValue"] as? Int == expectedInterface.rawValue,
-                  current["contentWidthPx"] as? Int == width, current["contentHeightPx"] as? Int == height else {
+                  current["contentWidthPx"] as? Int == width, current["contentHeightPx"] as? Int == height,
+                  let mappingAfter = current["fixedCoordinateMapping"] as? [String: Any],
+                  try JSONSerialization.data(withJSONObject: mappingAfter, options: [.sortedKeys]) == mappingBeforeBytes else {
                 throw NativeDisplayCapture.CaptureError.invalid("App geometry changed during native capture")
             }
+            metadata["fixedCoordinateMappingAfterCapture"] = mappingAfter
+            metadata["fixedCoordinateMappingStableDuringCapture"] = true
             metadata["capturedWindowWidthPx"] = native.width
             metadata["capturedWindowHeightPx"] = native.height
-            metadata["captureSurface"] = "simctl framebuffer with XCTest-driven UIKit window; unchanged native pixels"
+            metadata["captureSurface"] = "simctl framebuffer with XCTest-driven UIKit window; measured window coordinates; original framebuffer retained"
             metadata["nativeCapture"] = native.response
             let attachment = XCTAttachment(data: native.png, uniformTypeIdentifier: "public.png")
             attachment.name = name

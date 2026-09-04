@@ -144,7 +144,10 @@ final class ExtendedParityCaptureTests: XCTestCase {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { settling.fulfill() }
             wait(for: [settling], timeout: 5)
             try requireVisible(visibleAnchor, named: anchor)
-            guard var details = metadata(marker), let scale = details["displayScale"] as? NSNumber,
+            guard var details = metadata(marker), details["ready"] as? Bool == true,
+                  details["scenario"] as? String == base,
+                  details["interfaceOrientationRawValue"] as? Int == UIInterfaceOrientation.portrait.rawValue,
+                  let scale = details["displayScale"] as? NSNumber,
                   let bounds = details["windowBoundsPoints"] as? [Double], bounds.count == 4 else {
                 throw ProbeError.missing("Native window geometry")
             }
@@ -175,15 +178,23 @@ final class ExtendedParityCaptureTests: XCTestCase {
             details["scrollRegions"] = app.scrollViews.allElementsBoundByIndex.filter { $0.exists }.map(describe)
             details["scrollOffsetEquivalence"] = "Requires comparison with the Android extended reference; no offset equality asserted"
             details["appearanceParityVerified"] = false
+            guard let mappingBefore = details["fixedCoordinateMapping"] as? [String: Any] else {
+                throw ProbeError.missing("Measured UIKit fixed-coordinate mapping")
+            }
+            let mappingBeforeBytes = try JSONSerialization.data(withJSONObject: mappingBefore, options: [.sortedKeys])
             let native = try NativeDisplayCapture.capture(name: "extended-v1-" + id, metadata: details,
                 width: Int((bounds[2] * scale.doubleValue).rounded()),
                 height: Int((bounds[3] * scale.doubleValue).rounded()), in: self)
             try requireVisible(visibleAnchor, named: anchor)
             guard let current = self.metadata(marker), current["ready"] as? Bool == true,
                   current["scenario"] as? String == base,
-                  current["interfaceOrientationRawValue"] as? Int == UIInterfaceOrientation.portrait.rawValue else {
+                  current["interfaceOrientationRawValue"] as? Int == UIInterfaceOrientation.portrait.rawValue,
+                  let mappingAfter = current["fixedCoordinateMapping"] as? [String: Any],
+                  try JSONSerialization.data(withJSONObject: mappingAfter, options: [.sortedKeys]) == mappingBeforeBytes else {
                 throw ProbeError.missing("Unchanged UIKit geometry after native capture")
             }
+            details["fixedCoordinateMappingAfterCapture"] = mappingAfter
+            details["fixedCoordinateMappingStableDuringCapture"] = true
             details["capturedWindowWidthPx"] = native.width
             details["capturedWindowHeightPx"] = native.height
             details["nativeCapture"] = native.response

@@ -8,6 +8,7 @@ import unittest
 
 from PIL import Image, ImageCms, PngImagePlugin
 from extract_native_profile import SP_SAMPLE_SIZES, extract, validate_native_geometry
+from native_mapping_fixtures import mapped_files
 
 
 class NativeProfileExtraction(unittest.TestCase):
@@ -35,6 +36,130 @@ class NativeProfileExtraction(unittest.TestCase):
         image.save(png, pnginfo=info)
         geometry.write_text(json.dumps(metadata or self.geometry(), ensure_ascii=False), encoding="utf-8")
         return png, geometry
+
+    def mapped_input(self, directory, operation="clockwise"):
+        png, geometry = self.input_files(directory)
+        raw = directory / "original-framebuffer.png"
+        metadata = mapped_files(png, geometry, raw, operation)
+        return png, geometry, raw, metadata
+
+    def test_measured_mapping_independently_verifies_and_retains_both_originals(self):
+        for operation in ("clockwise", "counterclockwise"):
+            with self.subTest(operation=operation), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                png, geometry, raw, metadata = self.mapped_input(directory, operation)
+                original, window = raw.read_bytes(), png.read_bytes()
+                result = extract(png, geometry, directory / "out", raw_framebuffer_path=raw)
+                mapping = result["nativeCoordinateMapping"]
+                self.assertTrue(mapping["independentlyVerified"])
+                self.assertTrue(mapping["rawAttachmentRequired"])
+                self.assertTrue(mapping["certificate"]["inversePixelsVerified"])
+                self.assertEqual(metadata["nativeCapture"]["coordinateMapping"], mapping["certificate"])
+                self.assertEqual(original, Path(mapping["rawCopy"]).read_bytes())
+                self.assertEqual(window, Path(mapping["windowCopy"]).read_bytes())
+                self.assertEqual(original, raw.read_bytes())
+                self.assertEqual(window, png.read_bytes())
+                self.assertEqual(sha256(original).hexdigest(), result["sourceReferences"]["nativeRawFramebuffer"]["sha256"])
+                with Image.open(png) as image, Image.open(directory / "out/full-content.png") as crop:
+                    self.assertEqual(image.crop((2, 4, 18, 26)).tobytes(), crop.tobytes())
+                profile = json.loads((directory / "out/android-viewport-profile.json").read_text())
+                self.assertEqual(mapping, profile["nativeCoordinateMapping"])
+                self.assertFalse(profile["appearanceParityVerified"])
+
+    def test_measured_identity_reuses_same_original_without_second_attachment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            png, geometry, raw, _ = self.mapped_input(directory, "identity")
+            self.assertEqual(raw.read_bytes(), png.read_bytes())
+            result = extract(png, geometry, directory / "out")
+            mapping = result["nativeCoordinateMapping"]
+            self.assertFalse(mapping["imageTransformed"])
+            self.assertFalse(mapping["rawAttachmentRequired"])
+            self.assertEqual("identity", mapping["certificate"]["operation"])
+            self.assertEqual(str(png.resolve()), result["sourceReferences"]["nativeRawFramebuffer"]["path"])
+
+    def test_transformed_missing_raw_is_rejected_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            png, geometry, _, _ = self.mapped_input(directory)
+            with self.assertRaisesRegex(ValueError, "original raw-framebuffer"):
+                extract(png, geometry, directory / "out")
+            self.assertFalse((directory / "out").exists())
+
+    def test_dangling_new_format_fields_cannot_take_legacy_capture_path(self):
+        for field in ("fixedCoordinateMapping", "fixedCoordinateMappingAfterCapture",
+                      "fixedCoordinateMappingStableDuringCapture", "rawSha256", "rawWidthPx", "rawHeightPx"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                png, geometry, _, metadata = self.mapped_input(directory, "identity")
+                mapping_value = metadata.get(field, metadata["nativeCapture"].get(field))
+                for key in ("fixedCoordinateMapping", "fixedCoordinateMappingAfterCapture", "fixedCoordinateMappingStableDuringCapture"):
+                    metadata.pop(key)
+                for key in ("coordinateMapping", "rawSha256", "rawWidthPx", "rawHeightPx"):
+                    metadata["nativeCapture"].pop(key)
+                target = metadata["nativeCapture"] if field.startswith("raw") else metadata
+                target[field] = mapping_value
+                geometry.write_text(json.dumps(metadata), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "certificate"):
+                    extract(png, geometry, directory / "out")
+                self.assertFalse((directory / "out").exists())
+
+    def test_mapping_flags_certificate_and_stable_measurements_are_required(self):
+        mutations = [
+            lambda m: m["nativeCapture"].pop("coordinateMapping"),
+            lambda m: m["nativeCapture"].pop("imageTransformed"),
+            lambda m: m["nativeCapture"].update(imageTransformed="true"),
+            lambda m: m["nativeCapture"].update(imageTransformed=False),
+            lambda m: m["nativeCapture"]["coordinateMapping"].update(inversePixelsVerified=False),
+            lambda m: m.pop("fixedCoordinateMappingAfterCapture"),
+            lambda m: m.update(fixedCoordinateMappingStableDuringCapture=False),
+            lambda m: m["fixedCoordinateMappingAfterCapture"].update(displayScale=3),
+            lambda m: m["fixedCoordinateMappingAfterCapture"].update(schemaVersion=True),
+            lambda m: m.update(screenNativeBoundsPixels=[0, 0, 31, 20]),
+        ]
+        for index, mutate in enumerate(mutations):
+            with self.subTest(index=index), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                png, geometry, raw, metadata = self.mapped_input(directory)
+                mutate(metadata)
+                geometry.write_text(json.dumps(metadata), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    extract(png, geometry, directory / "out", raw_framebuffer_path=raw)
+                self.assertFalse((directory / "out").exists())
+
+    def test_forged_window_pixel_with_updated_hashes_cannot_pass_mapping_proof(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            png, geometry, raw, metadata = self.mapped_input(directory)
+            with Image.open(png) as image:
+                altered = image.copy()
+            altered.putpixel((3, 4), (255, 1, 2, 3))
+            info = PngImagePlugin.PngInfo()
+            info.add(b"gAMA", struct.pack(">I", 45455))
+            altered.save(png, pnginfo=info)
+            forged_hash = sha256(png.read_bytes()).hexdigest()
+            metadata["nativeCapture"]["sha256"] = forged_hash
+            metadata["nativeCapture"]["coordinateMapping"]["windowSha256"] = forged_hash
+            geometry.write_text(json.dumps(metadata), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "pixels"):
+                extract(png, geometry, directory / "out", raw_framebuffer_path=raw)
+            self.assertFalse((directory / "out").exists())
+
+    def test_wrong_original_with_matching_outer_hash_cannot_pass_mapping_proof(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            png, geometry, raw, metadata = self.mapped_input(directory)
+            with Image.open(raw) as image:
+                altered = image.copy()
+            altered.putpixel((0, 0), (255, 254, 253, 252))
+            info = PngImagePlugin.PngInfo()
+            info.add(b"gAMA", struct.pack(">I", 45455))
+            altered.save(raw, pnginfo=info)
+            metadata["nativeCapture"]["rawSha256"] = sha256(raw.read_bytes()).hexdigest()
+            geometry.write_text(json.dumps(metadata), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                extract(png, geometry, directory / "out", raw_framebuffer_path=raw)
+            self.assertFalse((directory / "out").exists())
 
     def test_both_crops_preserve_exact_pixel_subsets_and_reference_hashes(self):
         with tempfile.TemporaryDirectory() as temporary:

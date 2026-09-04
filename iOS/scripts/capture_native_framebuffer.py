@@ -5,8 +5,9 @@ The XCTest runner writes Documents/icy-native-capture/requests/<UUID>.json:
 {schemaVersion:1, requestId:UUID, scenario:string, expectedWidthPx:int,
  expectedHeightPx:int, metadata:object}. A response with the same UUID contains
 status, sourceCommand, sha256, widthPx, heightPx and optional PNG metadata/error.
-Whenever simctl produced a file, its original bytes are retained and returned,
-including on a dimension/decoding failure. No image transformation is performed.
+Whenever simctl produces a file its original bytes are retained. A window PNG
+can use a separately certified, lossless pixel permutation from measured UIKit
+coordinates. No direction is inferred from an orientation enum; no pixels resize.
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ import time
 import uuid
 
 from PIL import Image
+from framebuffer_coordinates import map_framebuffer
 
 
 MAX_REQUEST_BYTES = 256 * 1024
@@ -130,9 +132,10 @@ class CaptureService:
     def capture(self, container: Path, request_path: Path, request_id: str) -> None:
         response_json = direct_path(container, "Documents", "icy-native-capture", "responses", request_id + ".json")
         response_png = direct_path(container, "Documents", "icy-native-capture", "responses", request_id + ".png")
+        response_raw = direct_path(container, "Documents", "icy-native-capture", "responses", request_id + ".raw.png")
         evidence = self.output / request_id
         # Reusing an ID must not overwrite an earlier capture/response.
-        if evidence.exists() or response_json.exists() or response_png.exists():
+        if evidence.exists() or response_json.exists() or response_png.exists() or response_raw.exists():
             raise ValueError("Capture request ID was already used")
         evidence.mkdir()
         raw_png = evidence / "framebuffer.png"
@@ -153,15 +156,27 @@ class CaptureService:
             atomic_new(evidence / "simctl.log", (completed.stdout + completed.stderr).encode("utf-8"))
             result["captureExitCode"] = completed.returncode
             if raw_png.is_file():
-                # Copy exact bytes even when decoding/geometry subsequently fails.
                 raw = raw_png.read_bytes()
                 result.update(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
-                atomic_new(response_png, raw)
                 result.update(png_info(raw_png))
             if completed.returncode: raise ValueError("simctl screenshot command failed")
             if not raw_png.is_file(): raise ValueError("simctl did not produce a framebuffer PNG")
+            if "fixedCoordinateMapping" in request["metadata"]:
+                mapped, certificate = map_framebuffer(raw, request["metadata"],
+                    (request["expectedWidthPx"], request["expectedHeightPx"]))
+                result.update(rawSha256=hashlib.sha256(raw).hexdigest(),
+                              rawWidthPx=result["widthPx"], rawHeightPx=result["heightPx"],
+                              coordinateMapping=certificate, imageTransformed=mapped != raw)
+                if mapped != raw:
+                    window_png = evidence / "window.png"
+                    atomic_new(window_png, mapped)
+                    atomic_new(response_raw, raw)
+                    result.update(png_info(window_png))
+                atomic_new(response_png, mapped)
             if (result["widthPx"], result["heightPx"]) != (request["expectedWidthPx"], request["expectedHeightPx"]):
-                raise ValueError("Framebuffer dimensions differ from the current app draw; no rotation or resize was applied")
+                raise ValueError("Framebuffer dimensions differ from the current app draw without a certified coordinate mapping")
+            if not response_png.exists():
+                atomic_new(response_png, raw)
             result["status"] = "captured"
         except Exception as error:
             result["error"] = str(error)

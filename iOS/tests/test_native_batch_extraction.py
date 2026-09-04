@@ -9,6 +9,7 @@ import uuid
 
 from PIL import Image, ImageCms, PngImagePlugin
 from extract_native_batch import EXPECTED, collect, extract_batch, provenance
+from native_mapping_fixtures import mapped_files
 
 DEVICE = "AE42CFCF-8FFB-497C-AAEB-F69DE0081C06"
 REVISION = "b8d3a9e19894ea4a633e5bb50300021aa4df4043"
@@ -79,6 +80,77 @@ class NativeBatchExtraction(unittest.TestCase):
 
     def run_batch(self, **kwargs):
         return extract_batch(self.manifest, self.root / "out", artifact_metadata=self.artifact, **kwargs)
+
+    def mapped_manifest(self, *, include_raw=True):
+        case = "landscape-mixed-3"
+        records = self.make_manifest((case,))
+        png, meta = self.case_paths[case]
+        raw = self.captures / (str(uuid.uuid4()).upper() + ".png")
+        mapped_files(png, meta, raw)
+        raw_attachment = deepcopy(records[0]["attachments"][1])
+        raw_attachment.update(exportedFileName=raw.name,
+            suggestedHumanReadableName=case + "-raw-framebuffer_0_" + str(uuid.uuid4()).upper() + ".png")
+        if include_raw:
+            records[0]["attachments"].append(raw_attachment)
+        self.write(self.manifest, records)
+        return case, records, raw
+
+    def test_mapped_batch_pairs_and_retains_original_framebuffer_attachment(self):
+        case, records, raw = self.mapped_manifest()
+        pairs, _, ignored = collect(self.manifest)
+        self.assertEqual(raw, pairs[case][0]["rawFramebuffer"]["path"])
+        self.assertEqual([], ignored)
+        report = self.run_batch(allow_partial=True)
+        self.assertEqual([], report["rejections"])
+        row = report["pairs"][0]
+        self.assertEqual(records[0]["attachments"][2], row["rawFramebufferAttachment"])
+        self.assertTrue(row["nativeCoordinateMapping"]["independentlyVerified"])
+        self.assertEqual(raw.read_bytes(), Path(row["nativeCoordinateMapping"]["rawCopy"]).read_bytes())
+        self.assertFalse(report["appearanceParityVerified"])
+
+    def test_mapped_batch_without_original_is_diagnostic_rejection_only(self):
+        case, _, _ = self.mapped_manifest(include_raw=False)
+        report = self.run_batch(allow_partial=True)
+        self.assertEqual([], report["pairs"])
+        self.assertEqual(case, report["rejections"][0]["case"])
+        self.assertIn("original raw-framebuffer", report["rejections"][0]["error"])
+        self.assertFalse(report["readyForReviewedAndroidCapture"])
+        self.assertFalse((self.root / "out" / case).exists())
+
+    def test_raw_attachment_wrong_identity_type_failure_reuse_or_path_is_rejected(self):
+        changes = [("isAssociatedWithFailure", True), ("deviceId", "OTHER"),
+            ("configurationName", "Different configuration"), ("exportedFileName", "../raw.png"),
+            ("suggestedHumanReadableName", "landscape-mixed-3-raw-framebuffer.json")]
+        for field, value in changes:
+            with self.subTest(field=field):
+                _, records, _ = self.mapped_manifest()
+                records[0]["attachments"][2][field] = value
+                self.write(self.manifest, records)
+                with self.assertRaises(ValueError):
+                    collect(self.manifest)
+        _, records, _ = self.mapped_manifest()
+        records[0]["attachments"][2]["exportedFileName"] = records[0]["attachments"][1]["exportedFileName"]
+        self.write(self.manifest, records)
+        with self.assertRaisesRegex(ValueError, "reused"):
+            collect(self.manifest)
+
+    def test_duplicate_or_split_retry_raw_attachment_cannot_be_selected(self):
+        _, records, raw = self.mapped_manifest()
+        duplicate = deepcopy(records[0]["attachments"][2])
+        other = self.captures / (str(uuid.uuid4()) + ".png")
+        other.write_bytes(raw.read_bytes())
+        duplicate["exportedFileName"] = other.name
+        records[0]["attachments"].append(duplicate)
+        self.write(self.manifest, records)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            collect(self.manifest)
+        _, records, _ = self.mapped_manifest()
+        retry = deepcopy(records[0])
+        retry["attachments"] = [records[0]["attachments"].pop()]
+        records.append(retry)
+        self.write(self.manifest, records)
+        with self.assertRaisesRegex(ValueError, "different test records"):
+            collect(self.manifest)
 
     def test_real_manifest_schema_requires_complete_29_and_groups_measured_geometry(self):
         self.make_manifest(EXPECTED)

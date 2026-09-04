@@ -1,6 +1,7 @@
 """Pair the 29 default XCTest captures and extract measured Android viewport profiles.
 
-No screenshots are captured, resized, color-converted, or compared. Supplied
+No screenshots are captured, resized, or color-converted. Declared coordinate
+permutations are checked against the original raw attachment. Supplied
 GitHub metadata/verification files are local evidence, not authenticated claims.
 See NATIVE-BATCH-EXTRACTION.md for the input and partial-run contract.
 """
@@ -61,8 +62,12 @@ def collect(manifest_path):
                 raise ValueError("Attachment lacks its suggestedHumanReadableName")
             base, separator, extension = human.rpartition(".")
             base = EXPORT_SUFFIX.sub("", base)
-            kind = "geometry" if base.endswith("-geometry") else "png"
-            stem = base.removesuffix("-geometry") if kind == "geometry" else base
+            if base.endswith("-raw-framebuffer"):
+                kind, stem = "raw", base.removesuffix("-raw-framebuffer")
+            elif base.endswith("-geometry"):
+                kind, stem = "geometry", base.removesuffix("-geometry")
+            else:
+                kind, stem = "png", base
             if not separator or stem not in EXPECTED:
                 ignored.append({"test": test.get("testIdentifier"), "attachment": attachment})
                 continue
@@ -88,7 +93,7 @@ def collect(manifest_path):
                                       "testIdentifierURL": test.get("testIdentifierURL")})
     pairs = {}
     for stem, kinds in found.items():
-        if set(kinds) != {"png", "geometry"} or any(len(items) != 1 for items in kinds.values()):
+        if not {"png", "geometry"} <= set(kinds) or not set(kinds) <= {"png", "geometry", "raw"} or any(len(items) != 1 for items in kinds.values()):
             raise ValueError(f"Missing or ambiguous image/geometry pair: {stem}")
         png, geometry = kinds["png"][0], kinds["geometry"][0]
         if png["testRecordIndex"] != geometry["testRecordIndex"]:
@@ -97,6 +102,14 @@ def collect(manifest_path):
             value = png["record"].get(key)
             if not isinstance(value, str) or not value or value != geometry["record"].get(key):
                 raise ValueError(f"PNG/geometry {key} differs: {stem}")
+        if "raw" in kinds:
+            raw = kinds["raw"][0]
+            if raw["testRecordIndex"] != png["testRecordIndex"]:
+                raise ValueError(f"Raw framebuffer and PNG come from different test records: {stem}")
+            for key in ("deviceId", "configurationName"):
+                if raw["record"].get(key) != png["record"].get(key):
+                    raise ValueError(f"Raw framebuffer and PNG {key} differs: {stem}")
+            png["rawFramebuffer"] = raw
         pairs[stem] = (png, geometry)
     identities = {(pair[0]["record"]["deviceId"], pair[0]["record"]["configurationName"]) for pair in pairs.values()}
     if len(identities) > 1:
@@ -202,7 +215,9 @@ def extract_batch(manifest, output, *, artifact_metadata=None, simulator_verific
                     or metadata["requestedDeviceOrientationRawValue"] != int(expected["orientation"])
                     or metadata.get("requestedLargeText") is not bool(expected["large"])):
                 raise ValueError("Attachment name and geometry identity differ")
-            extraction = extract(png["path"], geometry["path"], output / stem, safe_area_interior=safe_area_interior)
+            raw = png.get("rawFramebuffer")
+            extraction = extract(png["path"], geometry["path"], output / stem, safe_area_interior=safe_area_interior,
+                                 raw_framebuffer_path=raw["path"] if raw is not None else None)
             profile_path = output / stem / "android-viewport-profile.json"
             profile = load_profile(profile_path)
             results = native_result_directory(ROOT, profile, "baseline")
@@ -217,11 +232,18 @@ def extract_batch(manifest, output, *, artifact_metadata=None, simulator_verific
                        "--serial", serial, "--orientation", profile["orientation"], "--rotation", "0",
                        "--viewport-profile", str(profile_path)], "captureCommandExecuted": False,
                    "sourcePngColor": extraction["sourcePngColor"]}
+            if raw is not None:
+                row["rawFramebufferAttachment"] = raw["record"]
+            if "nativeCoordinateMapping" in extraction:
+                row["nativeCoordinateMapping"] = extraction["nativeCoordinateMapping"]
             report["pairs"].append(row)
             groups[profile["profileId"]].append(row)
         except (OSError, ValueError, KeyError) as error:
-            failures.append({"case": stem, "error": str(error), "nativePng": digest(png["path"]),
-                             "nativeGeometry": digest(geometry["path"])})
+            failure = {"case": stem, "error": str(error), "nativePng": digest(png["path"]),
+                       "nativeGeometry": digest(geometry["path"])}
+            if "rawFramebuffer" in png:
+                failure["nativeRawFramebuffer"] = digest(png["rawFramebuffer"]["path"])
+            failures.append(failure)
     for profile_id, rows in sorted(groups.items()):
         profile = load_profile(rows[0]["profile"])
         report["groups"].append({"profileId": profile_id, "geometry": {key: profile[key] for key in

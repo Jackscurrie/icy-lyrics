@@ -3,8 +3,8 @@ import XCTest
 import ImageIO
 import CryptoKit
 
-/// Test-runner/host handshake for unchanged simulator framebuffer PNGs.
-/// The host uses public simctl commands; neither side resizes or rotates pixels.
+/// Test-runner/host handshake retaining the original simulator framebuffer.
+/// A measured window-coordinate permutation may reorder whole pixels; no scaling.
 enum NativeDisplayCapture {
     struct Frame {
         let png: Data
@@ -50,7 +50,8 @@ enum NativeDisplayCapture {
               response["schemaVersion"] as? Int == 1,
               response["requestId"] as? String == id,
               response["scenario"] as? String == name,
-              response["source"] as? String == "simctl framebuffer" else {
+              response["source"] as? String == "simctl framebuffer",
+              response["requestSha256"] as? String == digest(bytes) else {
             throw CaptureError.invalid("Native framebuffer response identity does not match")
         }
         let pngURL = responses.appendingPathComponent(id + ".png")
@@ -62,7 +63,7 @@ enum NativeDisplayCapture {
             guard png.starts(with: [137, 80, 78, 71, 13, 10, 26, 10]) else {
                 throw CaptureError.invalid("Host capture is not a PNG")
             }
-            let hash = SHA256.hash(data: png).map { String(format: "%02x", $0) }.joined()
+            let hash = digest(png)
             guard response["sha256"] as? String == hash,
                   let image = CGImageSourceCreateWithData(png as CFData, nil),
                   let properties = CGImageSourceCopyPropertiesAtIndex(image, 0, nil) as? [String: Any],
@@ -75,7 +76,26 @@ enum NativeDisplayCapture {
                   response["widthPx"] as? Int == actualWidth,
                   response["heightPx"] as? Int == actualHeight,
                   actualWidth == width, actualHeight == height, orientation == 1 else {
-                throw CaptureError.invalid("Unchanged framebuffer is \(actualWidth)x\(actualHeight), orientation \(orientation); expected \(width)x\(height). Host response: \(response)")
+                throw CaptureError.invalid("Native window PNG is \(actualWidth)x\(actualHeight), orientation \(orientation); expected \(width)x\(height). Host response: \(response)")
+            }
+            if response["imageTransformed"] as? Bool == true {
+                let rawURL = responses.appendingPathComponent(id + ".raw.png")
+                let raw = try Data(contentsOf: rawURL)
+                attach(raw, type: "public.png", name: name + "-raw-framebuffer", in: test)
+                guard response["rawSha256"] as? String == digest(raw),
+                      response["coordinateMapping"] as? [String: Any] != nil,
+                      let rawImage = CGImageSourceCreateWithData(raw as CFData, nil),
+                      let rawProperties = CGImageSourceCopyPropertiesAtIndex(rawImage, 0, nil) as? [String: Any],
+                      let rawWidth = rawProperties[kCGImagePropertyPixelWidth as String] as? Int,
+                      let rawHeight = rawProperties[kCGImagePropertyPixelHeight as String] as? Int,
+                      rawWidth > 0, rawHeight > 0,
+                      rawWidth == response["rawWidthPx"] as? Int,
+                      rawHeight == response["rawHeightPx"] as? Int,
+                      (rawProperties[kCGImagePropertyOrientation as String] as? Int ?? 1) == 1 else {
+                    throw CaptureError.invalid("Original framebuffer or coordinate mapping evidence is missing")
+                }
+            } else if response["imageTransformed"] as? Bool != false {
+                throw CaptureError.invalid("Host did not declare the pixel coordinate operation")
             }
             return Frame(png: png, width: actualWidth, height: actualHeight,
                          orientation: orientation, response: response)
@@ -83,6 +103,10 @@ enum NativeDisplayCapture {
             attach(png, type: "public.png", name: name + "-rejected-framebuffer", in: test)
             throw error
         }
+    }
+
+    private static func digest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     private static func attach(_ data: Data, type: String, name: String, in test: XCTestCase) {

@@ -16,6 +16,7 @@ import uuid
 from PIL import Image
 
 IOS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(IOS / "scripts"))
 SPEC = importlib.util.spec_from_file_location("framebuffer", IOS / "scripts/capture_native_framebuffer.py")
 capture = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(capture)
@@ -83,6 +84,61 @@ class NativeFramebufferCaptureTest(unittest.TestCase):
         self.assertIn("dimensions differ", result["error"])
         self.assertEqual((20, 30), (result["widthPx"], result["heightPx"]))
         self.assertEqual(self.png, (self.responses / (self.request_id + ".png")).read_bytes())
+
+    def landscape_mapping(self):
+        window = [[0, 0], [30, 0], [30, 20], [0, 20]]
+        fixed = [[0, 30], [0, 0], [20, 0], [20, 30]]
+        samples = [[15, 10], [16, 10], [15, 11]]
+        return {"schemaVersion": 1, "cornerOrder": ["TL", "TR", "BR", "BL"],
+            "windowBoundsPoints": [0, 0, 30, 20], "contentBoundsInWindowPoints": [0, 0, 30, 20],
+            "fixedBoundsPoints": [0, 0, 20, 30], "screenNativeBoundsPixels": [0, 0, 20, 30],
+            "displayScale": 1, "nativeDisplayScale": 1,
+            "windowCornersInWindowPoints": window, "windowCornersInFixedPoints": fixed,
+            "roundTripsInWindowPoints": window, "contentCornersInWindowPoints": window,
+            "contentCornersInFixedPoints": fixed, "contentRoundTripsInWindowPoints": window,
+            "sampleOrder": ["center", "centerPlusOnePixelX", "centerPlusOnePixelY"],
+            "sampleWindowPoints": samples, "sampleFixedPoints": [[10, 15], [10, 14], [11, 15]],
+            "sampleRoundTripsInWindowPoints": samples}
+
+    def test_measured_landscape_keeps_raw_and_returns_all_pixels_in_window_coordinates(self):
+        self.payload.update(expectedWidthPx=30, expectedHeightPx=20)
+        mapping = self.landscape_mapping()
+        self.payload["metadata"] = {"ready": True, "contentWidthPx": 30, "contentHeightPx": 20,
+            "windowBoundsPoints": mapping["windowBoundsPoints"],
+            "contentBoundsInWindowPoints": mapping["contentBoundsInWindowPoints"],
+            "screenNativeBoundsPixels": mapping["screenNativeBoundsPixels"],
+            "displayScale": 1, "nativeDisplayScale": 1, "fixedCoordinateMapping": mapping}
+        self.path.write_text(json.dumps(self.payload))
+        source = Image.new("RGBA", (20, 30))
+        source.putdata([(x, y, x + y, 255) for y in range(30) for x in range(20)])
+        encoded = io.BytesIO()
+        source.save(encoded, format="PNG")
+        self.png = encoded.getvalue()
+        self.service().poll(self.container)
+        result = self.response()
+        self.assertEqual("captured", result["status"], result.get("error"))
+        self.assertTrue(result["imageTransformed"])
+        self.assertEqual(hashlib.sha256(self.png).hexdigest(), result["rawSha256"])
+        self.assertEqual(self.png, (self.responses / (self.request_id + ".raw.png")).read_bytes())
+        self.assertEqual(self.png, (self.output / self.request_id / "framebuffer.png").read_bytes())
+        derived = (self.responses / (self.request_id + ".png")).read_bytes()
+        self.assertEqual(hashlib.sha256(derived).hexdigest(), result["sha256"])
+        with Image.open(io.BytesIO(derived)) as window:
+            self.assertEqual((30, 20), window.size)
+            self.assertEqual(source.getpixel((0, 29)), window.getpixel((0, 0)))
+            self.assertEqual(source.getpixel((19, 0)), window.getpixel((29, 19)))
+            original_bytes, window_bytes = source.tobytes(), window.tobytes()
+            self.assertEqual(sorted(original_bytes[i:i + 4] for i in range(0, len(original_bytes), 4)),
+                             sorted(window_bytes[i:i + 4] for i in range(0, len(window_bytes), 4)))
+
+    def test_invalid_measured_mapping_retains_raw_and_never_publishes_a_derivative(self):
+        self.payload["metadata"]["fixedCoordinateMapping"] = self.landscape_mapping()
+        self.path.write_text(json.dumps(self.payload))
+        self.service().poll(self.container)
+        self.assertEqual("error", self.response()["status"])
+        self.assertEqual(self.png, (self.responses / (self.request_id + ".png")).read_bytes())
+        self.assertFalse((self.responses / (self.request_id + ".raw.png")).exists())
+        self.assertFalse((self.output / self.request_id / "window.png").exists())
 
     def test_orientation_is_recorded_without_rotating_the_png(self):
         exif = Image.Exif()

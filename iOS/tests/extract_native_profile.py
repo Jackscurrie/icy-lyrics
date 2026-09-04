@@ -1,7 +1,9 @@
 """Extract measured native content pixels and prepare an Android viewport profile.
 
-Requires an actual XCTest PNG and its matching geometry attachment. Crops never
-resize, rotate, mask, recolor, or approve appearance parity. The optional safe-area
+Requires an actual XCTest PNG and its matching geometry attachment. Coordinate-
+mapped captures also require the original framebuffer and an independently
+verified whole-pixel permutation. Crops never resize, mask, recolor, or approve
+appearance parity. The optional safe-area
 interior excludes app-painted edge pixels as well as any system overlays there.
 """
 from decimal import Decimal
@@ -13,6 +15,7 @@ import json
 import math
 import re
 import struct
+import sys
 
 from PIL import Image, PngImagePlugin
 
@@ -71,6 +74,55 @@ def native_font_samples(metadata):
     for size in SP_SAMPLE_SIZES:
         number(samples[str(size)], f"spToPx[{size}]", positive=True)
     return {str(size): samples[str(size)] for size in SP_SAMPLE_SIZES}
+
+
+def framebuffer_evidence(png_path, png, metadata, raw_framebuffer_path):
+    """A hash assertion alone cannot turn a transformed image into evidence."""
+    capture = metadata.get("nativeCapture")
+    if not isinstance(capture, dict):
+        if raw_framebuffer_path is not None:
+            raise ValueError("Raw framebuffer input requires its native capture acknowledgement")
+        return None
+    transformed = capture.get("imageTransformed", False)
+    if type(transformed) is not bool:
+        raise ValueError("imageTransformed must be an explicit boolean")
+    certificate = capture.get("coordinateMapping")
+    if certificate is None:
+        declared_geometry = any(key in metadata for key in ("fixedCoordinateMapping",
+            "fixedCoordinateMappingAfterCapture", "fixedCoordinateMappingStableDuringCapture"))
+        declared_raw = any(key in capture for key in ("rawSha256", "rawWidthPx", "rawHeightPx"))
+        if transformed or raw_framebuffer_path is not None or declared_geometry or declared_raw:
+            raise ValueError("Transformed framebuffer requires its measured coordinate-mapping certificate")
+        return None  # The untouched legacy transport did not emit certificates.
+    if type(capture.get("imageTransformed")) is not bool or not isinstance(certificate, dict):
+        raise ValueError("Measured framebuffer mapping requires an explicit boolean and certificate")
+    before, after = metadata.get("fixedCoordinateMapping"), metadata.get("fixedCoordinateMappingAfterCapture")
+    if not isinstance(before, dict) or not before or not isinstance(after, dict):
+        raise ValueError("Measured framebuffer mapping requires geometry before and after capture")
+    canonical = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    if metadata.get("fixedCoordinateMappingStableDuringCapture") is not True or canonical(before) != canonical(after):
+        raise ValueError("Measured framebuffer geometry changed during capture")
+    if transformed and raw_framebuffer_path is None:
+        raise ValueError("Transformed capture requires the original raw-framebuffer attachment")
+    raw_path = Path(raw_framebuffer_path).resolve() if raw_framebuffer_path is not None else png_path
+    raw = raw_path.read_bytes() if raw_framebuffer_path is not None else png
+    if len(raw) < 33 or raw[:8] != b"\x89PNG\r\n\x1a\n" or raw[12:16] != b"IHDR":
+        raise ValueError("Original raw framebuffer is not a PNG")
+    raw_size = struct.unpack_from(">II", raw, 16)
+    declared_size = (integer(capture.get("rawWidthPx"), "rawWidthPx", positive=True),
+                     integer(capture.get("rawHeightPx"), "rawHeightPx", positive=True))
+    if capture.get("rawSha256") != sha256(raw).hexdigest() or declared_size != raw_size:
+        raise ValueError("Native acknowledgement does not identify this original raw framebuffer")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from framebuffer_coordinates import verify_framebuffer_mapping
+    proof = verify_framebuffer_mapping(raw, png, metadata, certificate)
+    if (proof.get("operation") != "identity") != transformed:
+        raise ValueError("imageTransformed disagrees with the independently verified coordinate operation")
+    with Image.open(BytesIO(raw)) as image:
+        image.load()
+        raw_color = color_metadata(raw, image)
+    return {"proof": proof, "rawPath": raw_path, "rawPng": raw, "rawPngColor": raw_color,
+            "imageTransformed": transformed}
 
 
 def validate_native_geometry(metadata, image_size):
@@ -220,7 +272,7 @@ def crop_png(source, original_png, rectangle):
     return result
 
 
-def extract(png_path, geometry_path, output_directory, *, safe_area_interior=False):
+def extract(png_path, geometry_path, output_directory, *, safe_area_interior=False, raw_framebuffer_path=None):
     png_path, geometry_path, output_directory = (Path(item).resolve() for item in
                                                 (png_path, geometry_path, output_directory))
     png, geometry = png_path.read_bytes(), geometry_path.read_bytes()
@@ -240,6 +292,7 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
         measured = validate_native_geometry(metadata, source.size)
         if "nativeCapture" in metadata and metadata["nativeCapture"].get("sha256") != sha256(png).hexdigest():
             raise ValueError("Native framebuffer acknowledgement does not identify this PNG")
+        framebuffer = framebuffer_evidence(png_path, png, metadata, raw_framebuffer_path)
         images = {"full-content.png": (measured["fullContentRectPx"], "Entire recorded Compose content rectangle")}
         if safe_area_interior:
             images["safe-area-interior.png"] = (measured["safeAreaInteriorRectPx"],
@@ -247,6 +300,15 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
         payloads = {name: crop_png(source, png, box) for name, (box, _) in images.items()}
     references = {"nativePng": {"path": str(png_path), "sha256": sha256(png).hexdigest(), "bytes": len(png)},
                   "nativeGeometry": {"path": str(geometry_path), "sha256": sha256(geometry).hexdigest(), "bytes": len(geometry)}}
+    mapping_record = None
+    if framebuffer is not None:
+        raw = framebuffer["rawPng"]
+        references["nativeRawFramebuffer"] = {"path": str(framebuffer["rawPath"]), "sha256": sha256(raw).hexdigest(), "bytes": len(raw)}
+        mapping_record = {"independentlyVerified": True, "imageTransformed": framebuffer["imageTransformed"],
+                          "certificate": framebuffer["proof"], "rawPngColor": framebuffer["rawPngColor"],
+                          "rawAttachmentRequired": framebuffer["imageTransformed"],
+                          "rawCopy": str(output_directory / "raw-framebuffer.png"),
+                          "windowCopy": str(output_directory / "window-capture.png")}
     viewport = {"widthPx": metadata["contentWidthPx"], "heightPx": metadata["contentHeightPx"],
                 "density": metadata["composeDensity"], "fontScale": metadata["fontScale"],
                 "safeDrawingInsetsPx": metadata["safeDrawingInsetsPx"],
@@ -285,9 +347,18 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
                              "sha256": sha256(payloads[name]).hexdigest(), "bytes": len(payloads[name])}
                             for name, (box, scope) in images.items()],
                   "appearanceParityVerified": False}
+    if mapping_record is not None:
+        profile["nativeCoordinateMapping"] = mapping_record
+        extraction["nativeCoordinateMapping"] = mapping_record
+        if mapping_record["imageTransformed"]:
+            extraction["operation"] = "Independently verified measured whole-pixel coordinate permutation, then integer-boundary crops; no resampling, mask, or recoloring"
+            extraction["cropCoordinates"] = "[left, top, right, bottom], pixels relative to the verified UIKit-window PNG; right/bottom exclusive"
     documents = {name: json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
                  for name, record in (("android-viewport-profile.json", profile), ("extraction.json", extraction))}
     output_directory.mkdir(parents=True, exist_ok=True)
+    if framebuffer is not None:
+        (output_directory / "raw-framebuffer.png").write_bytes(framebuffer["rawPng"])
+        (output_directory / "window-capture.png").write_bytes(png)
     for name, data in payloads.items():
         (output_directory / name).write_bytes(data)
     for name, document in documents.items():
@@ -301,9 +372,11 @@ def main(argv=None):
     parser.add_argument("geometry_json", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--safe-area-interior", action="store_true")
+    parser.add_argument("--raw-framebuffer", type=Path, help="Original framebuffer attachment; required for a coordinate-mapped image")
     args = parser.parse_args(argv)
     try:
-        result = extract(args.native_png, args.geometry_json, args.output, safe_area_interior=args.safe_area_interior)
+        result = extract(args.native_png, args.geometry_json, args.output, safe_area_interior=args.safe_area_interior,
+                         raw_framebuffer_path=args.raw_framebuffer)
     except (OSError, ValueError, struct.error) as error:
         parser.error(str(error))
     print(f"Extracted {len(result['crops'])} measured native crop(s); profile {result['profileId']}. Appearance parity remains unverified.")
