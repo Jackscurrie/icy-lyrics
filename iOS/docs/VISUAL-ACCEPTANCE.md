@@ -13,10 +13,10 @@ results and evidence links; this document does not repeat its run history.
 | Evidence | Current result | What it establishes |
 |---|---|---|
 | Original versus extracted Android | **20/20 exact**, zero changed RGBA pixels across 51,840,000 pixels | Extraction preserved those original scenes at their measured Android profiles. It does not establish iPhone parity. |
-| Extended original Android references | **11/11 captured**; all 57 original production hashes preserved | Additional expanded/settings/dialog references. Matching iOS capture/comparison remains pending. See [EXTENDED-PARITY.md](../tests/EXTENDED-PARITY.md) for raw full-display scope and scroll limits. |
-| Original Android mixed/lyrics motion | **44/44 captured; 44/44 repeated PNGs byte-identical** | Both media sides, both directions and interrupted reversal in one retained composition per side. Matching iOS motion execution/comparison remains pending; see [MOTION-PARITY.md](../tests/MOTION-PARITY.md). |
+| Extended original Android references | **11/11 captured**; all 57 original production hashes preserved | The iOS lane also captured 11/11 extended UIKit cases. Matched cross-platform comparison and Android scroll-offset equivalence remain pending. See [EXTENDED-PARITY.md](../tests/EXTENDED-PARITY.md) for raw full-display scope and scroll limits. |
+| Original Android mixed/lyrics motion | **44/44 captured; 44/44 repeated PNGs byte-identical** | The matching iOS motion run completed all 44 frames, but every strict RGBA comparison differs. Both media sides, directions and interrupted reversal are covered; see [MOTION-PARITY.md](../tests/MOTION-PARITY.md). |
 | iOS offscreen raster at Android profiles | **20/20 captured and compared; all 20 differ** | Complete raster evidence for investigation, not appearance acceptance. Updated font/paint adapters and all 108 native Kotlin tests passed, but these stills remain unequal. |
-| Production UIKit/Metal | **Partial**; portrait execution passed, landscape capture remains incomplete | The same 20 fixtures with both landscape rotations and two large-text variants. Full matched production comparison remains pending; these are additional viewports, not additional app states. |
+| Production UIKit/Metal | **29/29 default captures completed; comparison pending** | Both landscape rotations and two large-text variants now pass the measured framebuffer transport. Earlier matched portrait captures all differed; the latest complete catalog still needs matched Android comparison and review. |
 | Physical iPhone | **Pending** | Production appearance, gestures, safe areas, orientation changes and performance remain unverified. |
 
 The original 20 cover initial onboarding/empty player, portrait/long-title/error,
@@ -32,7 +32,9 @@ settled screenshots do not test uninterrupted transitions.
 
 A separate [original Android GPU probe](../tests/KAWARP-GPU-PHASES.md) now
 contains eight Kawarp frames at fixed shader phases and two pixel dimensions,
-plus the actual preprocessing textures. Matching iPhone GPU output is pending.
+plus the actual preprocessing textures. The iPhone probe now captures all eight
+real UIKit/Metal frames; none matches the Android pixels, so preprocessing and
+GPU output remain under investigation.
 These selected phases do not cover the live clock or artwork crossfades.
 
 ## Coverage matrix
