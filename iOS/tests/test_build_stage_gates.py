@@ -53,6 +53,13 @@ xcrun() {
 ditto() { mkdir -p "$(dirname "$2")"; cp -R "$1" "$2"; }
 python3() {
   if [[ "$1" == scripts/source_fingerprint.py ]]; then echo frozen-source; return 0; fi
+  if [[ "$1" == scripts/capture_native_framebuffer.py ]]; then
+    if [[ "$HOST_EXIT" != 0 ]]; then return "$HOST_EXIT"; fi
+    while [[ "$1" != -- ]]; do shift; done
+    shift
+    "$@"
+    return $?
+  fi
   if [[ "$1" == scripts/record_simulator_result.py ]]; then
     echo verifier >> events
     if [[ "$VERIFIER_EXIT" != 0 ]]; then return "$VERIFIER_EXIT"; fi
@@ -71,7 +78,7 @@ class SimulatorStageGates(unittest.TestCase):
 
     def run_stages(self, *, stale_framework=False, stages=STAGES, **overrides):
         environment = os.environ | {"NATIVE_EXIT": "0", "SWIFT_EXIT": "0", "ATTACHMENT_EXIT": "0",
-                                    "MAKE_FRAMEWORK": "1", "MAKE_RESULT": "1", "ARCH_EXIT": "0", "VERIFIER_EXIT": "0"}
+                                    "MAKE_FRAMEWORK": "1", "MAKE_RESULT": "1", "ARCH_EXIT": "0", "VERIFIER_EXIT": "0", "HOST_EXIT": "0"}
         environment.update({key: str(value) for key, value in overrides.items()})
         with tempfile.TemporaryDirectory(prefix="icy-stage-gates-") as directory:
             root = Path(directory)
@@ -124,6 +131,13 @@ class SimulatorStageGates(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertEqual(events, ["native", "swift", "export"])
         self.assertEqual(status["attachmentExportExitCode"], 9)
+        self.assertFalse(marker)
+
+    def test_native_capture_host_failure_cannot_create_a_verification_marker(self):
+        code, events, status, marker = self.run_stages(HOST_EXIT=12)
+        self.assertEqual(code, 12)
+        self.assertEqual(events, ["native"])
+        self.assertEqual(status["swiftExitCode"], 12)
         self.assertFalse(marker)
 
     def test_stale_framework_cannot_run_swift_after_a_failed_build(self):

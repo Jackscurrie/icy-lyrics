@@ -30,6 +30,11 @@ images within each platform: reduced motion selects the static fallback.
 **There is no actual Kawarp frame in the original 20.** Scenario resets and
 settled screenshots do not test uninterrupted transitions.
 
+A separate [original Android GPU probe](../tests/KAWARP-GPU-PHASES.md) now
+contains eight Kawarp frames at fixed shader phases and two pixel dimensions,
+plus the actual preprocessing textures. Matching iPhone GPU output is pending.
+These selected phases do not cover the live clock or artwork crossfades.
+
 ## Coverage matrix
 
 Every unchecked row remains required. “Fixture implemented” means only that

@@ -85,8 +85,9 @@ internal fun androidBackgroundGradientPaint(): ComposePaint = ComposePaint().app
   }
 }
 
-private class ArtworkTexture(val image: SkImage) {
-  val shader: Shader = image.makeShader(sampling = SamplingMode.LINEAR)
+internal class ArtworkTexture(val image: SkImage) {
+  // Android BitmapShader defaults to nearest sampling when used as a RuntimeShader input.
+  val shader: Shader = image.makeShader(sampling = SamplingMode.DEFAULT)
 }
 
 @Composable private fun IosKawarpBackground(artwork: ImageBitmap, isPlaying: Boolean) {
@@ -137,21 +138,28 @@ private class ArtworkTexture(val image: SkImage) {
     else ((frameNanos - transitionStartedAt).toDouble() / transitionDurationNanos).coerceIn(0.0, 1.0).toFloat()
   val time = fixedFrame?.let { it / 1_000_000_000f } ?: animationTimeSeconds
   Canvas(Modifier.fillMaxSize()) {
-    val uniforms = Data.makeFromBytes(shaderUniformBytes(size.width, size.height, time, blend, WARP_INTENSITY, SATURATION, DITHERING))
-    val shader = effect.makeShader(uniforms, arrayOf(from.shader, to.shader), null)
-    try {
-      paint.shader = shader
-      drawIntoCanvas { it.skiaCanvas.drawRect(Rect.makeWH(size.width, size.height), paint) }
-    } finally {
-      paint.shader = null
-      shader.close()
-      uniforms.close()
-    }
+    drawKawarpFrame(effect, paint, from, to, time, blend)
+  }
+}
+
+/** Shared with the opt-in UIKit GPU probe; all production binding and cleanup stays here. */
+internal fun androidx.compose.ui.graphics.drawscope.DrawScope.drawKawarpFrame(
+  effect: RuntimeEffect, paint: Paint, from: ArtworkTexture, to: ArtworkTexture, time: Float, blend: Float,
+) {
+  val uniforms = Data.makeFromBytes(shaderUniformBytes(size.width, size.height, time, blend, WARP_INTENSITY, SATURATION, DITHERING))
+  val shader = effect.makeShader(uniforms, arrayOf(from.shader, to.shader), null)
+  try {
+    paint.shader = shader
+    drawIntoCanvas { it.skiaCanvas.drawRect(Rect.makeWH(size.width, size.height), paint) }
+  } finally {
+    paint.shader = null
+    shader.close()
+    uniforms.close()
   }
 }
 
 /** Skia linear image resize matches Bitmap.createScaledBitmap's filtering policy. */
-private fun preprocessArtwork(source: ImageBitmap): SkImage {
+internal fun preprocessArtwork(source: ImageBitmap): SkImage {
   val scaled = ImageBitmap(BLUR_SIZE, BLUR_SIZE)
   val resizePaint = androidx.compose.ui.graphics.Paint().apply { filterQuality = FilterQuality.Low }
   androidx.compose.ui.graphics.Canvas(scaled).drawImageRect(

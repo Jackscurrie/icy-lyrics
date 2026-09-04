@@ -9,8 +9,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import generate_xcode_project as project
 
 class XcodeProjectValidation(unittest.TestCase):
-    def test_native_pixel_captures_use_stills_instead_of_video_frames(self):
-        for output in (project.scheme_output, project.extended_scheme_output):
+    def test_automatic_test_attachments_prefer_still_format(self):
+        for output in (project.scheme_output, project.extended_scheme_output, project.kawarp_scheme_output):
             action = ET.fromstring(output).find("./TestAction")
             self.assertEqual("screenshots", action.attrib["preferredScreenCaptureFormat"])
 
@@ -18,7 +18,7 @@ class XcodeProjectValidation(unittest.TestCase):
         references={value["path"]:key for key,value in project.objects.items()
                     if value["isa"]=="PBXFileReference" and value.get("lastKnownFileType")=="sourcecode.swift"}
         sources={path.relative_to(project.APP).as_posix()
-                 for directory in ("IcyLyrics","IcyLyricsTests","IcyLyricsUITests","IcyLyricsExtendedUITests")
+                 for directory in ("IcyLyrics","IcyLyricsTests","IcyLyricsUITests","IcyLyricsExtendedUITests","IcyLyricsKawarpUITests","NativeCapture")
                  for path in (project.APP/directory).rglob("*.swift")}
         self.assertEqual(sources,set(references))
         for path,identifier in references.items():
@@ -52,7 +52,7 @@ class XcodeProjectValidation(unittest.TestCase):
 
     def test_application_and_tests_match_the_arm64_kotlin_framework(self):
         # An Intel test bundle cannot import the ARM-only host app's Swift module.
-        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests", "IcyLyricsExtendedUITests"):
+        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests", "IcyLyricsExtendedUITests", "IcyLyricsKawarpUITests"):
             for variant in ("Debug", "Release"):
                 settings=project.objects[project.uid(f"config:{name}:{variant}")]["buildSettings"]
                 self.assertEqual("arm64",settings["ARCHS"])
@@ -69,8 +69,14 @@ class XcodeProjectValidation(unittest.TestCase):
         self.assertEqual("com.apple.product-type.bundle.ui-testing", target["productType"])
         self.assertEqual([project.app_target], [project.objects[key]["target"] for key in target["dependencies"]])
         sources = project.objects[project.uid("sources:IcyLyricsExtendedUITests")]["files"]
-        self.assertEqual(["IcyLyricsExtendedUITests/ExtendedParityCaptureTests.swift"],
+        self.assertEqual(["IcyLyricsExtendedUITests/ExtendedParityCaptureTests.swift", "NativeCapture/NativeDisplayCapture.swift"],
                          [project.objects[project.objects[key]["fileRef"]]["path"] for key in sources])
+
+    def test_native_framebuffer_handshake_is_only_in_ui_test_runners(self):
+        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests", "IcyLyricsExtendedUITests", "IcyLyricsKawarpUITests"):
+            files = project.objects[project.uid("sources:" + name)]["files"]
+            paths = {project.objects[project.objects[key]["fileRef"]]["path"] for key in files}
+            self.assertEqual(name.endswith("UITests"), "NativeCapture/NativeDisplayCapture.swift" in paths)
 
     def test_compose_required_phone_frame_duration_entry_is_enabled(self):
         # Compose's native PlistSanityCheck aborts application launch without it.

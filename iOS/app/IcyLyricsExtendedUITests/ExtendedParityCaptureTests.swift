@@ -59,19 +59,62 @@ final class ExtendedParityCaptureTests: XCTestCase {
         let title = thirdParty ? "Third-party notices" : "GNU AGPL v3 or later"
         try capture(id, base: "legal", anchor: title) { app in
             try self.scrollTo(button, app: app)
-            try self.tap(app.buttons[button], named: button)
-            try self.requireVisible(self.element(title, app: app), named: title)
-            try self.requireVisible(app.buttons["Close"], named: "Close")
+            let launch = try self.uniqueButton(button, app: app)
+            try self.requireStableFrame(launch, named: button)
+            try self.tap(launch, named: button)
+            let dialogTitle = self.element(title, app: app)
+            let close = app.buttons["Close"]
+            let appeared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                dialogTitle.exists || close.exists
+            }, object: nil)
+            if XCTWaiter.wait(for: [appeared], timeout: 3) != .completed,
+               !dialogTitle.exists, !close.exists,
+               app.buttons[button].exists, app.buttons[button].isHittable {
+                // One observed AGPL tap did not open a modal. A retry is allowed
+                // only while the original button remains and neither modal
+                // marker exists; never tap through a partly appeared dialog.
+                let retry = try self.uniqueButton(button, app: app)
+                try self.requireStableFrame(retry, named: button)
+                if !dialogTitle.exists && !close.exists && retry.exists && retry.isHittable {
+                    self.actions.append(["action": "bounded legal-open retry", "attempt": 2,
+                        "reason": "Original launch button is visible; title and Close are both absent",
+                        "element": self.describe(retry)])
+                    try self.tap(retry, named: button)
+                }
+            }
+            try self.requireVisible(dialogTitle, named: title)
+            try self.requireVisible(close, named: "Close")
             if scrolled {
+                // Actual Compose modal AX trees use a full-window ScrollView.
+                // Its title/Close descendants identify it; its width does not.
                 let candidates = app.scrollViews.allElementsBoundByIndex.filter {
-                    $0.isHittable && $0.frame.width < app.frame.width && $0.frame.height > 0
+                    $0.isHittable && $0.descendants(matching: .any).matching(NSPredicate(format: "label == %@", title)).firstMatch.exists
+                        && $0.buttons["Close"].exists
                 }
-                guard let scroll = candidates.max(by: { $0.frame.height < $1.frame.height }) else {
-                    throw ProbeError.missing("Accessible legal-dialog scroll region; inspect attached accessibility tree")
+                guard candidates.count == 1 else {
+                    throw ProbeError.missing("Exactly one accessible legal dialog containing its title and Close; found \(candidates.count)")
                 }
-                self.actions.append(["action": "dialog swipeUp", "regionBefore": self.describe(scroll),
+                let scroll = candidates[0]
+                let bodies = scroll.staticTexts.allElementsBoundByIndex.filter {
+                    $0.label != title && $0.label != "Close" && $0.isHittable && !$0.frame.isEmpty
+                        && $0.frame.minY >= dialogTitle.frame.maxY && $0.frame.maxY <= close.frame.minY
+                        && app.frame.contains($0.frame)
+                }
+                guard bodies.count == 1 else {
+                    throw ProbeError.missing("Exactly one observed legal text body between title and Close; found \(bodies.count)")
+                }
+                let body = bodies[0]
+                try self.requireStableFrame(body, named: "legal text body")
+                let start = body.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+                let end = body.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+                self.actions.append(["action": "dialog body drag upward", "regionBefore": self.describe(scroll),
+                    "bodyBoundsPoints": self.rect(body.frame), "bodyLabelCharacters": body.label.count,
+                    "startScreenPoint": [Double(start.screenPoint.x), Double(start.screenPoint.y)],
+                    "endScreenPoint": [Double(end.screenPoint.x), Double(end.screenPoint.y)],
                     "offsetEquivalence": "Native gesture; not an asserted match to Android's 360dp ScrollBy"])
-                scroll.swipeUp(velocity: .slow)
+                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+                try self.requireVisible(dialogTitle, named: title)
+                try self.requireVisible(close, named: "Close")
                 self.actions.append(["action": "dialog scroll result", "regionAfter": self.describe(scroll)])
             }
         }
@@ -110,18 +153,16 @@ final class ExtendedParityCaptureTests: XCTestCase {
             // The application screenshot retains simultaneous app windows and
             // dialog dimming. Individual windows are also attached for review.
             let shot = app.screenshot()
-            guard let pixels = shot.image.cgImage,
-                  pixels.width == Int((bounds[2] * scale.doubleValue).rounded()),
-                  pixels.height == Int((bounds[3] * scale.doubleValue).rounded()), pixels.height > pixels.width else {
-                throw ProbeError.missing("Screenshot dimensions matching the actual portrait application window; no resize allowed")
-            }
+            attach(XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png"),
+                   name: "extended-v1-" + id + "-xctest-diagnostic")
             details["catalog"] = "extended-v1"
             details["baseScenario"] = base
             details["scenario"] = id
             details["extendedScenario"] = id
-            details["captureSurface"] = "XCTest application composite including app windows; individual window images attached"
-            details["capturedWindowWidthPx"] = pixels.width
-            details["capturedWindowHeightPx"] = pixels.height
+            details["captureSurface"] = "simctl framebuffer with XCTest-driven UIKit window; includes app dialogs and dimming"
+            details["uiImageOrientationRawValue"] = shot.image.imageOrientation.rawValue
+            details["uiImageScale"] = Double(shot.image.scale)
+            details["uiImageSizePoints"] = [Double(shot.image.size.width), Double(shot.image.size.height)]
             details["requestedDeviceOrientationRawValue"] = UIDeviceOrientation.portrait.rawValue
             details["expectedInterfaceOrientationRawValue"] = UIInterfaceOrientation.portrait.rawValue
             details["requestedLargeText"] = false
@@ -134,12 +175,25 @@ final class ExtendedParityCaptureTests: XCTestCase {
             details["scrollRegions"] = app.scrollViews.allElementsBoundByIndex.filter { $0.exists }.map(describe)
             details["scrollOffsetEquivalence"] = "Requires comparison with the Android extended reference; no offset equality asserted"
             details["appearanceParityVerified"] = false
-            attach(XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png"), name: "extended-v1-" + id)
+            let native = try NativeDisplayCapture.capture(name: "extended-v1-" + id, metadata: details,
+                width: Int((bounds[2] * scale.doubleValue).rounded()),
+                height: Int((bounds[3] * scale.doubleValue).rounded()), in: self)
+            try requireVisible(visibleAnchor, named: anchor)
+            guard let current = self.metadata(marker), current["ready"] as? Bool == true,
+                  current["scenario"] as? String == base,
+                  current["interfaceOrientationRawValue"] as? Int == UIInterfaceOrientation.portrait.rawValue else {
+                throw ProbeError.missing("Unchanged UIKit geometry after native capture")
+            }
+            details["capturedWindowWidthPx"] = native.width
+            details["capturedWindowHeightPx"] = native.height
+            details["nativeCapture"] = native.response
+            attach(XCTAttachment(data: native.png, uniformTypeIdentifier: "public.png"), name: "extended-v1-" + id)
             for (index, window) in windows.enumerated() {
                 attach(XCTAttachment(data: window.screenshot().pngRepresentation, uniformTypeIdentifier: "public.png"), name: "extended-v1-\(id)-window-\(index)")
             }
             attach(XCTAttachment(data: try JSONSerialization.data(withJSONObject: details, options: [.prettyPrinted, .sortedKeys]),
                                  uniformTypeIdentifier: "public.json"), name: "extended-v1-" + id + "-geometry")
+            guard native.height > native.width else { throw ProbeError.missing("Native portrait framebuffer") }
         } catch {
             attach(XCTAttachment(string: app.debugDescription), name: "extended-v1-" + id + "-accessibility-failure")
             if app.state == .runningForeground {
@@ -155,6 +209,35 @@ final class ExtendedParityCaptureTests: XCTestCase {
     }
     private func requireVisible(_ element: XCUIElement, named name: String) throws {
         guard element.waitForExistence(timeout: 10), element.isHittable else { throw ProbeError.missing(name) }
+    }
+    private func uniqueButton(_ label: String, app: XCUIApplication) throws -> XCUIElement {
+        let query = app.buttons.matching(NSPredicate(format: "label == %@", label))
+        guard query.firstMatch.waitForExistence(timeout: 10) else { throw ProbeError.missing(label) }
+        let matches = query.allElementsBoundByIndex.filter { $0.exists && $0.isHittable && $0.isEnabled }
+        guard matches.count == 1 else { throw ProbeError.missing("Exactly one enabled \(label) button; found \(matches.count)") }
+        return matches[0]
+    }
+    private func requireStableFrame(_ element: XCUIElement, named name: String) throws {
+        try requireVisible(element, named: name)
+        var previous: CGRect?
+        var unchangedSince: Date?
+        let stable = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard element.exists && element.isHittable && !element.frame.isEmpty else {
+                previous = nil; unchangedSince = nil; return false
+            }
+            let current = element.frame
+            let now = Date()
+            if previous == current, let since = unchangedSince {
+                return now.timeIntervalSince(since) >= 0.3
+            }
+            previous = current; unchangedSince = now
+            return false
+        }, object: nil)
+        guard XCTWaiter.wait(for: [stable], timeout: 5) == .completed else {
+            throw ProbeError.missing("Stable visible frame for \(name)")
+        }
+        actions.append(["action": "observed stable frame", "name": name, "framePoints": rect(element.frame),
+                        "minimumUnchangedSeconds": 0.3])
     }
     private func tap(_ element: XCUIElement, named name: String) throws {
         try requireVisible(element, named: name)

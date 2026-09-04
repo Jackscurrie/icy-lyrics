@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "archive": "android36-runtime-child-sampling.zip",
+  "archiveBytes": 8504,
+  "archiveSha256": "7f0888e70dcd5430fb4926c381629ba487cb69343a0d89ee4d256b02deb926a6",
+  "runId": "20260904T110648Z-a214f161",
+  "hardwareCanvasVerified": true,
+  "samples": 2,
+  "sourceShaderSha256": "18ddb81f4abb42eea49f97264300a73c6e3c90d13493cba750b3c6ae03c234ba",
+  "sourceBgraSha256": "f38d522927a4f3eebe2cc4647870653de12ad51f6937f0e49fb398a9324ec6d6",
+  "defaultCentersGray": [
+    0,
+    0,
+    255,
+    0
+  ],
+  "linearControlCentersGray": [
+    0,
+    64,
+    191,
+    127
+  ],
+  "scope": "Actual hardware Android RuntimeShader sampling evidence; native iOS and full Kawarp acceptance remain separate."
+}

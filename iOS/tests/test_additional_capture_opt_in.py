@@ -29,14 +29,15 @@ class AdditionalCaptureOptInTests(unittest.TestCase):
             self.diagnostics = f"exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}\nfiles={files}"
             return result.returncode, files
 
-    def finish(self, enabled, status=0):
+    def finish(self, enabled, status=0, gpu="false"):
         prefix = '''
 mkdir -p build/reports
 simulator=12345678-1234-1234-1234-123456789abc
 git() { :; }
 xcrun() { printf '%s\\n' "$*" >> actions; }
 '''
-        return self.run_shell(prefix + FINISH + f"\ntrap finish EXIT\nexit {status}\n", ICY_ADDITIONAL_IOS_PARITY=enabled)
+        return self.run_shell(prefix + FINISH + f"\ntrap finish EXIT\nexit {status}\n",
+                              ICY_ADDITIONAL_IOS_PARITY=enabled, ICY_KAWARP_GPU_PROBE=gpu)
 
     def test_default_finish_deletes_simulator_without_handoff(self):
         code, files = self.finish("false")
@@ -49,6 +50,13 @@ xcrun() { printf '%s\\n' "$*" >> actions; }
         code, files = self.finish("true", status=7)
         self.assertEqual(code, 7, self.diagnostics)
         self.assertEqual(files.get("build/reports/retained-ios-simulator.txt"), "12345678-1234-1234-1234-123456789abc\n", self.diagnostics)
+        self.assertNotIn("actions", files, self.diagnostics)
+
+    def test_gpu_only_retains_simulator_after_failure_without_enabling_motion(self):
+        code, files = self.finish("false", status=7, gpu="true")
+        self.assertEqual(code, 7, self.diagnostics)
+        self.assertEqual(files.get("build/reports/retained-ios-simulator.txt"),
+                         "12345678-1234-1234-1234-123456789abc\n", self.diagnostics)
         self.assertNotIn("actions", files, self.diagnostics)
 
     def stages(self, **overrides):

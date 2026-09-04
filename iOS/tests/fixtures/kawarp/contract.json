@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "referenceSourceManifestSha256": "c82c2183ef9cd411f8aaec6c002882781f2aa38785d80292cc9d79d86773976e",
+  "shaderSha256": "755f24a2ef9d9f873877f44f9a7cda0f5945a7be5ffe6351cc79dcca7b382d3b",
+  "sourceArtwork": {
+    "png": "input-artwork.png",
+    "pngSha256": "637ea5fc5b72e14361d2e801b64451bd333df8a52ec676c8872463f2b0ed4c18",
+    "widthPx": 256,
+    "heightPx": 256,
+    "config": "ARGB_8888",
+    "colorSpace": "sRGB IEC61966-2.1",
+    "hasAlphaFlag": true,
+    "premultipliedFlag": true,
+    "allDecodedPixelsOpaque": true,
+    "argbLittleEndianFile": "input-artwork.argb-le",
+    "argbLittleEndianSha256": "dccb39b6102ede6f8d0e24f1047fb5357484cae613b1878b5efd2edee2947896",
+    "rgbaFile": "input-artwork.rgba",
+    "rgbaSha256": "9afe42cd3ba4e0e1e7cd3b7c576794a5a924fa8bcaa53ffb377cfbf682f209d2"
+  },
+  "processedArtwork": {
+    "png": "processed-artwork.png",
+    "pngSha256": "862adcf84ba9e9a233fe95aa61bb72c89e3cb272efa0c9377deaa5a793d84e1e",
+    "widthPx": 128,
+    "heightPx": 128,
+    "config": "ARGB_8888",
+    "colorSpace": "sRGB IEC61966-2.1",
+    "hasAlphaFlag": true,
+    "premultipliedFlag": true,
+    "allDecodedPixelsOpaque": true,
+    "argbLittleEndianFile": "processed-artwork.argb-le",
+    "argbLittleEndianSha256": "037c7193dfb68aa477531b234551bad060a5060dea9128cb557d06396102509f",
+    "rgbaFile": "processed-artwork.rgba",
+    "rgbaSha256": "72c5d9307a973d0d26c891f07f899705a0d26f493753863d5cc5257c6433eef1"
+  },
+  "uniformOrder": [
+    "width",
+    "height",
+    "time",
+    "blend",
+    "intensity",
+    "saturation",
+    "dithering"
+  ],
+  "catalog": "kawarp-gpu-uniform-phases-v1",
+  "frames": [
+    {
+      "id": "256x512-phase-0",
+      "drawWidthPx": 256,
+      "drawHeightPx": 512,
+      "uniformFloat32Values": [
+        256,
+        512,
+        0,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "43800000",
+        "44000000",
+        "00000000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000804300000044000000000000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "256x512-phase-1",
+      "drawWidthPx": 256,
+      "drawHeightPx": 512,
+      "uniformFloat32Values": [
+        256,
+        512,
+        1,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "43800000",
+        "44000000",
+        "3f800000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "00008043000000440000803f0000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "256x512-phase-3",
+      "drawWidthPx": 256,
+      "drawHeightPx": 512,
+      "uniformFloat32Values": [
+        256,
+        512,
+        3,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "43800000",
+        "44000000",
+        "40400000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000804300000044000040400000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "256x512-phase-12",
+      "drawWidthPx": 256,
+      "drawHeightPx": 512,
+      "uniformFloat32Values": [
+        256,
+        512,
+        12,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "43800000",
+        "44000000",
+        "41400000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000804300000044000040410000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "512x256-phase-0",
+      "drawWidthPx": 512,
+      "drawHeightPx": 256,
+      "uniformFloat32Values": [
+        512,
+        256,
+        0,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "44000000",
+        "43800000",
+        "00000000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000004400008043000000000000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "512x256-phase-1",
+      "drawWidthPx": 512,
+      "drawHeightPx": 256,
+      "uniformFloat32Values": [
+        512,
+        256,
+        1,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "44000000",
+        "43800000",
+        "3f800000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "00000044000080430000803f0000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "512x256-phase-3",
+      "drawWidthPx": 512,
+      "drawHeightPx": 256,
+      "uniformFloat32Values": [
+        512,
+        256,
+        3,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "44000000",
+        "43800000",
+        "40400000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000004400008043000040400000803f0000803f0000c03f6f12033c"
+    },
+    {
+      "id": "512x256-phase-12",
+      "drawWidthPx": 512,
+      "drawHeightPx": 256,
+      "uniformFloat32Values": [
+        512,
+        256,
+        12,
+        1,
+        1,
+        1.5,
+        0.008
+      ],
+      "uniformFloat32BitsHex": [
+        "44000000",
+        "43800000",
+        "41400000",
+        "3f800000",
+        "3f800000",
+        "3fc00000",
+        "3c03126f"
+      ],
+      "uniformLittleEndianBytesHex": "0000004400008043000040410000803f0000803f0000c03f6f12033c"
+    }
+  ]
+}

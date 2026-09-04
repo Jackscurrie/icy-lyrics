@@ -88,6 +88,36 @@ class NativeProfileExtraction(unittest.TestCase):
             self.assertEqual("pending", scaling["scalingEquivalence"])
             self.assertFalse(scaling["fontShapingParityVerified"])
 
+    def test_host_framebuffer_requires_matching_original_png_acknowledgement(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            png, geometry = self.input_files(directory)
+            capture = {"schemaVersion": 1, "status": "captured", "source": "simctl framebuffer",
+                       "widthPx": 20, "heightPx": 30, "pngOrientation": 1,
+                       "sha256": sha256(png.read_bytes()).hexdigest()}
+            metadata = self.geometry() | {
+                "captureSurface": "simctl framebuffer with XCTest-driven UIKit window; unchanged native pixels",
+                "nativeCapture": capture}
+            geometry.write_text(json.dumps(metadata), encoding="utf-8")
+            result = extract(png, geometry, directory / "valid")
+            self.assertEqual(capture, result["nativeMetadata"]["nativeCapture"])
+            profile = json.loads((directory / "valid/android-viewport-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual("simctl-framebuffer-with-xctest-geometry", profile["sourceCaptureBackend"])
+            with Image.open(png) as original, Image.open(directory / "valid/full-content.png") as cropped:
+                self.assertEqual(original.crop((2, 4, 18, 26)).tobytes(), cropped.tobytes())
+            for invalid in (None, {}, capture | {"status": "error"}, capture | {"source": "video"},
+                            capture | {"widthPx": 19}, capture | {"pngOrientation": 6},
+                            capture | {"sha256": "0" * 64}):
+                with self.subTest(capture=invalid):
+                    geometry.write_text(json.dumps(metadata | {"nativeCapture": invalid}), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        extract(png, geometry, directory / "rejected")
+                    self.assertFalse((directory / "rejected").exists())
+
+    def test_host_acknowledgement_cannot_be_mixed_with_legacy_capture_surface(self):
+        with self.assertRaisesRegex(ValueError, "matching capture surface"):
+            validate_native_geometry(self.geometry() | {"nativeCapture": None}, (20, 30))
+
     def test_present_native_font_samples_must_be_complete_positive_finite_numbers(self):
         samples = {str(size): float(size * 2) for size in SP_SAMPLE_SIZES}
         invalid = [None, {}, {key: value for key, value in samples.items() if key != "64"},

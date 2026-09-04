@@ -70,6 +70,11 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
 
     func makeViewController() -> UIViewController {
         #if DEBUG
+        if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "--icy-kawarp-probe"),
+           ProcessInfo.processInfo.arguments.indices.contains(index + 1),
+           let runID = ProcessInfo.processInfo.environment["ICY_KAWARP_RUN_ID"] {
+            return KawarpGpuProbeViewController(caseID: ProcessInfo.processInfo.arguments[index + 1], runID: runID)
+        }
         if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "--icy-fixture"),
            ProcessInfo.processInfo.arguments.indices.contains(index + 1) {
             return ParityFixtureViewController(scenario: ProcessInfo.processInfo.arguments[index + 1])
@@ -81,6 +86,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     private var isFixture: Bool {
         #if DEBUG
         return ProcessInfo.processInfo.arguments.contains("--icy-fixture")
+            || ProcessInfo.processInfo.arguments.contains("--icy-kawarp-probe")
         #else
         return false
         #endif

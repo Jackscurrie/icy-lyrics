@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "archive": "android36-kawarp-gpu-phases.zip",
+  "archiveBytes": 4430882,
+  "archiveSha256": "4e9435349de15a8c39092ae30496440d520f5b3748181ffa2602cb7c13875a7c",
+  "runId": "20260904T112124Z-fb74bd2f",
+  "frameCount": 8,
+  "viewportsPx": [
+    [
+      256,
+      512
+    ],
+    [
+      512,
+      256
+    ]
+  ],
+  "selectedShaderPhasesSeconds": [
+    0,
+    1,
+    3,
+    12
+  ],
+  "originalProductionFilesVerifiedBeforeAndAfter": 57,
+  "hardwareCanvasVerified": true,
+  "sourceArtworkPngSha256": "637ea5fc5b72e14361d2e801b64451bd333df8a52ec676c8872463f2b0ed4c18",
+  "sourceArtworkRgbaSha256": "9afe42cd3ba4e0e1e7cd3b7c576794a5a924fa8bcaa53ffb377cfbf682f209d2",
+  "processedArtworkRgbaSha256": "72c5d9307a973d0d26c891f07f899705a0d26f493753863d5cc5257c6433eef1",
+  "originalShaderSha256": "755f24a2ef9d9f873877f44f9a7cda0f5945a7be5ffe6351cc79dcca7b382d3b",
+  "referenceSourceManifestSha256": "c82c2183ef9cd411f8aaec6c002882781f2aa38785d80292cc9d79d86773976e",
+  "scope": "Original Android preprocessing and GPU uniform-phase diagnostic. No live animation/crossfade/full-app or iOS parity claim."
+}

@@ -2,11 +2,11 @@
 
 This standalone macOS command-line program asks whether the **unchanged Android fonts** can produce their original COLRv1 and CBDT color glyphs through FreeType in the exact Skia revision used by Skiko 0.144.6. It retains a CoreText font manager for a side-by-side backend comparison. Nothing in this directory changes the app, UIKit, Compose, the default build, or CI.
 
-**Status: source prototype; native compile and execution pending.** Local preparation and test results do not establish native support. Only a successful `validation.json` from a real Mac establishes this bounded glyph experiment. It never establishes iOS execution, text shaping, screenshot parity, or permission to distribute an IPA.
+**Status: native arm64 macOS experiment passed; iOS integration pending.** [Run 33868138348](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33868138348) compiled and executed all 34 samples with Xcode 26.4.1. The original COLRv1 snowflake, note and heart and CBDT Canada/US flags produced nonblank colored FreeType glyphs. This establishes only the bounded Mac glyph experiment; it does not establish iOS execution, Compose shaping, screenshot parity, or permission to distribute an IPA.
 
 ## Run on the existing public Mac runner
 
-Use an arm64 macOS host with Xcode **26.4.1** selected, Python 3.10 or newer, network access, and approximately 2 GB of free workspace space (build output varies). No signing, Apple Developer membership, Homebrew, Rust, or paid service is required. The first download is approximately 69.5 MB compressed; generated Gitiles tar metadata varies slightly. GN and Ninja are hash-pinned downloads, so installed tool versions do not affect the experiment. Xcode's selected Apple clang and SDK versions are recorded. CPU compilation can take several minutes; there is no measured runtime estimate yet.
+Use an arm64 macOS host with Xcode **26.4.1** selected, Python 3.10 or newer, network access, and approximately 2 GB of free workspace space (build output varies). No signing, Apple Developer membership, Homebrew, Rust, or paid service is required. The first download is approximately 69.5 MB compressed; generated Gitiles tar metadata varies slightly. GN and Ninja are hash-pinned downloads, so installed tool versions do not affect the experiment. Xcode's selected Apple clang and SDK versions are recorded. The first successful CI job took about 4 minutes 17 seconds, including a 2 minute 47 second native build step; future runs can vary.
 
 From the repository root:
 
@@ -18,7 +18,7 @@ Outputs are placed in a new directory under `iOS/build/freetype-probe/`. Each ru
 
 The existing `Public source checks` workflow has two manual inputs, both defaulting to **false**: **`font_backend_probe`** adds this independent standard `macos-26` job alongside normal checks; **`font_backend_only`** runs just the experiment and skips the desktop, Android and iPhone jobs. Its `icy-font-backend-probe` artifact contains metrics, PNGs, source lock, verified input identities, status/validation and toolchain/build logs only. Downloaded archives, extracted sources, font files and native executables are excluded.
 
-The first dispatch, [run 33865575594](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33865575594), stopped before compilation because Gitiles tar timestamps changed. Fresh dependency downloads now pass exact source-tree verification described below. Native compilation and glyph output still need a successful rerun.
+The first dispatch, [run 33865575594](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33865575594), stopped before compilation because Gitiles tar timestamps changed. Fresh dependency downloads now pass exact source-tree verification described below. The successful rerun's artifact is **9934897376**, 331,654 bytes, SHA-256 **`c0ec758ca764d7cda24b8830ae33225eb41ed3f83073bfdda78cea9745be1291`**, from commit **`072cf86705e5ec14e06472578f84d8ea6bbea816`**. Its validation records all 34 samples and retains the observed CoreText color-font failures.
 
 Windows can verify downloads, locked configuration, original font hashes, extraction and the overlay without attempting native execution:
 

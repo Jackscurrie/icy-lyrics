@@ -9,17 +9,18 @@ final class ParityCaptureTests: XCTestCase {
                      "landscape-mixed-right", "multilingual", "syllables"]
 
     override func setUpWithError() throws { continueAfterFailure = false }
-    func testPortraitFixtures() { capture(portrait, orientation: .portrait) }
-    func testLandscapeLeftFixtures() { capture(landscape, orientation: .landscapeLeft) }
-    func testLandscapeRightFixtures() { capture(landscape, orientation: .landscapeRight) }
-    func testLargeTextFixture() {
+    func testPortraitFixtures() throws { try capture(portrait, orientation: .portrait) }
+    func testLandscapeLeftFixtures() throws { try capture(landscape, orientation: .landscapeLeft) }
+    func testLandscapeRightFixtures() throws { try capture(landscape, orientation: .landscapeRight) }
+    func testLargeTextFixture() throws {
         let largeText = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        capture(["portrait-long"], orientation: .portrait, extraArguments: largeText)
-        capture(["multilingual"], orientation: .landscapeLeft, extraArguments: largeText)
+        try capture(["portrait-long"], orientation: .portrait, extraArguments: largeText)
+        try capture(["multilingual"], orientation: .landscapeLeft, extraArguments: largeText)
     }
-    private func capture(_ scenarios: [String], orientation: UIDeviceOrientation, extraArguments: [String] = []) {
+    private func capture(_ scenarios: [String], orientation: UIDeviceOrientation, extraArguments: [String] = []) throws {
         for scenario in scenarios {
             let app = XCUIApplication()
+            defer { app.terminate() }
             app.launchArguments = ["--icy-fixture", scenario, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + extraArguments
             XCUIDevice.shared.orientation = orientation
             app.launch()
@@ -65,20 +66,33 @@ final class ParityCaptureTests: XCTestCase {
                 XCTAssertGreaterThan((metadata["fontScale"] as? NSNumber)?.doubleValue ?? 0, 1)
             }
             let shot = app.windows.firstMatch.screenshot()
-            guard let pixels = shot.image.cgImage else { XCTFail("Screenshot has no pixels"); return }
-            XCTAssertEqual(pixels.width > pixels.height, isLandscape)
-            XCTAssertEqual(pixels.width, metadata["contentWidthPx"] as? Int,
-                           "XCTest altered the native screenshot width")
-            XCTAssertEqual(pixels.height, metadata["contentHeightPx"] as? Int,
-                           "XCTest altered the native screenshot height")
-            metadata["capturedWindowWidthPx"] = pixels.width
-            metadata["capturedWindowHeightPx"] = pixels.height
+            let name = "\(scenario)-\(orientation.rawValue)\(extraArguments.isEmpty ? "" : "-large-text")"
+            let diagnostic = XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png")
+            diagnostic.name = name + "-xctest-diagnostic"
+            diagnostic.lifetime = .keepAlways
+            add(diagnostic)
+            metadata["uiImageOrientationRawValue"] = shot.image.imageOrientation.rawValue
+            metadata["uiImageScale"] = Double(shot.image.scale)
+            metadata["uiImageSizePoints"] = [Double(shot.image.size.width), Double(shot.image.size.height)]
             metadata["requestedDeviceOrientationRawValue"] = orientation.rawValue
             metadata["expectedInterfaceOrientationRawValue"] = expectedInterface.rawValue
             metadata["requestedLargeText"] = !extraArguments.isEmpty
             metadata["settleDelayAfterDrawSeconds"] = 2
-            let name = "\(scenario)-\(orientation.rawValue)\(extraArguments.isEmpty ? "" : "-large-text")"
-            let attachment = XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png")
+            let width = try XCTUnwrap(metadata["contentWidthPx"] as? Int)
+            let height = try XCTUnwrap(metadata["contentHeightPx"] as? Int)
+            let native = try NativeDisplayCapture.capture(name: name, metadata: metadata,
+                                                          width: width, height: height, in: self)
+            guard let current = readMetadata(marker), current["ready"] as? Bool == true,
+                  current["scenario"] as? String == scenario,
+                  current["interfaceOrientationRawValue"] as? Int == expectedInterface.rawValue,
+                  current["contentWidthPx"] as? Int == width, current["contentHeightPx"] as? Int == height else {
+                throw NativeDisplayCapture.CaptureError.invalid("App geometry changed during native capture")
+            }
+            metadata["capturedWindowWidthPx"] = native.width
+            metadata["capturedWindowHeightPx"] = native.height
+            metadata["captureSurface"] = "simctl framebuffer with XCTest-driven UIKit window; unchanged native pixels"
+            metadata["nativeCapture"] = native.response
+            let attachment = XCTAttachment(data: native.png, uniformTypeIdentifier: "public.png")
             attachment.name = name
             attachment.lifetime = .keepAlways
             add(attachment)
@@ -87,7 +101,7 @@ final class ParityCaptureTests: XCTestCase {
             geometry.name = name + "-geometry"
             geometry.lifetime = .keepAlways
             add(geometry)
-            app.terminate()
+            XCTAssertEqual(native.width > native.height, isLandscape)
         }
     }
 

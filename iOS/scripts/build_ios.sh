@@ -18,7 +18,7 @@ finish() {
   fi
   git status --porcelain=v1 --untracked-files=all -- . ../android-v2 ../.github/workflows/ci.yml > build/reports/source-status.txt || true
   if [[ -n "${simulator:-}" ]]; then
-    if [[ "${ICY_ADDITIONAL_IOS_PARITY:-false}" == true ]]; then
+    if [[ "${ICY_ADDITIONAL_IOS_PARITY:-false}" == true || "${ICY_KAWARP_GPU_PROBE:-false}" == true ]]; then
       # Explicit workflow-dispatch diagnostics run as a separate step, even
       # after a failed main gate. That step's cleanup owns this simulator.
       printf '%s\n' "$simulator" > build/reports/retained-ios-simulator.txt
@@ -102,7 +102,11 @@ source_fingerprint="$(python3 scripts/source_fingerprint.py)"
 
 phase 'Running Swift tests and capturing the simulator interface'
 swift_test_status=0
-if xcodebuild "${common[@]}" -configuration Debug -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
+mkdir -p build/reports/native-framebuffer
+native_capture_output="$(mktemp -d "$ROOT/build/reports/native-framebuffer/default.XXXXXX")"
+if python3 scripts/capture_native_framebuffer.py --simulator "$simulator" \
+  --runner-bundle-id com.icy.lyrics.ios.IcyLyricsUITests.xctrunner --output "$native_capture_output/host" -- \
+  xcodebuild "${common[@]}" -configuration Debug -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
   -resultBundlePath build/SimulatorTests.xcresult test 2>&1 | tee build/reports/xcode-simulator.log; then
   :
 else

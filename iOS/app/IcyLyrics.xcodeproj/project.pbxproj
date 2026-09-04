@@ -54,6 +54,12 @@
 			"lastKnownFileType" = "sourcecode.swift";
 			"sourceTree" = "SOURCE_ROOT";
 		};
+		0595D3E64D78A87AFB9C2509 = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/KawarpGpuProbeViewController.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
 		3CDA4F8F52DC424378AE59AB = {
 			"isa" = "PBXFileReference";
 			"path" = "IcyLyrics/NativeHost.swift";
@@ -75,29 +81,33 @@
 		04212D98F0A776D11F81B7AC = {
 			"isa" = "PBXGroup";
 			"name" = "IcyLyrics";
-			"children" = (AA7FC16BAA0644169122E79B, 3CDA4F8F52DC424378AE59AB, 163E03C181EB6B193899ACE0, 89C1A339816E130147BEBDAF, 652F55016243BF1B9F1BBEA4, 06271BAF49532C879AA3C58B, A4CC6BC01A927E2A78FD3BEC);
+			"children" = (AA7FC16BAA0644169122E79B, 0595D3E64D78A87AFB9C2509, 3CDA4F8F52DC424378AE59AB, 163E03C181EB6B193899ACE0, 89C1A339816E130147BEBDAF, 652F55016243BF1B9F1BBEA4, 06271BAF49532C879AA3C58B, A4CC6BC01A927E2A78FD3BEC);
 			"sourceTree" = "<group>";
 		};
-		6BC92A5E75E26DB84FC764A7 = {
+		7E69063E69B5F69464224B7B = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = AA7FC16BAA0644169122E79B;
 		};
-		DB15C7AF432A6596EACD460D = {
+		5499E16EB597727057AB002A = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 0595D3E64D78A87AFB9C2509;
+		};
+		135F3105B486FC9D799634DF = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 3CDA4F8F52DC424378AE59AB;
 		};
-		E03130BF5BD01FCB2BD4BDF1 = {
+		ED56FE9DB92F5C889D696C59 = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 163E03C181EB6B193899ACE0;
 		};
-		532A27065AE1A5BDE17E1AE2 = {
+		03DC1428F26925514B2C6F0F = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 89C1A339816E130147BEBDAF;
 		};
 		5ADED6592956F1EB2646582B = {
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
-			"files" = (6BC92A5E75E26DB84FC764A7, DB15C7AF432A6596EACD460D, E03130BF5BD01FCB2BD4BDF1, 532A27065AE1A5BDE17E1AE2);
+			"files" = (7E69063E69B5F69464224B7B, 5499E16EB597727057AB002A, 135F3105B486FC9D799634DF, ED56FE9DB92F5C889D696C59, 03DC1428F26925514B2C6F0F);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
 		940487D76C0755C094022162 = {
@@ -153,6 +163,18 @@
 			"name" = "Copy canonical visual resources";
 			"shellPath" = "/bin/sh";
 			"shellScript" = "set -eu\n/usr/bin/ditto \"$SRCROOT/../shared/ui/assets\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/IcyAssets\"\n";
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		95645F551EA365DF9C5B4113 = {
+			"isa" = "PBXShellScriptBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"inputPaths" = ("$(SRCROOT)/../tests/fixtures/kawarp");
+			"outputPaths" = ();
+			"alwaysOutOfDate" = 1;
+			"name" = "Optional Debug Kawarp probe input";
+			"shellPath" = "/bin/sh";
+			"shellScript" = "set -eu\nprobe_assets=\"${TARGET_BUILD_DIR:?}/${UNLOCALIZED_RESOURCES_FOLDER_PATH:?}/KawarpProbeAssets\"\nif [ \"$CONFIGURATION\" = Debug ] && [ \"${ICY_KAWARP_PROBE:-NO}\" = YES ]; then\n  /usr/bin/ditto \"$SRCROOT/../tests/fixtures/kawarp\" \"$probe_assets\"\nelse\n  /bin/rm -rf \"$probe_assets\"\nfi\n";
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
 		25B92B697A1B32E0AC9CA0C1 = {
@@ -231,7 +253,7 @@
 		FC2503C5B690BF6200E9673D = {
 			"isa" = "PBXNativeTarget";
 			"buildConfigurationList" = 0A42FE565C116450AFD1A297;
-			"buildPhases" = (5ADED6592956F1EB2646582B, 8F7018B424CD0CDCEEBC9DE2, 9EF4527C97D57956B725EA2C, 8A1EED22144C3F04485A69EE, A75E188B58003E6D2FBFDD71);
+			"buildPhases" = (5ADED6592956F1EB2646582B, 8F7018B424CD0CDCEEBC9DE2, 9EF4527C97D57956B725EA2C, 8A1EED22144C3F04485A69EE, A75E188B58003E6D2FBFDD71, 95645F551EA365DF9C5B4113);
 			"buildRules" = ();
 			"dependencies" = ();
 			"name" = "IcyLyrics";
@@ -257,18 +279,18 @@
 			"children" = (9E498DBE4F6C86A2D2C3C515, 7017E0E7A9E3D73E1E8EEF79);
 			"sourceTree" = "<group>";
 		};
-		CF1D4CB6D83148E71C86E273 = {
+		3485C0FA27B92E77A2A63009 = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 9E498DBE4F6C86A2D2C3C515;
 		};
-		57BC57D669009BA33EC79175 = {
+		D98D71821934915C35E5AA42 = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 7017E0E7A9E3D73E1E8EEF79;
 		};
 		3402E4D55CE7184A01257EBD = {
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
-			"files" = (CF1D4CB6D83148E71C86E273, 57BC57D669009BA33EC79175);
+			"files" = (3485C0FA27B92E77A2A63009, D98D71821934915C35E5AA42);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
 		4C5984B1E9CFC55153B378A0 = {
@@ -385,20 +407,30 @@
 			"lastKnownFileType" = "sourcecode.swift";
 			"sourceTree" = "SOURCE_ROOT";
 		};
+		F2225271FD1AD58C9231A4CA = {
+			"isa" = "PBXFileReference";
+			"path" = "NativeCapture/NativeDisplayCapture.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
 		11D44BDA95BD67F1B2C1EEFA = {
 			"isa" = "PBXGroup";
 			"name" = "IcyLyricsUITests";
-			"children" = (761E3F0E42040CA9F7A20623);
+			"children" = (761E3F0E42040CA9F7A20623, F2225271FD1AD58C9231A4CA);
 			"sourceTree" = "<group>";
 		};
-		7B76DD7B298F9E8861780472 = {
+		F94D76D29529951061841087 = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 761E3F0E42040CA9F7A20623;
+		};
+		AE9F2DA03CD56779564B317E = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F2225271FD1AD58C9231A4CA;
 		};
 		373CA61E6840798715BC06A6 = {
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
-			"files" = (7B76DD7B298F9E8861780472);
+			"files" = (F94D76D29529951061841087, AE9F2DA03CD56779564B317E);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
 		6DD99C7CD95B279ECE5735ED = {
@@ -514,17 +546,21 @@
 		AEEC949E58E93C57A3DDAAC3 = {
 			"isa" = "PBXGroup";
 			"name" = "IcyLyricsExtendedUITests";
-			"children" = (F7BEEB4F4D9A271D6FE0C9CD);
+			"children" = (F7BEEB4F4D9A271D6FE0C9CD, F2225271FD1AD58C9231A4CA);
 			"sourceTree" = "<group>";
 		};
-		39CD9F72498DBCF0FBB7E3E6 = {
+		A2E4FCCFF7D9AD0C6C8C1A58 = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = F7BEEB4F4D9A271D6FE0C9CD;
+		};
+		B6B71C6EB83D92EA7622F722 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F2225271FD1AD58C9231A4CA;
 		};
 		EA641D613B9EE3CC7C4409D4 = {
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
-			"files" = (39CD9F72498DBCF0FBB7E3E6);
+			"files" = (A2E4FCCFF7D9AD0C6C8C1A58, B6B71C6EB83D92EA7622F722);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
 		5714D561EDFADAA8E530437C = {
@@ -631,10 +667,140 @@
 			"productReference" = B75D68359F69E8D3DC2393AD;
 			"productType" = "com.apple.product-type.bundle.ui-testing";
 		};
+		5F848E6B594F266397468C1F = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyricsKawarpUITests/KawarpGpuCaptureTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		82DB39676B1B4FCD702B2F9F = {
+			"isa" = "PBXGroup";
+			"name" = "IcyLyricsKawarpUITests";
+			"children" = (5F848E6B594F266397468C1F, F2225271FD1AD58C9231A4CA);
+			"sourceTree" = "<group>";
+		};
+		B4E2D56914D0C2E44CEECE09 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 5F848E6B594F266397468C1F;
+		};
+		42276C0C67851CBF05030CD1 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F2225271FD1AD58C9231A4CA;
+		};
+		457F0B18621663E4A3ABD1E5 = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (B4E2D56914D0C2E44CEECE09, 42276C0C67851CBF05030CD1);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		711C961006B249ED0BB44CBE = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		FEB203C8554C8F1196A696E4 = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		E92B69B1BFAC27BC2C8A7066 = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"path" = "IcyLyricsKawarpUITests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+			"includeInIndex" = 0;
+		};
+		0BB5EDF78B6E5ABBEEC03B26 = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = 244210E48437B6556980A702;
+			"proxyType" = 1;
+			"remoteGlobalIDString" = FC2503C5B690BF6200E9673D;
+			"remoteInfo" = "IcyLyrics";
+		};
+		36E8DB54CAF99A457354F2ED = {
+			"isa" = "PBXTargetDependency";
+			"target" = FC2503C5B690BF6200E9673D;
+			"targetProxy" = 0BB5EDF78B6E5ABBEEC03B26;
+		};
+		4AD2BDD95510A72E7FEAF0DB = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsKawarpUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ARCHS" = "arm64";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		679A065D212C0687C5C077FB = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsKawarpUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ARCHS" = "arm64";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		A59BB5C5A33AD125A6D43594 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (4AD2BDD95510A72E7FEAF0DB, 679A065D212C0687C5C077FB);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		17BFE4118F7E19B8E7D49E87 = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = A59BB5C5A33AD125A6D43594;
+			"buildPhases" = (457F0B18621663E4A3ABD1E5, 711C961006B249ED0BB44CBE, FEB203C8554C8F1196A696E4);
+			"buildRules" = ();
+			"dependencies" = (36E8DB54CAF99A457354F2ED);
+			"name" = "IcyLyricsKawarpUITests";
+			"productName" = "IcyLyricsKawarpUITests";
+			"productReference" = E92B69B1BFAC27BC2C8A7066;
+			"productType" = "com.apple.product-type.bundle.ui-testing";
+		};
 		0A3E27B8CA818264D75C8D81 = {
 			"isa" = "PBXGroup";
 			"name" = "Products";
-			"children" = (25B92B697A1B32E0AC9CA0C1, 1BDC3544A33FE692640F6C27, 8A602E11325A9A1B2AA96A93, B75D68359F69E8D3DC2393AD);
+			"children" = (25B92B697A1B32E0AC9CA0C1, 1BDC3544A33FE692640F6C27, 8A602E11325A9A1B2AA96A93, B75D68359F69E8D3DC2393AD, E92B69B1BFAC27BC2C8A7066);
 			"sourceTree" = "<group>";
 		};
 		E2AA269EB967A8853A258BFA = {
@@ -645,7 +811,7 @@
 		};
 		4813494D137E1631BBA301D5 = {
 			"isa" = "PBXGroup";
-			"children" = (04212D98F0A776D11F81B7AC, 660C34C1659FB0C821D0D3D5, 11D44BDA95BD67F1B2C1EEFA, AEEC949E58E93C57A3DDAAC3, B79606FB3AFEA5BD1609ED40, 8BF729FFE074CAEE622C0292, E2AA269EB967A8853A258BFA, 0A3E27B8CA818264D75C8D81);
+			"children" = (04212D98F0A776D11F81B7AC, 660C34C1659FB0C821D0D3D5, 11D44BDA95BD67F1B2C1EEFA, AEEC949E58E93C57A3DDAAC3, 82DB39676B1B4FCD702B2F9F, B79606FB3AFEA5BD1609ED40, 8BF729FFE074CAEE622C0292, E2AA269EB967A8853A258BFA, 0A3E27B8CA818264D75C8D81);
 			"sourceTree" = "<group>";
 		};
 		184B519F8E1416CCE38CFFD7 = {
@@ -695,7 +861,7 @@
 			"productRefGroup" = 0A3E27B8CA818264D75C8D81;
 			"projectDirPath" = "";
 			"projectRoot" = "";
-			"targets" = (FC2503C5B690BF6200E9673D, 497D736836F9568554B14210, 0600AD124F60FE19BB893348, BF2669AE159C2D046C3D7AE1);
+			"targets" = (FC2503C5B690BF6200E9673D, 497D736836F9568554B14210, 0600AD124F60FE19BB893348, BF2669AE159C2D046C3D7AE1, 17BFE4118F7E19B8E7D49E87);
 		};
 	};
 	"rootObject" = 244210E48437B6556980A702;

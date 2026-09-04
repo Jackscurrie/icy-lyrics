@@ -28,7 +28,9 @@ fingerprint="$(python3 scripts/source_fingerprint.py)"
 client="${SPOTIFY_CLIENT_ID:-}"
 [[ -z "$client" || "$client" =~ ^[a-zA-Z0-9]{32}$ ]] || { echo 'Invalid public Spotify client ID.' >&2; exit 1; }
 status=0
-if xcodebuild -project app/IcyLyrics.xcodeproj -scheme IcyLyricsExtendedParity -configuration Debug \
+if python3 scripts/capture_native_framebuffer.py --simulator "$simulator" \
+  --runner-bundle-id com.icy.lyrics.ios.IcyLyricsExtendedUITests.xctrunner --output "$output/native-framebuffer" -- \
+  xcodebuild -project app/IcyLyrics.xcodeproj -scheme IcyLyricsExtendedParity -configuration Debug \
   -derivedDataPath build/ExtendedDerivedData -destination "platform=iOS Simulator,id=$simulator" \
   -parallel-testing-enabled NO -resultBundlePath "$output/ExtendedParity.xcresult" \
   "SPOTIFY_CLIENT_ID=$client" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= test \

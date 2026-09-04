@@ -9,6 +9,8 @@ plaintext distribution gate and requires the owner's original local key.
 
 ## Before installation
 
+This delivery route requires no paid Apple Developer membership. Standard GitHub-hosted runners are free for this public repository, and Sideloadly supports free Apple ID signing with a seven-day refresh. Any existing coding subscription or usage billing is separate. Spotify's Web API Development Mode requires the developer app's owner to maintain Spotify Premium; reusing an existing eligible developer account does not add another Spotify subscription. These Web API rules do not mean every App Remote listener must be Premium. [GitHub billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions), [Sideloadly](https://sideloadly.io/), [Spotify quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes).
+
 - iPhone running iOS 16 or later, Windows computer, USB cable, free Apple ID, and Spotify installed on the phone.
 - Download Sideloadly from its [official website](https://sideloadly.io/). Follow its current Windows prerequisites, including the web versions of iTunes/iCloud linked there.
 - Use the supplied `SHA256SUMS.txt`. In PowerShell, run `Get-FileHash -Algorithm SHA256 .\IcyLyrics-unsigned.ipa` and compare the hash exactly.

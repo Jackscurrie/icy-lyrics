@@ -11,6 +11,7 @@ from pathlib import Path
 import argparse
 import json
 import math
+import re
 import struct
 
 from PIL import Image, PngImagePlugin
@@ -75,8 +76,12 @@ def native_font_samples(metadata):
 def validate_native_geometry(metadata, image_size):
     if not isinstance(metadata, dict) or metadata.get("ready") is not True:
         raise ValueError("A completed native draw acknowledgement is required")
-    if not text(metadata, "captureSurface").startswith("XCTest application window"):
+    surface = text(metadata, "captureSurface")
+    host_capture = surface.startswith("simctl framebuffer with XCTest-driven UIKit window;")
+    if not surface.startswith("XCTest application window") and not host_capture:
         raise ValueError("Expected native XCTest application-window metadata")
+    if not host_capture and "nativeCapture" in metadata:
+        raise ValueError("Native framebuffer acknowledgement requires its matching capture surface")
     for key in ("scenario", "locale", "timezone", "preferredContentSizeCategory", "libraryDateText"):
         text(metadata, key)
     scale = number(metadata.get("displayScale"), "displayScale", positive=True)
@@ -98,6 +103,14 @@ def validate_native_geometry(metadata, image_size):
     window_height = integer(metadata.get("capturedWindowHeightPx"), "capturedWindowHeightPx", positive=True)
     if image_size != (window_width, window_height):
         raise ValueError("PNG dimensions disagree with captured-window metadata")
+    if host_capture:
+        capture = metadata.get("nativeCapture")
+        if (not isinstance(capture, dict) or capture.get("schemaVersion") != 1
+                or capture.get("status") != "captured" or capture.get("source") != "simctl framebuffer"
+                or (capture.get("widthPx"), capture.get("heightPx")) != image_size
+                or capture.get("pngOrientation", 1) != 1
+                or not re.fullmatch(r"[0-9a-f]{64}", str(capture.get("sha256", "")))):
+            raise ValueError("Missing or invalid native framebuffer acknowledgement")
     window = four(metadata.get("windowBoundsPoints"), "windowBoundsPoints", rectangle=True)
     content = four(metadata.get("contentBoundsInWindowPoints"), "contentBoundsInWindowPoints", rectangle=True)
     if (pixel(window[2] * scale, "window width"), pixel(window[3] * scale, "window height")) != image_size:
@@ -225,6 +238,8 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
         source.load()
         source_color = color_metadata(png, source)
         measured = validate_native_geometry(metadata, source.size)
+        if "nativeCapture" in metadata and metadata["nativeCapture"].get("sha256") != sha256(png).hexdigest():
+            raise ValueError("Native framebuffer acknowledgement does not identify this PNG")
         images = {"full-content.png": (measured["fullContentRectPx"], "Entire recorded Compose content rectangle")}
         if safe_area_interior:
             images["safe-area-interior.png"] = (measured["safeAreaInteriorRectPx"],
@@ -240,7 +255,8 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
     profile_id = "ios-native-" + sha256(json.dumps(viewport, sort_keys=True).encode()).hexdigest()[:16]
     font_samples = native_font_samples(metadata)
     profile = {"schemaVersion": 1, "profileId": profile_id, "scenario": metadata["scenario"], **viewport,
-               "sourceReferences": references, "sourceCaptureBackend": "xctest-application-window",
+               "sourceReferences": references, "sourceCaptureBackend": (
+                   "simctl-framebuffer-with-xctest-geometry" if "nativeCapture" in metadata else "xctest-application-window"),
                "androidSettings": {"wmSize": f"{viewport['widthPx']}x{viewport['heightPx']}",
                                    "wmDensityDpi": measured["densityDpi"], "fontScale": viewport["fontScale"]},
                "androidInsetDispatch": {"required": True, "safeDrawingInsetsPx": viewport["safeDrawingInsetsPx"],

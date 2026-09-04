@@ -72,13 +72,17 @@ for name, directory, product_type in (
     ("IcyLyricsTests", "IcyLyricsTests", "com.apple.product-type.bundle.unit-test"),
     ("IcyLyricsUITests", "IcyLyricsUITests", "com.apple.product-type.bundle.ui-testing"),
     ("IcyLyricsExtendedUITests", "IcyLyricsExtendedUITests", "com.apple.product-type.bundle.ui-testing"),
+    ("IcyLyricsKawarpUITests", "IcyLyricsKawarpUITests", "com.apple.product-type.bundle.ui-testing"),
 ):
     is_app = name == "IcyLyrics"
+    source_paths = list((APP/directory).rglob("*.swift"))
+    if product_type == "com.apple.product-type.bundle.ui-testing":
+        source_paths += list((APP/"NativeCapture").glob("*.swift"))
     source_refs = [file("source:"+path.relative_to(APP).as_posix(), path.relative_to(APP).as_posix(), "sourcecode.swift")
-                   for path in sorted((APP/directory).rglob("*.swift"), key=lambda value: value.relative_to(APP).as_posix())]
+                   for path in sorted(source_paths, key=lambda value: value.relative_to(APP).as_posix())]
     groups.append(add("group:"+name,"PBXGroup", name=name, children=source_refs + ([catalog, info, privacy] if is_app else []), sourceTree="<group>"))
     source_phase = add("sources:"+name,"PBXSourcesBuildPhase", buildActionMask=2147483647,
-                       files=[build_file("compile:"+str(ref),ref) for ref in source_refs], runOnlyForDeploymentPostprocessing=0)
+                       files=[build_file("compile:"+name+":"+str(ref),ref) for ref in source_refs], runOnlyForDeploymentPostprocessing=0)
     links = [build_file("link:"+name+str(ref),ref) for ref in ([shared,spotify] if is_app else [])]
     link_phase = add("links:"+name,"PBXFrameworksBuildPhase",buildActionMask=2147483647,files=links,runOnlyForDeploymentPostprocessing=0)
     resources = [build_file("resource:"+str(ref),ref) for ref in ([catalog,privacy] if is_app else [])]
@@ -93,6 +97,14 @@ for name, directory, product_type in (
             inputPaths=["$(SRCROOT)/../shared/ui/assets"],outputPaths=["$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/IcyAssets"],
             name="Copy canonical visual resources",shellPath="/bin/sh",
             shellScript='set -eu\n/usr/bin/ditto "$SRCROOT/../shared/ui/assets" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/IcyAssets"\n',
+            runOnlyForDeploymentPostprocessing=0))
+        phases.append(add("kawarpprobeassets", "PBXShellScriptBuildPhase", buildActionMask=2147483647, files=[],
+            inputPaths=["$(SRCROOT)/../tests/fixtures/kawarp"], outputPaths=[], alwaysOutOfDate=1,
+            name="Optional Debug Kawarp probe input", shellPath="/bin/sh",
+            shellScript='set -eu\nprobe_assets="${TARGET_BUILD_DIR:?}/${UNLOCALIZED_RESOURCES_FOLDER_PATH:?}/KawarpProbeAssets"\n'
+                'if [ "$CONFIGURATION" = Debug ] && [ "${ICY_KAWARP_PROBE:-NO}" = YES ]; then\n'
+                '  /usr/bin/ditto "$SRCROOT/../tests/fixtures/kawarp" "$probe_assets"\n'
+                'else\n  /bin/rm -rf "$probe_assets"\nfi\n',
             runOnlyForDeploymentPostprocessing=0))
     product = add("product:"+name,"PBXFileReference",explicitFileType="wrapper.application" if is_app else "wrapper.cfbundle",
                   path=name+(".app" if is_app else ".xctest"),sourceTree="BUILT_PRODUCTS_DIR",includeInIndex=0)
@@ -154,13 +166,21 @@ reference(ET.SubElement(extended_testables, "TestableReference", skipped="NO"), 
 ET.indent(extended_scheme)
 extended_scheme_output = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(extended_scheme, encoding="unicode") + "\n"
 
+kawarp_scheme = ET.fromstring(scheme_output)
+kawarp_testables = kawarp_scheme.find("./TestAction/Testables")
+kawarp_testables.clear()
+reference(ET.SubElement(kawarp_testables, "TestableReference", skipped="NO"), "IcyLyricsKawarpUITests")
+ET.indent(kawarp_scheme)
+kawarp_scheme_output = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(kawarp_scheme, encoding="unicode") + "\n"
+
 def main(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument("--check",action="store_true")
     args=parser.parse_args(argv)
     for path,content in ((APP/"IcyLyrics.xcodeproj/project.pbxproj",output),
                          (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyrics.xcscheme",scheme_output),
-                         (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyricsExtendedParity.xcscheme",extended_scheme_output)):
+                         (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyricsExtendedParity.xcscheme",extended_scheme_output),
+                         (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyricsKawarpGpu.xcscheme",kawarp_scheme_output)):
         if args.check:
             if not path.exists() or path.read_text(encoding="utf-8")!=content: raise SystemExit(f"Stale generated project: {path}")
         else:
