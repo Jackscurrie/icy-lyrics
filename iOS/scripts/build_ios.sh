@@ -3,17 +3,22 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 [[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Use an Apple Silicon macOS runner.' >&2; exit 1; }
+mkdir -p build/reports build/delivery
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode_26.4.1.app/Contents/Developer}"
-[[ "$(xcodebuild -version | head -1)" == 'Xcode 26.4.1' ]] || { echo 'Xcode 26.4.1 is required.' >&2; exit 1; }
-java -version 2>&1 | head -1 | grep -Eq '"17[.\"]' || { echo 'JDK 17 is required.' >&2; exit 1; }
+# Read the entire output: closing xcodebuild's pipe with head can crash its
+# Foundation file handle before it finishes writing the second version line.
+xcode_version="$(xcodebuild -version)"
+printf '%s\n' "$xcode_version" > build/reports/xcode.txt
+[[ "${xcode_version%%$'\n'*}" == 'Xcode 26.4.1' ]] || { echo 'Xcode 26.4.1 is required.' >&2; exit 1; }
+java_version="$(java -version 2>&1)"
+printf '%s\n' "$java_version" > build/reports/java.txt
+grep -Eq '"17[."]' <<< "$java_version" || { echo 'JDK 17 is required.' >&2; exit 1; }
 python3 scripts/generate_xcode_project.py --check
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 scripts/bootstrap_spotify.py
-mkdir -p build/reports build/delivery
 # A failed rerun must not retain a previous verification marker or merge result bundles.
 rm -f build/reports/simulator-verification.json
 rm -rf "$ROOT/build/SimulatorTests.xcresult" "$ROOT/build/IcyLyrics.xcarchive"
-xcodebuild -version > build/reports/xcode.txt
 bash gradlew --no-daemon --version > build/reports/gradle.txt
 
 # Public, non-secret configuration. Empty client IDs permit offline fixture builds.
@@ -30,7 +35,9 @@ xcrun simctl boot "$simulator"
 xcrun simctl bootstatus "$simulator" -b
 
 # Run the shared model/parser, persistence and shader-math tests on the simulator.
-bash gradlew --no-daemon -Picy.iosSimulator="$simulator" :shared:lyrics:verificationTest :shared:lyrics:iosSimulatorArm64Test \
+# Collect independent module failures in one run while preserving a failing exit
+# status. Xcode tests and IPA packaging still require this complete gate to pass.
+bash gradlew --no-daemon --continue -Picy.iosSimulator="$simulator" :shared:lyrics:verificationTest :shared:lyrics:iosSimulatorArm64Test \
   :shared:platform:iosSimulatorArm64Test :shared:ui:iosSimulatorArm64Test \
   :shared:ui:linkDebugFrameworkIosSimulatorArm64 --stacktrace 2>&1 | tee build/reports/kotlin-simulator.log
 rm -rf "$ROOT/app/Frameworks/IcyShared.framework"

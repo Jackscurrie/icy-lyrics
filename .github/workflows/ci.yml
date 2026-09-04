@@ -61,7 +61,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+      - name: Restore iOS compiler and dependency caches
+        id: ios_cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: icy-ios-${{ runner.os }}-${{ runner.arch }}-xcode26.4.1-v1-${{ hashFiles('iOS/**/*.gradle.kts', 'iOS/**/gradle.lockfile', 'iOS/gradle/wrapper/gradle-wrapper.properties') }}
       - name: Verify simulator and package the unsigned device application
         run: bash iOS/scripts/build_ios.sh
       - name: Upload validation evidence
@@ -82,3 +90,14 @@ jobs:
           name: icy-lyrics-unsigned-iphone
           path: iOS/build/delivery/
           if-no-files-found: error
+      - name: Save iOS compiler and dependency caches
+        # Keep downloaded toolchains after a test failure, so the next fix can
+        # reach native compilation without repeating the initial downloads.
+        if: always() && !cancelled() && steps.ios_cache.outputs.cache-primary-key != '' && steps.ios_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan
+          key: ${{ steps.ios_cache.outputs.cache-primary-key }}

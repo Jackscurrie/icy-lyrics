@@ -13,6 +13,9 @@ import com.icy.lyrics.core.lyrics.model.TimedLyricLine
 import com.icy.lyrics.core.lyrics.model.VocalLine
 import it.krzeminski.snakeyaml.engine.kmp.api.Load
 import it.krzeminski.snakeyaml.engine.kmp.api.LoadSettings
+import it.krzeminski.snakeyaml.engine.kmp.constructor.ConstructScalar
+import it.krzeminski.snakeyaml.engine.kmp.nodes.Node
+import it.krzeminski.snakeyaml.engine.kmp.nodes.Tag
 import it.krzeminski.snakeyaml.engine.kmp.schema.CoreSchema
 
 class LyricsfileParseException(message: String, cause: Throwable? = null) :
@@ -43,6 +46,7 @@ object LyricsfileYamlParser {
     val root = try {
       val settings = LoadSettings(
         schema = CoreSchema(),
+        tagConstructors = mapOf(Tag.INT to BoundedIntegerConstructor),
         allowDuplicateKeys = false,
         allowRecursiveKeys = false,
         maxAliasesForCollections = 0,
@@ -238,11 +242,22 @@ object LyricsfileYamlParser {
     is Short -> toLong()
     is Int -> toLong()
     is Long -> this
-    // SnakeYAML represents integers larger than Long using a platform-specific Number.
-    // Its decimal spelling is exact; parsing that spelling avoids truncating via toLong().
-    is Number -> toString().takeIf { INTEGER_DECIMAL.matches(it) }?.toLongOrNull()
-      ?: throw LyricsfileParseException("$path is outside the supported integer range or is not an integer")
     else -> throw LyricsfileParseException("$path must be an integer")
+  }
+
+  // Bound CoreSchema integers before SnakeYAML's unsupported Native BigInteger path.
+  // Floating scalars retain their distinct type and are rejected by asLong on every platform.
+  private object BoundedIntegerConstructor : ConstructScalar() {
+    override fun construct(node: Node?): Long {
+      val value = constructScalar(node)
+      val (digits, radix) = when {
+        value.startsWith("0x") -> value.substring(2) to 16
+        value.startsWith("0o") -> value.substring(2) to 8
+        else -> value to 10
+      }
+      return digits.toLongOrNull(radix)
+        ?: throw LyricsfileParseException("Lyricsfile integer is outside the supported integer range")
+    }
   }
 
   private fun Char?.isWhitespaceOrNull(): Boolean = this == null || isWhitespace()
@@ -266,7 +281,6 @@ object LyricsfileYamlParser {
 
   private data class RawWord(val text: String, val startMs: Long, val endMs: Long?)
 
-  private val INTEGER_DECIMAL = Regex("[+-]?[0-9]+")
   private val VERSION_HEADER = Regex("(?m)^[ \\t\\n\\x0B\\f\\r]*version[ \\t\\n\\x0B\\f\\r]*:")
   private val METADATA_HEADER = Regex("(?m)^[ \\t\\n\\x0B\\f\\r]*metadata[ \\t\\n\\x0B\\f\\r]*:")
 }
