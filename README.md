@@ -1,16 +1,18 @@
 # Icy Lyrics
 
-Icy Lyrics is a forked Spicetify lyrics extension with fullscreen lyrics, permanent local TTML storage, dynamic backgrounds, and word-by-word lyrics rendering.
+PUBLIC GOOGLE PLAY STORE RELEASE COMING SOON!! Currently in closed testing
+ 
+Icy Lyrics is a fork of the popular Spicetify lyrics extension "Spicy Lyrics" by Spikerko with multiple fullscreen modes, a lyric creator, and more
 
-Icy Lyrics 1.0.0 is the first public release. The desktop extension remains an independent Icy-branded fork while keeping Spicy Lyrics 6.3.12 API compatibility for lyric lookup. Its Icy-owned startup updater checks the release manifest on jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails.
+Icy Lyrics 1.0.0 is the first public release. The desktop extension auto-updates on startup from jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails.
 
 ## 1.0.0 Highlights
 
 - Spotify, Apple Music, and community lyrics through the current Spicy Lyrics API protocol, including packed and raw-TTML responses.
-- Saved TTML files in the Icy-owned `icylyrics` IndexedDB, keyed by the complete Spotify URI and protected from ordinary cache clearing.
-- Searchable settings, Lyrics Manager, compact/expanded Now Playing View card, virtualized lyrics, playback offset, volume controls, and the current renderer fixes.
+- Saved TTML files in the `icylyrics` IndexedDB, keyed by the complete Spotify URI and protected from ordinary cache clearing.
+- Searchable settings, Lyric Creator, Lyrics Manager, compact/expanded Now Playing View card, virtualized lyrics, playback offset, volume controls, and the current renderer fixes.
 - Four bounded cinema/fullscreen views: album art only, album art with titles, mixed, and lyrics only.
-- Optional lyrics Reveal Mode, final-line outro, and fullscreen-only animated-background blur control.
+- Optional lyrics Reveal Mode and fullscreen-only animated-background blur control.
 
 Saved TTML normally survives Spotify restarts. Clearing Spotify's profile data or uninstalling the client can still remove browser-managed IndexedDB data.
 
@@ -29,6 +31,10 @@ Copy-Item -LiteralPath .\dist\icy-lyrics.js -Destination "$env:APPDATA\spicetify
 ```
 
 Run `npm test` for the API, TTML persistence/migration, retry, request-generation, and fullscreen helper tests.
+
+## Easy Install
+
+Visit www.jackscurrie.com/icy-lyrics for a all-in-one install script for Windows, Linux, and macOS
 
 ## Manual Install
 
