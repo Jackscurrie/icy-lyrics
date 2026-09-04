@@ -6,6 +6,9 @@ import IcyShared
 /// UIKit owns OS presentations only. Compose owns every application screen.
 @MainActor
 final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemoteDelegate {
+    // Spotify 5.0.1 declares both weak delegate properties non-null. A retained
+    // sink detaches the host without assigning nil or weakening the SDK contract.
+    private static let detachedRemoteDelegate = DetachedAppRemoteDelegate()
     private weak var window: UIWindow?
     private let authorization: SpotifyAuthorization
     private var hasCreatedAppRemote = false
@@ -111,8 +114,8 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         refreshTimer?.invalidate()
         refreshTimer = nil
         if hasCreatedAppRemote {
-            appRemote.playerAPI?.delegate = nil
-            appRemote.delegate = nil
+            appRemote.playerAPI?.delegate = Self.detachedRemoteDelegate
+            appRemote.delegate = Self.detachedRemoteDelegate
             appRemote.disconnect()
         }
         playerObserver = nil
@@ -158,8 +161,8 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
                     self.refreshTimer?.invalidate()
                     self.refreshTimer = nil
                     if self.hasCreatedAppRemote {
-                        self.appRemote.playerAPI?.delegate = nil
-                        self.appRemote.delegate = nil
+                        self.appRemote.playerAPI?.delegate = Self.detachedRemoteDelegate
+                        self.appRemote.delegate = Self.detachedRemoteDelegate
                         self.appRemote.disconnect()
                     }
                     self.playerObserver = nil
@@ -399,6 +402,17 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         keepAwake = enabled
         UIApplication.shared.isIdleTimerDisabled = !closed && active && enabled
     }
+}
+
+@MainActor
+private final class DetachedAppRemoteDelegate: NSObject, SPTAppRemoteDelegate, SPTAppRemotePlayerStateDelegate {
+    func appRemoteDidEstablishConnection(_ appRemote: SPTAppRemote) {
+        // A connection attempt may finish after its owner has deactivated.
+        appRemote.disconnect()
+    }
+    func appRemote(_ appRemote: SPTAppRemote, didFailConnectionAttemptWithError error: Error?) {}
+    func appRemote(_ appRemote: SPTAppRemote, didDisconnectWithError error: Error?) {}
+    func playerStateDidChange(_ playerState: SPTAppRemotePlayerState) {}
 }
 
 @MainActor
