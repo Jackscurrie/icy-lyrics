@@ -12,7 +12,7 @@ import tempfile
 import zipfile
 
 from bootstrap_age import ROOT, WORK, VERSION, bootstrap, digest, within_build
-from package_ipa import committed_asset_hashes, corresponding_source, validate_app, validate_committed_source
+from package_ipa import committed_asset_hashes, corresponding_source, spotify_configuration, validate_app, validate_committed_source
 from source_fingerprint import fingerprint
 
 IDENTITY = WORK / "identity.agekey"
@@ -191,6 +191,8 @@ def inspect_delivery(directory, expected_commit):
         info, binaries = validate_app(expanded / "Payload/IcyLyrics.app", resource_hashes=committed_asset_hashes(expected_commit))
     if binaries != report.get("binaries") or info["CFBundleIdentifier"] != report.get("bundleIdentifier") or info["MinimumOSVersion"] != report.get("minimumOS"):
         raise ValueError("Actual application metadata differs from its build report")
+    if spotify_configuration(info) != report.get("spotify"):
+        raise ValueError("Packaged Spotify configuration differs from its build report")
     return report
 
 def current_commit():

@@ -7,6 +7,7 @@ from pathlib import Path
 import datetime
 import hashlib
 import json
+import os
 import plistlib
 import posixpath
 import re
@@ -222,8 +223,26 @@ def validate_dependencies(binaries, executable):
                 candidate=local_path(dependency,binary)
                 if candidate not in binaries: raise ValueError(f"Unexpected or missing external dependency: {dependency}")
 
+def spotify_configuration(info, expected_client_id=None):
+    client=info.get("SpotifyClientID")
+    if not isinstance(client,str) or (client and not re.fullmatch(r"[a-zA-Z0-9]{32}",client)):
+        raise ValueError("Missing or invalid packaged Spotify Client ID")
+    if expected_client_id is not None and client!=expected_client_id:
+        raise ValueError("Packaged Spotify Client ID does not match this build's configuration")
+    redirect="com.icy.lyrics.ios://spotify-callback"
+    scheme="com.icy.lyrics.ios"
+    if info.get("SpotifyRedirectURI")!=redirect:
+        raise ValueError("Packaged Spotify redirect differs from the registered callback")
+    types=info.get("CFBundleURLTypes",[])
+    if not isinstance(types,list) or not any(isinstance(item,dict) and isinstance(item.get("CFBundleURLSchemes"),list)
+                                           and scheme in item["CFBundleURLSchemes"] for item in types):
+        raise ValueError("The application cannot receive its registered Spotify callback scheme")
+    return {"configured":bool(client), "clientIdSha256":hashlib.sha256(client.encode("ascii")).hexdigest() if client else None,
+            "redirectUri":redirect,"callbackScheme":scheme}
+
 def validate_app(app, *, resource_hashes=None):
     info=plistlib.loads((app/"Info.plist").read_bytes())
+    spotify_configuration(info)
     assert info["CFBundlePackageType"]=="APPL", "Not an application"
     assert info["UIDeviceFamily"]==[1], "Expected iPhone-only device family"
     validate_minimum_os(info["MinimumOSVersion"],{})
@@ -273,6 +292,7 @@ def main():
     assert verification["result"]=="passed" and verification["commit"]==sha,"Missing matching simulator verification"
     assert verification["sourceFingerprint"]==fingerprint(),"Sources changed after simulator verification"
     info,binaries=validate_app(app)
+    spotify=spotify_configuration(info,os.environ.get("SPOTIFY_CLIENT_ID"))
     delivery=ROOT/"build/delivery"
     delivery.mkdir(parents=True,exist_ok=True)
     ipa=delivery/"IcyLyrics-unsigned.ipa"
@@ -290,7 +310,7 @@ def main():
     digest=hashlib.sha256(ipa.read_bytes()).hexdigest()
     (delivery/"SHA256SUMS.txt").write_text(f"{digest}  {ipa.name}\n")
     report={"label":"simulator-verified IPA; physical iPhone validation pending", "commit":sha,
-            "correspondingSource":source,
+            "correspondingSource":source,"spotify":spotify,
             "verificationScope":"simulator-tested sources; device binary separately inspected, not executed",
             "createdUtc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"sha256":digest,"bytes":ipa.stat().st_size,
             "bundleIdentifier":info["CFBundleIdentifier"],"minimumOS":info["MinimumOSVersion"],"binaries":binaries,

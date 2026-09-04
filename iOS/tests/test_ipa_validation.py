@@ -8,7 +8,35 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
-from package_ipa import committed_asset_hashes, corresponding_source, macho, source_instructions, validate_committed_source, validate_dependencies, validate_minimum_os
+from package_ipa import committed_asset_hashes, corresponding_source, macho, source_instructions, spotify_configuration, validate_committed_source, validate_dependencies, validate_minimum_os
+
+class SpotifyConfigurationValidation(unittest.TestCase):
+    def info(self,client="a"*32):
+        return {"SpotifyClientID":client,"SpotifyRedirectURI":"com.icy.lyrics.ios://spotify-callback",
+                "CFBundleURLTypes":[{"CFBundleURLSchemes":["com.icy.lyrics.ios"]}]}
+
+    def test_offline_and_configured_builds_are_distinguishable(self):
+        self.assertFalse(spotify_configuration(self.info(""))["configured"])
+        configured=spotify_configuration(self.info(),"a"*32)
+        self.assertTrue(configured["configured"])
+        self.assertEqual(hashlib.sha256(b"a"*32).hexdigest(),configured["clientIdSha256"])
+
+    def test_an_offline_or_wrong_client_build_cannot_pass_as_the_requested_configuration(self):
+        for client in ("","b"*32):
+            with self.subTest(client=client),self.assertRaisesRegex(ValueError,"does not match"):
+                spotify_configuration(self.info(client),"a"*32)
+
+    def test_unexpanded_or_malformed_client_configuration_is_rejected(self):
+        for client in (None,"$(SPOTIFY_CLIENT_ID)"," ","a"*31,"a"*33):
+            with self.subTest(client=client),self.assertRaisesRegex(ValueError,"invalid"):
+                spotify_configuration(self.info(client))
+
+    def test_both_redirect_and_registered_scheme_are_required(self):
+        for key,value in (("SpotifyRedirectURI","com.icy.lyrics.ios://wrong"),("CFBundleURLTypes",[])):
+            info=self.info()
+            info[key]=value
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,"callback"):
+                spotify_configuration(info)
 
 class CommittedSourceValidation(unittest.TestCase):
     def setUp(self):

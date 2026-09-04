@@ -31,12 +31,12 @@ class IosProviderSessionTest {
     var late: Continuation<String>? = null
     val published = mutableListOf<String>()
     val old = launch {
-      published += session.resolve { suspendCoroutine { late = it } }
+      published.add(session.resolve<String> { suspendCoroutine { late = it } })
     }
     runCurrent()
     session.disconnect()
     session.connect()
-    published += session.resolve { "new account" }
+    published.add(session.resolve<String> { "new account" })
     late!!.resume("revoked account")
     runCurrent()
     old.join()

@@ -23,6 +23,8 @@ screen = "package com.icy.lyrics.ui\nimport androidx.compose.runtime.*\n@Composa
 harness = (root / "iOS/tests/android/IcyParityScreenshotTest.kt").read_text(encoding="utf-8")
 harness = harness.replace("      val platform = rememberAndroidIcyUiPlatform()\n      CompositionLocalProvider(LocalIcyUiPlatform provides platform) {\n        key(current) { IcyParityFixtureScreen(current) }\n      }", "      key(current) { IcyParityFixtureScreen(current) }")
 (tests / "IcyParityScreenshotTest.kt").write_text(harness, encoding="utf-8")
+(tests / "NativeViewportProfile.kt").write_text(
+    (root / "iOS/tests/android/NativeViewportProfile.kt").read_text(encoding="utf-8"), encoding="utf-8")
 gradle = baseline / "app/build.gradle.kts"
 s = gradle.read_text()
 if "ui-test-junit4" not in s:

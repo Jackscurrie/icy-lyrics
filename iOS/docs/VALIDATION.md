@@ -10,6 +10,8 @@ Xcode then reported one Swift artwork-bridging error (`NSData` passed where Swif
 
 In [run 33851816799](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33851816799), revision `796333b`, the shared native tests and Swift application/test-bundle compilation passed. App launch then aborted because Compose requires `CADisableMinimumFrameDurationOnPhone=true` in `Info.plist`. That entry is now present with a regression check; the Swift tests and screenshots still require a successful rerun. Earlier native runs exposed SnakeYAML's unsupported oversized-integer path, now avoided by a bounded integer constructor with strict shared regression coverage. No failed test was waived.
 
+[Run 33854638926](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33854638926), revision `55d6a58`, passed all 63 Python checks on macOS, the lyrics test tasks and application framework linking. Two newly added native test files had compiler errors (Okio `use` import and generic `plusAssign` inference); both are corrected. Both complete iOS simulator test KLIB compilation tasks subsequently executed successfully on Windows. Native execution and Swift launch remain pending. The existing Android Spotify Client ID is now configured in the GitHub iOS variable following the owner's confirmation of the bundle/callback registration; the next run must include it.
+
 ## Passed locally
 
 - Shared lyrics JVM verification: 83 tests, including original parser cases and portability/limits/Unicode/integer-boundary cases.
@@ -27,6 +29,8 @@ The capture harness uses 20 offline scenes with deterministic track/artwork/lyri
 Twenty-three Swift OAuth/import tests are authored but have not executed successfully yet. Eight additional native managed-import tests and four provider-session cancellation tests also await macOS execution. The native shader-compilation test passed in the macOS run above. Android and iOS bind an import to the track present when the picker opens, so a song change while Files is open cannot attach the result to the newly playing song.
 
 The new offscreen iOS raster capture lane uses the complete preserved Android scenario order, original springs, 2,000 ms controlled-clock advances, matching density/font scale/insets and SHA-verified fonts. Its source and native dependencies have been type-checked, but actual rendering is pending. `tests/compare_ios_parity.py` produces exact RGBA differences and rejects incomplete captures or mismatched geometry. Its report remains separate from native UIKit/Metal acceptance; it cannot approve the production renderer by itself.
+
+`tests/extract_native_profile.py` accepts actual UIKit screenshot/geometry attachments and produces exact content crops plus an Android viewport profile. It preserves source hashes, pixels and PNG color metadata; an optional safe-area-interior crop is explicitly a narrower comparison. `tests/capture_android_parity.py --viewport-profile ...` applies those measured dimensions, density, font scale and insets to an owned Android emulator, checks the effective Compose values and records native Android sp-to-pixel scaling. These profiles use separate result directories and do not replace the original 20 baselines. The Android instrumentation source compiles; no native-profile capture has run yet. UIKit real-time springs and Android nonlinear large-text scaling still require matching evidence.
 
 ## macOS CI gates
 
