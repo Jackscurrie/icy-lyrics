@@ -16,7 +16,9 @@ set -euo pipefail
 ROOT="$PWD"
 simulator=owned-test-simulator
 runtime=test-runtime
-common=()
+# Production always has project/configuration arguments. Bash 3.2 (macOS)
+# treats an empty array expansion as unbound under set -u, unlike Bash 5.
+common=(-project fixture.xcodeproj -scheme IcyLyrics)
 mkdir -p build/reports
 phase() { :; }
 bash() {
@@ -56,6 +58,9 @@ python3() {
 
 @unittest.skipUnless(BASH, "Bash is required to execute the production stage gates")
 class SimulatorStageGates(unittest.TestCase):
+    def _formatMessage(self, msg, standardMsg):
+        return super()._formatMessage(msg, standardMsg) + "\n" + getattr(self, "stage_diagnostics", "")
+
     def run_stages(self, *, stale_framework=False, **overrides):
         environment = os.environ | {"NATIVE_EXIT": "0", "SWIFT_EXIT": "0", "ATTACHMENT_EXIT": "0",
                                     "MAKE_FRAMEWORK": "1", "MAKE_RESULT": "1", "ARCH_EXIT": "0", "VERIFIER_EXIT": "0"}
@@ -70,8 +75,16 @@ class SimulatorStageGates(unittest.TestCase):
                     target.write_text("stale")
             completed = subprocess.run([BASH, "-s"], input=PRELUDE + STAGES + "\necho device >> events\n",
                                        cwd=root, env=environment, text=True, capture_output=True, timeout=20)
-            events = (root / "events").read_text().splitlines()
-            status = json.loads((root / "build/reports/simulator-stage-results.json").read_text())
+            event_path = root / "events"
+            report_path = root / "build/reports/simulator-stage-results.json"
+            raw_report = report_path.read_text() if report_path.exists() else "<missing>"
+            self.stage_diagnostics = (f"Shell: {BASH}\nOverrides: {overrides}\nExit: {completed.returncode}\n"
+                                      f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n"
+                                      f"Stage report:\n{raw_report}")
+            self.assertTrue(event_path.exists(), "Stage event log was not written")
+            self.assertTrue(report_path.exists(), "Stage status report was not written")
+            events = event_path.read_text().splitlines()
+            status = json.loads(raw_report)
             marker = (root / "build/reports/simulator-verification.json").exists()
             return completed.returncode, events, status, marker
 
