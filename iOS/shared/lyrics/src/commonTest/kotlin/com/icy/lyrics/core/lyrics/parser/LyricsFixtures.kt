@@ -1,0 +1,8 @@
+package com.icy.lyrics.core.lyrics.parser
+
+// Exact Android parser fixtures, embedded so the same contract runs on Kotlin/Native.
+internal fun lyricsFixture(name: String): String = when (name) {
+  "apple-word.ttml" -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tt xmlns=\"http://www.w3.org/ns/ttml\"\n    xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"\n    xmlns:itunes=\"http://music.apple.com/lyric\"\n    itunes:timing=\"Word\"\n    xml:lang=\"ja\">\n  <head>\n    <metadata>\n      <meta key=\"songwriters\" value=\"Ada Lovelace; Grace Hopper\"/>\n    </metadata>\n  </head>\n  <body>\n    <div>\n      <p xml:id=\"line-1\" begin=\"680\" end=\"2400\" ttm:agent=\"v2\" romanLyric=\"Konnichiwa sekai\">\n        <span begin=\"680\" end=\"1200\" romanWord=\"Konnichiwa\">こんにちは </span>\n        <span begin=\"1200\" end=\"1900\" romanWord=\"sekai\">世界</span>\n        <span ttm:role=\"x-bg\" ttm:agent=\"v1\" begin=\"1350\" end=\"2250\" romanLyric=\"hello\">\n          <span begin=\"1350\" end=\"1800\">hello </span>\n          <span begin=\"1800\" end=\"2200\">again</span>\n        </span>\n      </p>\n    </div>\n  </body>\n</tt>\n"
+  "example.lyricsfile.yaml" -> "version: '1.0'\nmetadata:\n  title: 'Small Hours'\n  artist: 'Example Artist'\n  language: 'en'\nlines:\n  - text: 'Stay until the morning'\n    start_ms: 4200\n    end_ms: 6800\n    words:\n      - text: 'Stay '\n        start_ms: 4200\n        end_ms: 4800\n      - text: 'until '\n        start_ms: 4800\n        end_ms: 5400\n      - text: 'the '\n        start_ms: 5400\n        end_ms: 5750\n      - text: 'morning'\n        start_ms: 5750\n        end_ms: 6800\nplain: |\n  Stay until the morning\n"
+  else -> error("Missing fixture $name")
+}

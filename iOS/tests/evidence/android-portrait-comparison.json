@@ -1,0 +1,513 @@
+{
+  "comparison": "Exact RGBA pixels; no masks, resizing, tolerances, or accepted differences.",
+  "baselineProductionSourcesUnchanged": true,
+  "sourceChecks": [
+    {
+      "path": "android-v2/app/src/main/AndroidManifest.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsApplication.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsViewModel.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/LyricsRetryPolicy.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/MainActivity.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/IcyNotificationListenerService.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/NowPlaying.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/SpotifyMediaSessionTracker.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/AppModels.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/ArtworkBackground.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/IcyLyricsApp.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LegalInfo.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LyricsCanvas.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/agpl_3_0_or_later.txt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/third_party_notices.txt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/colors.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/strings.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/styles.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/backup_rules.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/data_extraction_rules.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/AnimationMath.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/FullscreenMath.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsScene.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsSceneSpringAnimator.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/model/LyricsModels.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/IcyLyricsJsonParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LrcParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsFileParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsfileYamlParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/TtmlParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/LyricsOrchestrator.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/ProviderContracts.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/timing/PlaybackClock.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/AppServices.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyCredentialStore.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyLoopbackCallback.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyPkceClient.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Daos.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Entities.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/IcyLyricsDatabase.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/diagnostics/Diagnostics.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/migration/LegacyPreferenceCleaner.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/network/OkHttpAwait.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LocalTtmlProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LrclibProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/PlatformLyricsResolver.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyLyricsProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyPayloadDecoder.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpotifyTrackResolver.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/AppSettings.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/SettingsRepository.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/LyricsStorageRepositories.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/TrackKeys.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/timing/BluetoothTiming.kt",
+      "unchanged": true
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "onboarding",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "6eb4261c39361a3f05392724751f30f19f71cb5376b0ec8c1a107aa44e298604",
+      "extractedSha256": "6eb4261c39361a3f05392724751f30f19f71cb5376b0ec8c1a107aa44e298604",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "empty",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "44913cb45a8b3701834cb14f889c693edb0534e7c3d2d6b4c1adf9a171d66c5a",
+      "extractedSha256": "44913cb45a8b3701834cb14f889c693edb0534e7c3d2d6b4c1adf9a171d66c5a",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "extractedSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait-long",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "e45b3955b0b206803a720573c36ba7d54d5809100365f69dddc2a9b8d1d295f8",
+      "extractedSha256": "e45b3955b0b206803a720573c36ba7d54d5809100365f69dddc2a9b8d1d295f8",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait-failed",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "9c568603caffa3af08c65f3c9f56a2445c9437462f93ca110b9cbe1b7959da66",
+      "extractedSha256": "9c568603caffa3af08c65f3c9f56a2445c9437462f93ca110b9cbe1b7959da66",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "background-static",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "extractedSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "background-disabled",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "0507ef358747737593f613be9593f59a890c9f7002e3fc58466eeb55a9f778dc",
+      "extractedSha256": "0507ef358747737593f613be9593f59a890c9f7002e3fc58466eeb55a9f778dc",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "reduced-motion",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "extractedSha256": "57967c309f5cab0286a3cf01121717e0b6f849391939a97decf4c48ade4ef653",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "settings",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "c681a825d8bd763f72a42ece62489fe831ec6e5a7caf79c2e0d05f448b1b2a48",
+      "extractedSha256": "c681a825d8bd763f72a42ece62489fe831ec6e5a7caf79c2e0d05f448b1b2a48",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "library",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "43a6bd1a4367fdc19710c3e412873df81f8390b28211e948acafd97cfab55da0",
+      "extractedSha256": "43a6bd1a4367fdc19710c3e412873df81f8390b28211e948acafd97cfab55da0",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "library-empty",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "7dd57d443b774133333c42a0f79354b4a3957aca0fcd532616e392aad02debc4",
+      "extractedSha256": "7dd57d443b774133333c42a0f79354b4a3957aca0fcd532616e392aad02debc4",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "legal",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "197581ab95035d32516656454f36e2f76679f223e5d47627aa579affd19c808b",
+      "extractedSha256": "197581ab95035d32516656454f36e2f76679f223e5d47627aa579affd19c808b",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "diagnostics",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "b207e648e98307788eaedc0b9cc59c3b41f7038f0c116669b4a4a79946009132",
+      "extractedSha256": "b207e648e98307788eaedc0b9cc59c3b41f7038f0c116669b4a4a79946009132",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-artwork",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "landscape-titles",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "landscape-mixed",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "landscape-lyrics",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "landscape-mixed-right",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "multilingual",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    },
+    {
+      "scenario": "syllables",
+      "status": "missing",
+      "baselineExists": false,
+      "extractedExists": false
+    }
+  ],
+  "allIdentical": false
+}

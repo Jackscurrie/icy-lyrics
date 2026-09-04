@@ -1,0 +1,11 @@
+# Binary distribution review
+
+The repository is AGPL-3.0-or-later and retains Spicy Lyrics/Icy Lyrics attribution. The shared legal assets include the existing license text and notices, plus the bundled font notices. Source modifications and build scripts must remain available with any distribution under the applicable source-license obligations.
+
+Spotify SDK 5.0.1 is fetched from Spotify's tagged repository with a pinned SHA-256. It is not copied into source control. Spotify states that use of its developer tools accepts its Developer Terms. Its SDK binary is governed by those terms, not by this repository's AGPL license. The included MPMessagePack license must accompany SDK distribution. See [Spotify SDK terms notice](https://github.com/spotify/ios-sdk/tree/v5.0.1#terms-of-use) and [Spotify Developer Terms](https://developer.spotify.com/terms).
+
+**Public binary release is not cleared.** The additional SDK terms, Spotify policy restrictions and the application's AGPL obligations need a documented compatibility/distribution decision before publishing a combined binary. In particular, review the restrictions relevant to synchronized visual media and third-party lyrics integrations; copying the SDK does not establish permission for every use. This implementation does not assert that the AGPL and proprietary SDK terms have been resolved. [Spotify iOS policy notes](https://developer.spotify.com/documentation/ios/getting-started).
+
+Until that decision is recorded, the workflow builds/packages for verification but uploads only test reports, not the IPA. Once the owner has resolved the specific SDK/source-license requirements, record the decision and supporting permission or applicable terms here and set public repository variable `ICY_IOS_BINARY_DISTRIBUTION_CLEARED=true` to enable the IPA artifact step. No Apple membership/payment is required by that switch, and it does not bypass Spotify authorization or iPhone signing.
+
+Release evidence must also include the corresponding source revision, dependency versions, source attribution, SDK archive checksum, bundle contents/checksum, passing simulator result, pixel-comparison results and explicit physical-iPhone status. Physical iPhone installation/refresh/Spotify tests remain pending until a tester is available.

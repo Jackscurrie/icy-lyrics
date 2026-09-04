@@ -5,6 +5,10 @@ plugins {
 }
 
 android {
+  (sourceSets as org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.AndroidSourceSet>).getByName("main").kotlin.srcDirs(
+    "../../../iOS/shared/platform/src/commonMain/kotlin",
+    "../../../iOS/shared/platform/src/androidMain/kotlin",
+  )
   namespace = "com.icy.lyrics.core.platform"
   compileSdk = 36
 
@@ -16,6 +20,10 @@ android {
   }
 
   kotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+  kotlin.compilerOptions.freeCompilerArgs.add("-Xmulti-platform")
+  kotlin.compilerOptions.freeCompilerArgs.add(
+    "-Xcommon-sources=${file("../../../iOS/shared/platform/src/commonMain/kotlin/com/icy/lyrics/core/platform/runtime/PlatformRuntime.kt").absolutePath}",
+  )
 
   testOptions {
     unitTests.isIncludeAndroidResources = true
@@ -32,9 +40,11 @@ dependencies {
   implementation("androidx.room:room-ktx:2.8.3")
   ksp("androidx.room:room-compiler:2.8.3")
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  implementation("com.squareup.okio:okio:3.16.4")
+  implementation("io.ktor:ktor-http:3.3.3")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.3")

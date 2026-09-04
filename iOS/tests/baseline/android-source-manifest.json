@@ -1,0 +1,501 @@
+{
+  "head": "50af07bb5a58649f8760e96bc66a2ef4838c1e51",
+  "capturedAt": "2026-09-04T01:51:58.3122769Z",
+  "files": [
+    {
+      "path": "android-v2/LICENSE",
+      "sha256": "12c06a98afc39bb9d7b83311f40d95b802d567ff7ce2d001487d87127288bc5c",
+      "bytes": 34586
+    },
+    {
+      "path": "android-v2/PLAY_STORE_FULL_DESCRIPTION.txt",
+      "sha256": "e636b9cdbc9e16d6ea2752f80112090af53b803485ae8fecb7617dc76cd7aaeb",
+      "bytes": 3060
+    },
+    {
+      "path": "android-v2/README.md",
+      "sha256": "739603ed6f6b3b71e33c33372333aa3b5de68e4c061683b4b71f94961fe79906",
+      "bytes": 9392
+    },
+    {
+      "path": "android-v2/THIRD_PARTY_NOTICES.md",
+      "sha256": "252bb0f449977e943d228528a015bad5477b34bc734a972b2a2d98d72df5d185",
+      "bytes": 2092
+    },
+    {
+      "path": "android-v2/app/build.gradle.kts",
+      "sha256": "e15a75b8634df067572f8914353713b6e8b5b13ea977010e8f2ee546c5eadd86",
+      "bytes": 5129
+    },
+    {
+      "path": "android-v2/app/src/androidTest/java/com/icy/lyrics/TtmlParserAndroidTest.kt",
+      "sha256": "64ce31dc2bb82b862f114780074cd9e6610d5fdd14d036df3a7dcc098796ee41",
+      "bytes": 1323
+    },
+    {
+      "path": "android-v2/app/src/androidTest/java/com/icy/lyrics/ui/ArtworkBackgroundDeviceTest.kt",
+      "sha256": "4060b3ef912f915f0fef02c851cfcda05707d62848a48342cd695a95b48402f1",
+      "bytes": 394
+    },
+    {
+      "path": "android-v2/app/src/main/AndroidManifest.xml",
+      "sha256": "d42c5280c2e82a9dbd780579ff2dbd808992e001afd825099dc6d3771292b938",
+      "bytes": 1517
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsApplication.kt",
+      "sha256": "5907183d3fdd78d18437a9d6743b527c0c298ede834adb942a2b82b18df13e22",
+      "bytes": 1149
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsViewModel.kt",
+      "sha256": "32891feab2372fb761f249015f0804776be316a6f47b30cf720dbcfd90e95234",
+      "bytes": 23881
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/LyricsRetryPolicy.kt",
+      "sha256": "790e4b652d28c527f7457c4463e1e5969cff91428362fcc63a696b925a34f7e4",
+      "bytes": 1610
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/MainActivity.kt",
+      "sha256": "ced6baa86dbeb9bb1c44bb02081f274c180c30edb19a1e2a1cb4664ea65af9d0",
+      "bytes": 7055
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/IcyNotificationListenerService.kt",
+      "sha256": "ca9d0ce909d58199f2d161cf7109232fc39309f49f18e9ae8d017b36b32ccbb0",
+      "bytes": 893
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/NowPlaying.kt",
+      "sha256": "5dbde77bce3931e839135e881d7319d4e1c629b9d1a18f4471aa29b312b2eae8",
+      "bytes": 6470
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/SpotifyMediaSessionTracker.kt",
+      "sha256": "b254916bc6c0b090b2e3bfd9f321c23afb0f6178d9a4d2198aee5ed9db88a829",
+      "bytes": 4541
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/AppModels.kt",
+      "sha256": "6ccafa633a391399880f59bd3385c66b655810118bd04c1ec417efb0f707cdc0",
+      "bytes": 5570
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/ArtworkBackground.kt",
+      "sha256": "96e85b93d7f02c1d0fd4f9208946239829c761f785012ec0d840bf88fca4d509",
+      "bytes": 14125
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/IcyLyricsApp.kt",
+      "sha256": "4276e4917d1be293f0f196270ce7580a4538a53988146cfa79ce392bfa22681e",
+      "bytes": 82839
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LegalInfo.kt",
+      "sha256": "f37020d6c3d97f522f8db3ebf8a9dd427c5af77d7d86d2750c0690f4b51cd712",
+      "bytes": 1495
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LyricsCanvas.kt",
+      "sha256": "68a3a62b7ce1bd363ec3a24efc91fea5a323ec5f01469c18622a47dc7d1b565b",
+      "bytes": 51493
+    },
+    {
+      "path": "android-v2/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "sha256": "43006e2af584ef303b2321c4c0de928a61123de2918eac331aa511c0e9949d6e",
+      "bytes": 1476
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "sha256": "2aaa25ed76ee36972333fc45a9cccab543551e163913a20c5320e209e81445dc",
+      "bytes": 230
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+      "sha256": "16cb2a4b4b564d829dea6a6b3d1a9f92ce191ebfe0221ebb3d1a03841edd6599",
+      "bytes": 212
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/agpl_3_0_or_later.txt",
+      "sha256": "12c06a98afc39bb9d7b83311f40d95b802d567ff7ce2d001487d87127288bc5c",
+      "bytes": 34586
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/third_party_notices.txt",
+      "sha256": "252bb0f449977e943d228528a015bad5477b34bc734a972b2a2d98d72df5d185",
+      "bytes": 2092
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/colors.xml",
+      "sha256": "480593612451894d490e7f3951464f36fdae73bd673088118a35ebc621a16012",
+      "bytes": 80
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/strings.xml",
+      "sha256": "ac04d5cd7d60448c2a0907ee1ae8dfc85aa56475990b1e441a35fc9b1a07a85c",
+      "bytes": 155
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/styles.xml",
+      "sha256": "47cde72f26a1a7eb34bb103813e1516f0890971e5fea41108cdb8fddb3ad462e",
+      "bytes": 522
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/backup_rules.xml",
+      "sha256": "7ed9850c258c7baca9a9c6973f0b7b789630582f0ee8a9b1a7e1024b2fef3589",
+      "bytes": 156
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/data_extraction_rules.xml",
+      "sha256": "9bce993b8d9748a3d7ac0b871ac8681fd20bb12752f9e82096504ba3742915c7",
+      "bytes": 312
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/LyricsRetryPolicyTest.kt",
+      "sha256": "9268dc178c4e92cb4485d0de68bc11b77574f316418a0a692921e8d5ec47759b",
+      "bytes": 2621
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/media/NowPlayingTest.kt",
+      "sha256": "d8ae33d5c5892073ab589b11569d5299fb26fcb3fe5c7b79f31d9324b983f315",
+      "bytes": 3492
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/ArtworkBackgroundTest.kt",
+      "sha256": "c94f4b172c3fbee35d18fab7b0fd087177457a607d55e6099cdc893f664e0b37",
+      "bytes": 591
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/DiagnosticsRedactionTest.kt",
+      "sha256": "15694b73265ba1080df63ff42bdaec661b721869f69f25ac6f540d8a321077e6",
+      "bytes": 1344
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/LandscapeModeTest.kt",
+      "sha256": "ba77701c8828eaab352e1d9f41af7dc8b15110fc5d65e6afbdeef3a73afbe081",
+      "bytes": 9478
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/LegalInfoTest.kt",
+      "sha256": "61bb78024886f51ea6c3a6d9cbfebaf56bb5a9e8acca607ddbdb9e780cad4e27",
+      "bytes": 1167
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/LyricsCanvasLayoutTest.kt",
+      "sha256": "6934e4a3c83bcd4ef2d5d2ba21b31a9214bd4f9939488c15e76d1c0615b70a5f",
+      "bytes": 1816
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/LyricsCanvasPresentationTest.kt",
+      "sha256": "f545d77374463d020dbcb115bb81eacf55523061c79d2bc74ac9fa209af1535e",
+      "bytes": 12486
+    },
+    {
+      "path": "android-v2/app/src/test/java/com/icy/lyrics/ui/PortraitLyricsFullscreenTest.kt",
+      "sha256": "962f86cf5ee75ffcdc136f42d7e8d373ef1314653e33aeeb69367b0b5abdb65c",
+      "bytes": 878
+    },
+    {
+      "path": "android-v2/build.gradle.kts",
+      "sha256": "e68fc1b05658e30e41d131726452268bdee35310bc5229a55d481ca6e83b71dd",
+      "bytes": 340
+    },
+    {
+      "path": "android-v2/core/lyrics/build.gradle.kts",
+      "sha256": "61fd2bc361dde9a0e75190af38ff9c751bdedc55351aa860717aac4ecc310497",
+      "bytes": 751
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/AnimationMath.kt",
+      "sha256": "db65399f1799ae8984bacb8cf48edd1d9d723f7a0dccf13ad82150940256e917",
+      "bytes": 7179
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/FullscreenMath.kt",
+      "sha256": "0f706d9f00b8e1accab7c4173c690d746e3068ec896405dce03cfa758a496cd5",
+      "bytes": 8169
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsScene.kt",
+      "sha256": "73e88a67f1b8006cf998dbd0e6148abc83ca80d49e794b268549bb803933e120",
+      "bytes": 56404
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsSceneSpringAnimator.kt",
+      "sha256": "3413aa870105dcf468db9c4cc1959260a7e523edc4c9ba43cf990bbbe2dd3487",
+      "bytes": 9496
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/model/LyricsModels.kt",
+      "sha256": "713a3e6dcfef190e3fb9085d9065bb259ecde30ded1739a67d954f91edb626e5",
+      "bytes": 5997
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/IcyLyricsJsonParser.kt",
+      "sha256": "6b4c4d3fad0119bb0e686436717a28dbc7ecfa72f10b6cb1e4eaabf588233876",
+      "bytes": 5638
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LrcParser.kt",
+      "sha256": "0ba825ae4d6eaaa15a8d949725632cd9738f421cfbf8b960cee22afb16793338",
+      "bytes": 6603
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsFileParser.kt",
+      "sha256": "418bd08bb6c04727536587acb2c4a0749fb40f190c65b3227891b31a191a0985",
+      "bytes": 1251
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsfileYamlParser.kt",
+      "sha256": "8ea20197e4b369326ad1e0551babb3fd68e70bf2bab406158f9704eb2b4c7a5c",
+      "bytes": 11860
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/TtmlParser.kt",
+      "sha256": "468877dd1b990fa180782aff38ed197839e6c4021dd221d541648b525cae7af6",
+      "bytes": 25789
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/LyricsOrchestrator.kt",
+      "sha256": "5e349c54c9c264aad81b750705b6e64d0a72ba70ea4e0603cfc6ed2d528e68e4",
+      "bytes": 8374
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/ProviderContracts.kt",
+      "sha256": "b37211d61663ed27c4fe2ce6146648b5a9af3f4692f3bbc4e0dee4325c74811b",
+      "bytes": 2640
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/timing/PlaybackClock.kt",
+      "sha256": "d4ad6b3e4ef00119360352505612b0314ec2c7cf968a65a222bade7606ebf46e",
+      "bytes": 7408
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/animation/AnimationMathTest.kt",
+      "sha256": "b0ad2d558f8811d7eb904b0c54b89d7d0d5ee27d175ae194394c8d5c95b4c618",
+      "bytes": 4160
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsSceneEngineTest.kt",
+      "sha256": "16c8244365e17f88814293290ff6e78d036004e15d050078bb548ef517e36f39",
+      "bytes": 20122
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsSceneSpringAnimatorTest.kt",
+      "sha256": "94272f05970711331a5f70566dbd8d3cb9e2abf9f04a12f8e175e83564e71c52",
+      "bytes": 4901
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/model/LyricsModelsTest.kt",
+      "sha256": "b51d6d1c998c37a6145212c303c9b70622e510621234b5447be58ce2940efc92",
+      "bytes": 1898
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/parser/IcyLyricsJsonParserTest.kt",
+      "sha256": "b2f05baabb5537104527b4b751cf9be6ac22e0eb03f8edabd2b2e222fe74e250",
+      "bytes": 2081
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/parser/LrcParserTest.kt",
+      "sha256": "e02e241e6f79c2e11dacf8dc7cb1240c27d88330ae7aa68cd563040794da3396",
+      "bytes": 2020
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsfileYamlParserTest.kt",
+      "sha256": "ba434a7d3810e586db67a0d171bd2a6f7ce334a5bd2200523d7806acd64e051d",
+      "bytes": 3938
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/parser/TtmlParserTest.kt",
+      "sha256": "f54fac56608b84910ab8d2993d549db4f8c509a68615c51944c9d760f149c7fb",
+      "bytes": 7004
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/provider/LyricsOrchestratorTest.kt",
+      "sha256": "65cdf7952e233d621a96a2ce70878ac9ddeaaacb54a65237245ab227af3af498",
+      "bytes": 6944
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/kotlin/com/icy/lyrics/core/lyrics/timing/PlaybackClockTest.kt",
+      "sha256": "1f67b388ddad149ea1b5805ccd9f13015fbbb3cca3877b1e74b65496915d6d50",
+      "bytes": 4658
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/resources/fixtures/apple-word.ttml",
+      "sha256": "6811065a94e116a783aecd83bedcb5ca864abb428a2fe91e15e2d3af742bb17a",
+      "bytes": 854
+    },
+    {
+      "path": "android-v2/core/lyrics/src/test/resources/fixtures/example.lyricsfile.yaml",
+      "sha256": "94e8953aef820ffbd6b42aee151297482f062e2234f09b6d58f82649e85f81e7",
+      "bytes": 481
+    },
+    {
+      "path": "android-v2/core/platform/build.gradle.kts",
+      "sha256": "88888a41836c5e6d7c1c8b20c130f99a0f0943fbb0c8f58dcd41f78c4c2fce9e",
+      "bytes": 1572
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/AppServices.kt",
+      "sha256": "5491ee3f26f182d10c2cc2db376295dfa908de18e25c646fa87199888451a36b",
+      "bytes": 7122
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyCredentialStore.kt",
+      "sha256": "0ed7bc4af0852053442b5d7c2cce0c0a8b6d003592b27263c5b06430a1eeba63",
+      "bytes": 6259
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyLoopbackCallback.kt",
+      "sha256": "a65c9b1fda4071575d514803f74004ebc9cb37616b019f03d33fd5ac70747e22",
+      "bytes": 6775
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyPkceClient.kt",
+      "sha256": "3367947bb853b888b993da7016b8a484022d3fb5e2f585d992dba9c6eaec4565",
+      "bytes": 14304
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Daos.kt",
+      "sha256": "91770fa1d1ff4a7288ac88b07c9e4c4b389970dc9c344aa1100959bd76408314",
+      "bytes": 4312
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Entities.kt",
+      "sha256": "cff529f9c3f46106c8c880bdb54e3aa5c187a6852a3bc7cc2aa2a81ec840f40a",
+      "bytes": 2161
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/IcyLyricsDatabase.kt",
+      "sha256": "0c8f8af3e41054a81f685ee71ff9f4502f35fff32bc7a492bd829b0cec6a8cbd",
+      "bytes": 1152
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/diagnostics/Diagnostics.kt",
+      "sha256": "3ad272d2d789e058293649010b3b64133a7110cdb1e10507d399d27a3f5d161d",
+      "bytes": 4965
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/migration/LegacyPreferenceCleaner.kt",
+      "sha256": "3077dcaca4309e67e8511bcaa284630e733f832a5f71e30106d4cd7bbd260087",
+      "bytes": 1399
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/network/OkHttpAwait.kt",
+      "sha256": "ffaac36890ce8eac6f933aa4a8fa22deb04eead8652862d9c0aeb206335c2a11",
+      "bytes": 1904
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LocalTtmlProvider.kt",
+      "sha256": "56e8212e86636266effc7c121b71333c605f8de68a0008c2cd44a30f31b8d010",
+      "bytes": 1723
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LrclibProvider.kt",
+      "sha256": "a8f35ffa68a2a95b11894f30691faed40de2cfcc1b61e33b0a80ad08e4215a62",
+      "bytes": 16312
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/PlatformLyricsResolver.kt",
+      "sha256": "fc8c6e3680b13271d6299670a9f81172ad04091ce6e3bec601b9fda43728b7cc",
+      "bytes": 3164
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyLyricsProvider.kt",
+      "sha256": "341e63996558f7641e06a83db07b051bf97b07e158d36e952edfce795a599767",
+      "bytes": 24061
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyPayloadDecoder.kt",
+      "sha256": "5a7bf7c9b2965dc60d565d6bc5d6a53399a178786d58ceb5c848e040dbf8baa1",
+      "bytes": 5210
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpotifyTrackResolver.kt",
+      "sha256": "b589507d13f4ad65848b69d212c19a574f82c6d0e342d5eb3d1b5ea15967a28a",
+      "bytes": 11486
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/AppSettings.kt",
+      "sha256": "2812339b321f54dc8ba4701e254106184f5248651f294bcf213891a0d6afa60c",
+      "bytes": 1124
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/SettingsRepository.kt",
+      "sha256": "11698b974d6be9d44d422bcb9c2384bcf378993277294f6dc1cd10fd56906043",
+      "bytes": 6680
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/LyricsStorageRepositories.kt",
+      "sha256": "9e20618b580f2dbd8c6568a87c65316330576aaa1197e227a62b26764d1726aa",
+      "bytes": 8546
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/TrackKeys.kt",
+      "sha256": "25461e2253981557d89307c44f69c2fef415a7b847ed575c201ab7070988c262",
+      "bytes": 1421
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/timing/BluetoothTiming.kt",
+      "sha256": "8468b3c1e8af789c0dbe2bd910fdecb2dd1d30d383a45da6378b9521f3099545",
+      "bytes": 8248
+    },
+    {
+      "path": "android-v2/core/platform/src/test/kotlin/com/icy/lyrics/core/platform/auth/SpotifyPkceClientTest.kt",
+      "sha256": "4d868f009a1dd4e8cb55a8f342530e3540a52f5027fca718c7b3b6c6b11f7e4f",
+      "bytes": 11361
+    },
+    {
+      "path": "android-v2/core/platform/src/test/kotlin/com/icy/lyrics/core/platform/migration/LegacyPreferenceCleanerTest.kt",
+      "sha256": "318e5bee855186c1a92a11424b6eb81efd71165af811f2223db705d6015940ef",
+      "bytes": 1449
+    },
+    {
+      "path": "android-v2/core/platform/src/test/kotlin/com/icy/lyrics/core/platform/provider/ProviderIntegrationTest.kt",
+      "sha256": "e2c0a070c7b36196d6a0fbb47d0a9569c32887e2d3d15c25846e14c43b81833f",
+      "bytes": 36311
+    },
+    {
+      "path": "android-v2/core/platform/src/test/kotlin/com/icy/lyrics/core/platform/provider/SpotifyTrackResolverTest.kt",
+      "sha256": "63150724ae0bc3770ef4aed987c413e077fef300e33022cd0a21fa4ed9a0869b",
+      "bytes": 6527
+    },
+    {
+      "path": "android-v2/core/platform/src/test/kotlin/com/icy/lyrics/core/platform/timing/BluetoothDeviceKeyFactoryTest.kt",
+      "sha256": "9e6e09ae297f84cd66e18ef460525ace7e077ad823c751aa541372e00ec7de30",
+      "bytes": 1000
+    },
+    {
+      "path": "android-v2/gradle.properties",
+      "sha256": "a8c9a70d3d8dc6fe2165b5c28a6080572071757fed82538ea96069729688d526",
+      "bytes": 250
+    },
+    {
+      "path": "android-v2/gradle/wrapper/gradle-wrapper.jar",
+      "sha256": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+      "bytes": 45457
+    },
+    {
+      "path": "android-v2/gradle/wrapper/gradle-wrapper.properties",
+      "sha256": "70fa201501995e6f45c0c475def71093f8115849344c48322ca997cfddba8534",
+      "bytes": 252
+    },
+    {
+      "path": "android-v2/gradlew",
+      "sha256": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+      "bytes": 8728
+    },
+    {
+      "path": "android-v2/gradlew.bat",
+      "sha256": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+      "bytes": 2937
+    },
+    {
+      "path": "android-v2/settings.gradle.kts",
+      "sha256": "1fba472c11fc84f117c3371092d5b498e95f87c35ffe91ef97172807de405289",
+      "bytes": 1778
+    }
+  ]
+}

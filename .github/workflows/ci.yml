@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -43,3 +44,41 @@ jobs:
           lintPlayDebug
           verifyPlayDistributionBoundary
           bundlePlayRelease
+
+  ios-sideload:
+    name: iPhone simulator and resignable IPA
+    # Standard public-repository runners only: never opt into billed private/larger runners.
+    if: github.event.repository.private == false
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+      SPOTIFY_CLIENT_ID: ${{ vars.ICY_IOS_SPOTIFY_CLIENT_ID }}
+      ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - name: Verify simulator and package the unsigned device application
+        run: bash iOS/scripts/build_ios.sh
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-ios-verification
+          path: |
+            iOS/build/reports/
+            iOS/build/SimulatorTests.xcresult/
+            iOS/shared/*/build/reports/tests/
+          if-no-files-found: warn
+      - name: Upload resignable IPA after distribution review
+        # User's requested SDK/source-license gate; this is not an App Store signing gate.
+        if: success() && vars.ICY_IOS_BINARY_DISTRIBUTION_CLEARED == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-lyrics-unsigned-iphone
+          path: iOS/build/delivery/
+          if-no-files-found: error

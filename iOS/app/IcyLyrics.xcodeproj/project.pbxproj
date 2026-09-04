@@ -1,0 +1,556 @@
+// !$*UTF8*$!
+{
+	"archiveVersion" = 1;
+	"classes" = {
+	};
+	"objectVersion" = 56;
+	"objects" = {
+		B79606FB3AFEA5BD1609ED40 = {
+			"isa" = "PBXFileReference";
+			"path" = "Config.xcconfig";
+			"lastKnownFileType" = "text.xcconfig";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		A4D26868017C0CCFFE2EFE50 = {
+			"isa" = "PBXFileReference";
+			"path" = "Frameworks/IcyShared.framework";
+			"lastKnownFileType" = "wrapper.framework";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		2B78DA3DC866654E6EA7CB2F = {
+			"isa" = "PBXFileReference";
+			"path" = "Frameworks/SpotifyiOS.xcframework";
+			"lastKnownFileType" = "wrapper.xcframework";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		8BF729FFE074CAEE622C0292 = {
+			"isa" = "PBXFileReference";
+			"path" = "../shared/ui/assets";
+			"lastKnownFileType" = "folder";
+			"sourceTree" = "SOURCE_ROOT";
+			"name" = "IcyAssets";
+		};
+		652F55016243BF1B9F1BBEA4 = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/Assets.xcassets";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		A4CC6BC01A927E2A78FD3BEC = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/PrivacyInfo.xcprivacy";
+			"lastKnownFileType" = "text.xml";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		06271BAF49532C879AA3C58B = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/Info.plist";
+			"lastKnownFileType" = "text.plist.xml";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		AA7FC16BAA0644169122E79B = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/AppDelegate.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		3CDA4F8F52DC424378AE59AB = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/NativeHost.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		89C1A339816E130147BEBDAF = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyrics/SpotifyAuthorization.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		04212D98F0A776D11F81B7AC = {
+			"isa" = "PBXGroup";
+			"name" = "IcyLyrics";
+			"children" = (AA7FC16BAA0644169122E79B, 3CDA4F8F52DC424378AE59AB, 89C1A339816E130147BEBDAF, 652F55016243BF1B9F1BBEA4, 06271BAF49532C879AA3C58B, A4CC6BC01A927E2A78FD3BEC);
+			"sourceTree" = "<group>";
+		};
+		6BC92A5E75E26DB84FC764A7 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = AA7FC16BAA0644169122E79B;
+		};
+		DB15C7AF432A6596EACD460D = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 3CDA4F8F52DC424378AE59AB;
+		};
+		532A27065AE1A5BDE17E1AE2 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 89C1A339816E130147BEBDAF;
+		};
+		5ADED6592956F1EB2646582B = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (6BC92A5E75E26DB84FC764A7, DB15C7AF432A6596EACD460D, 532A27065AE1A5BDE17E1AE2);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		940487D76C0755C094022162 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A4D26868017C0CCFFE2EFE50;
+		};
+		1DFC8FC5C5C30CCE1238D2D1 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2B78DA3DC866654E6EA7CB2F;
+		};
+		8F7018B424CD0CDCEEBC9DE2 = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (940487D76C0755C094022162, 1DFC8FC5C5C30CCE1238D2D1);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		1301A4EBD917120AB9776E6E = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 652F55016243BF1B9F1BBEA4;
+		};
+		89BB95B3077CCA4988AED8D9 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A4CC6BC01A927E2A78FD3BEC;
+		};
+		9EF4527C97D57956B725EA2C = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (1301A4EBD917120AB9776E6E, 89BB95B3077CCA4988AED8D9);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		D20E624D57BF4C248C484275 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2B78DA3DC866654E6EA7CB2F;
+			"settings" = {
+				"ATTRIBUTES" = ("CodeSignOnCopy", "RemoveHeadersOnCopy");
+			};
+		};
+		8A1EED22144C3F04485A69EE = {
+			"isa" = "PBXCopyFilesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"dstPath" = "";
+			"dstSubfolderSpec" = 10;
+			"files" = (D20E624D57BF4C248C484275);
+			"name" = "Embed Spotify";
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		A75E188B58003E6D2FBFDD71 = {
+			"isa" = "PBXShellScriptBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"inputPaths" = ("$(SRCROOT)/../shared/ui/assets");
+			"outputPaths" = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/IcyAssets");
+			"name" = "Copy canonical visual resources";
+			"shellPath" = "/bin/sh";
+			"shellScript" = "set -eu\n/usr/bin/ditto \"$SRCROOT/../shared/ui/assets\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/IcyAssets\"\n";
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		25B92B697A1B32E0AC9CA0C1 = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"path" = "IcyLyrics.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+			"includeInIndex" = 0;
+		};
+		5E17188C20B0135CBD211EEA = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID)";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"INFOPLIST_FILE" = "IcyLyrics/Info.plist";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"OTHER_LDFLAGS" = ("$(inherited)", "-ObjC", "-lsqlite3", "-lc++", "-framework", "Metal", "-framework", "CoreText", "-framework", "CoreGraphics", "-framework", "QuartzCore", "-framework", "Security");
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		AA6AA6C68AD128CDC79CA8C9 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID)";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"INFOPLIST_FILE" = "IcyLyrics/Info.plist";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"OTHER_LDFLAGS" = ("$(inherited)", "-ObjC", "-lsqlite3", "-lc++", "-framework", "Metal", "-framework", "CoreText", "-framework", "CoreGraphics", "-framework", "QuartzCore", "-framework", "Security");
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		0A42FE565C116450AFD1A297 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (5E17188C20B0135CBD211EEA, AA6AA6C68AD128CDC79CA8C9);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		FC2503C5B690BF6200E9673D = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = 0A42FE565C116450AFD1A297;
+			"buildPhases" = (5ADED6592956F1EB2646582B, 8F7018B424CD0CDCEEBC9DE2, 9EF4527C97D57956B725EA2C, 8A1EED22144C3F04485A69EE, A75E188B58003E6D2FBFDD71);
+			"buildRules" = ();
+			"dependencies" = ();
+			"name" = "IcyLyrics";
+			"productName" = "IcyLyrics";
+			"productReference" = 25B92B697A1B32E0AC9CA0C1;
+			"productType" = "com.apple.product-type.application";
+		};
+		9E498DBE4F6C86A2D2C3C515 = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyricsTests/ImportedTtmlTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		7017E0E7A9E3D73E1E8EEF79 = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyricsTests/SpotifyAuthorizationTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		660C34C1659FB0C821D0D3D5 = {
+			"isa" = "PBXGroup";
+			"name" = "IcyLyricsTests";
+			"children" = (9E498DBE4F6C86A2D2C3C515, 7017E0E7A9E3D73E1E8EEF79);
+			"sourceTree" = "<group>";
+		};
+		CF1D4CB6D83148E71C86E273 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 9E498DBE4F6C86A2D2C3C515;
+		};
+		57BC57D669009BA33EC79175 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 7017E0E7A9E3D73E1E8EEF79;
+		};
+		3402E4D55CE7184A01257EBD = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (CF1D4CB6D83148E71C86E273, 57BC57D669009BA33EC79175);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		4C5984B1E9CFC55153B378A0 = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		50FC6891D65CC29A7D25A5F3 = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		1BDC3544A33FE692640F6C27 = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"path" = "IcyLyricsTests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+			"includeInIndex" = 0;
+		};
+		D78C40406931E4D274596937 = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = 244210E48437B6556980A702;
+			"proxyType" = 1;
+			"remoteGlobalIDString" = FC2503C5B690BF6200E9673D;
+			"remoteInfo" = "IcyLyrics";
+		};
+		AE2B539D40C00E6695025BB2 = {
+			"isa" = "PBXTargetDependency";
+			"target" = FC2503C5B690BF6200E9673D;
+			"targetProxy" = D78C40406931E4D274596937;
+		};
+		3F0F988C36F417D4822C67DD = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsTests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/IcyLyrics.app/IcyLyrics";
+				"BUNDLE_LOADER" = "$(TEST_HOST)";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		38F28E0D672573CA7D4D7F61 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsTests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/IcyLyrics.app/IcyLyrics";
+				"BUNDLE_LOADER" = "$(TEST_HOST)";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		CEB0DA6A30A88F3E2BFE1B60 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (3F0F988C36F417D4822C67DD, 38F28E0D672573CA7D4D7F61);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		497D736836F9568554B14210 = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = CEB0DA6A30A88F3E2BFE1B60;
+			"buildPhases" = (3402E4D55CE7184A01257EBD, 4C5984B1E9CFC55153B378A0, 50FC6891D65CC29A7D25A5F3);
+			"buildRules" = ();
+			"dependencies" = (AE2B539D40C00E6695025BB2);
+			"name" = "IcyLyricsTests";
+			"productName" = "IcyLyricsTests";
+			"productReference" = 1BDC3544A33FE692640F6C27;
+			"productType" = "com.apple.product-type.bundle.unit-test";
+		};
+		761E3F0E42040CA9F7A20623 = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyricsUITests/ParityCaptureTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		11D44BDA95BD67F1B2C1EEFA = {
+			"isa" = "PBXGroup";
+			"name" = "IcyLyricsUITests";
+			"children" = (761E3F0E42040CA9F7A20623);
+			"sourceTree" = "<group>";
+		};
+		7B76DD7B298F9E8861780472 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 761E3F0E42040CA9F7A20623;
+		};
+		373CA61E6840798715BC06A6 = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (7B76DD7B298F9E8861780472);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		6DD99C7CD95B279ECE5735ED = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		9A7595E23A41F3DE41AAEDDA = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		8A602E11325A9A1B2AA96A93 = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"path" = "IcyLyricsUITests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+			"includeInIndex" = 0;
+		};
+		0C82C680E42DDB2E6B214D8C = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = 244210E48437B6556980A702;
+			"proxyType" = 1;
+			"remoteGlobalIDString" = FC2503C5B690BF6200E9673D;
+			"remoteInfo" = "IcyLyrics";
+		};
+		D45BCCD2226921DBC31358A8 = {
+			"isa" = "PBXTargetDependency";
+			"target" = FC2503C5B690BF6200E9673D;
+			"targetProxy" = 0C82C680E42DDB2E6B214D8C;
+		};
+		A9858690DCBA761556E693D8 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		52C7D99693DA4BB3B719298E = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		4C17CC8D0590935FB928E691 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (A9858690DCBA761556E693D8, 52C7D99693DA4BB3B719298E);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		0600AD124F60FE19BB893348 = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = 4C17CC8D0590935FB928E691;
+			"buildPhases" = (373CA61E6840798715BC06A6, 6DD99C7CD95B279ECE5735ED, 9A7595E23A41F3DE41AAEDDA);
+			"buildRules" = ();
+			"dependencies" = (D45BCCD2226921DBC31358A8);
+			"name" = "IcyLyricsUITests";
+			"productName" = "IcyLyricsUITests";
+			"productReference" = 8A602E11325A9A1B2AA96A93;
+			"productType" = "com.apple.product-type.bundle.ui-testing";
+		};
+		0A3E27B8CA818264D75C8D81 = {
+			"isa" = "PBXGroup";
+			"name" = "Products";
+			"children" = (25B92B697A1B32E0AC9CA0C1, 1BDC3544A33FE692640F6C27, 8A602E11325A9A1B2AA96A93);
+			"sourceTree" = "<group>";
+		};
+		E2AA269EB967A8853A258BFA = {
+			"isa" = "PBXGroup";
+			"name" = "Frameworks";
+			"children" = (A4D26868017C0CCFFE2EFE50, 2B78DA3DC866654E6EA7CB2F);
+			"sourceTree" = "<group>";
+		};
+		4813494D137E1631BBA301D5 = {
+			"isa" = "PBXGroup";
+			"children" = (04212D98F0A776D11F81B7AC, 660C34C1659FB0C821D0D3D5, 11D44BDA95BD67F1B2C1EEFA, B79606FB3AFEA5BD1609ED40, 8BF729FFE074CAEE622C0292, E2AA269EB967A8853A258BFA, 0A3E27B8CA818264D75C8D81);
+			"sourceTree" = "<group>";
+		};
+		184B519F8E1416CCE38CFFD7 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"GCC_C_LANGUAGE_STANDARD" = "gnu17";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		A824290273A346217D9BE6F4 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"GCC_C_LANGUAGE_STANDARD" = "gnu17";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		9F6B1A7BCFF26D263B843F95 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (184B519F8E1416CCE38CFFD7, A824290273A346217D9BE6F4);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		244210E48437B6556980A702 = {
+			"isa" = "PBXProject";
+			"attributes" = {
+				"BuildIndependentTargetsInParallel" = "YES";
+				"LastUpgradeCheck" = "2640";
+			};
+			"buildConfigurationList" = 9F6B1A7BCFF26D263B843F95;
+			"compatibilityVersion" = "Xcode 14.0";
+			"developmentRegion" = "en";
+			"hasScannedForEncodings" = 0;
+			"knownRegions" = ("en", "Base");
+			"mainGroup" = 4813494D137E1631BBA301D5;
+			"productRefGroup" = 0A3E27B8CA818264D75C8D81;
+			"projectDirPath" = "";
+			"projectRoot" = "";
+			"targets" = (FC2503C5B690BF6200E9673D, 497D736836F9568554B14210, 0600AD124F60FE19BB893348);
+		};
+	};
+	"rootObject" = 244210E48437B6556980A702;
+}

@@ -1,0 +1,8 @@
+// Public app identifier: register the matching client and redirect in Spotify Dashboard.
+// Optional developer overrides belong in ignored Config.local.xcconfig.
+ICY_BUNDLE_ID = com.icy.lyrics.ios
+SPOTIFY_CLIENT_ID =
+SPOTIFY_CALLBACK_SCHEME = com.icy.lyrics.ios
+// Split slashes because xcconfig treats // as a comment.
+SPOTIFY_REDIRECT_URI = $(SPOTIFY_CALLBACK_SCHEME):/$()/spotify-callback
+#include? "Config.local.xcconfig"

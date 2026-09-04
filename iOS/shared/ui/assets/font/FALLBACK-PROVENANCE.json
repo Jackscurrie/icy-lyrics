@@ -1,0 +1,69 @@
+{
+  "source": "API36 emulator-5580 /system/fonts; exact bytes",
+  "fonts": [
+    {
+      "file": "NotoColorEmoji.ttf",
+      "sha256": "292f799100f358811337bc3c68da31e6b0c422e9ce8db27d6d52b6acbc5633f3",
+      "size": 2813064,
+      "embeddedNotices": [
+        "Copyright 2022 Google Inc.",
+        "Version 2.047;GOOG;noto-emoji:20240827:6c211821b8442ab3683a502f9a79b2034293fced",
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+        "http://scripts.sil.org/OFL"
+      ]
+    },
+    {
+      "file": "NotoColorEmojiFlags.ttf",
+      "sha256": "bccb829e97ca446771231993cf5bff3449974851201c497be6d6d52e906aae7b",
+      "size": 913564,
+      "embeddedNotices": [
+        "Copyright 2022 Google Inc.",
+        "Version 2.047;GOOG;noto-emoji:20240827:6c211821b8442ab3683a502f9a79b2034293fced"
+      ]
+    },
+    {
+      "file": "NotoNaskhArabicUI-Bold.ttf",
+      "sha256": "1bdd62b362a2a26b19dbcbf34d8bdb95b58ed35522d516f50c601b5f60b2b642",
+      "size": 119356,
+      "embeddedNotices": [
+        "Copyright 2013 Google Inc. All Rights Reserved.",
+        "Version 1.08 uh",
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+        "http://scripts.sil.org/OFL"
+      ]
+    },
+    {
+      "file": "NotoNaskhArabicUI-Regular.ttf",
+      "sha256": "61e022fdf23df726b4fdf2e5022c166c97ec4b3846c5dbb76fc0922798a2083a",
+      "size": 120800,
+      "embeddedNotices": [
+        "Copyright 2013 Google Inc. All Rights Reserved.",
+        "Version 1.08 uh",
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+        "http://scripts.sil.org/OFL"
+      ]
+    },
+    {
+      "file": "NotoSansCJK-Regular.ttc",
+      "sha256": "3e7e5afaac2c6d872592d76abedac03a51c6f0fc42d11e311ff2816a6c368afe",
+      "size": 32355424,
+      "embeddedNotices": [
+        "(c) 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.",
+        "Version 2.004-H1;hotconv 1.0.118;makeotfexe 2.5.65603",
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+        "https://openfontlicense.org"
+      ]
+    },
+    {
+      "file": "NotoSansDevanagariUI-VF.ttf",
+      "sha256": "bff82fa98d2a3d3b664f7d9df3265c3acb35848bafa61249f041df989bc230d7",
+      "size": 247460,
+      "embeddedNotices": [
+        "Copyright 2015 Google Inc. All Rights Reserved.",
+        "Version 2.000",
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+        "http://scripts.sil.org/OFL"
+      ]
+    }
+  ]
+}

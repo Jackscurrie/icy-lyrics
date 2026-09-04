@@ -12,9 +12,27 @@ val localProperties = Properties().apply {
   if (file.exists()) file.inputStream().use(::load)
 }
 
+val signingPropertiesFile = rootProject.file("signing.properties")
+val signingProperties = Properties().apply {
+  if (signingPropertiesFile.exists()) signingPropertiesFile.inputStream().use(::load)
+}
+
+fun Properties.requiredSigningProperty(name: String): String =
+  getProperty(name)?.takeIf(String::isNotBlank)
+    ?: error("Missing '$name' in ${signingPropertiesFile.path}")
+
 val privateFeatureProject = findProject(":local-private-feature")
 
 android {
+  (sourceSets as org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.AndroidSourceSet>).getByName("main").kotlin.srcDirs(
+    "../../iOS/shared/ui/src/commonMain/kotlin",
+    "../../iOS/shared/ui/src/androidMain/kotlin",
+  )
+  (sourceSets as org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.AndroidSourceSet>).getByName("androidTest").kotlin.srcDir("../../iOS/tests/android")
+  (sourceSets as org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.AndroidSourceSet>).getByName("test").kotlin.srcDirs(
+    "../../iOS/tests/unit",
+    "../../iOS/shared/ui/src/commonTest/kotlin",
+  )
   namespace = "com.icy.lyrics"
   compileSdk = 36
 
@@ -22,7 +40,7 @@ android {
     applicationId = "com.icy.lyrics"
     minSdk = 33
     targetSdk = 36
-    versionCode = 2
+    versionCode = 3
     versionName = "1.0.0-alpha01"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -34,10 +52,22 @@ android {
     buildConfigField("String", "SPICY_LYRICS_VERSION", "\"6.3.12\"")
   }
 
+  val uploadSigningConfig = if (signingPropertiesFile.exists()) {
+    signingConfigs.create("upload") {
+      storeFile = file(signingProperties.requiredSigningProperty("storeFile"))
+      storePassword = signingProperties.requiredSigningProperty("storePassword")
+      keyAlias = signingProperties.requiredSigningProperty("keyAlias")
+      keyPassword = signingProperties.requiredSigningProperty("keyPassword")
+    }
+  } else {
+    null
+  }
+
   flavorDimensions += "distribution"
   productFlavors {
     create("play") {
       dimension = "distribution"
+      uploadSigningConfig?.let { signingConfig = it }
       buildConfigField("boolean", "PRIVATE_FEATURE_INCLUDED", "false")
     }
     create("personal") {
@@ -93,9 +123,11 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
   debugImplementation("androidx.compose.ui:ui-tooling")
+  debugImplementation("androidx.compose.ui:ui-test-manifest")
 
   testImplementation("junit:junit:4.13.2")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.2.21")
 
   androidTestImplementation("androidx.test.ext:junit:1.3.0")
   androidTestImplementation("androidx.test:core:1.7.0")

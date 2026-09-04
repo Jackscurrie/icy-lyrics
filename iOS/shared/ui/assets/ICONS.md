@@ -1,0 +1,1 @@
+Material vector declarations are copied without path changes from AndroidX material-icons-core and material-icons-extended 1.7.8 sources. Only the package is renamed. These retain their Apache-2.0 copyright headers.
