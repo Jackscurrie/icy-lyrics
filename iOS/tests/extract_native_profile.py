@@ -15,6 +15,8 @@ import struct
 
 from PIL import Image, PngImagePlugin
 
+SP_SAMPLE_SIZES = (12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64)
+
 
 def number(value, name, *, positive=False):
     if type(value) not in (int, float) or not math.isfinite(value):
@@ -57,6 +59,19 @@ def text(metadata, key):
     return value
 
 
+def native_font_samples(metadata):
+    # Older capture attachments predate these measurements and remain usable
+    # for geometry. Never derive or invent their absent font conversions.
+    if "spToPx" not in metadata:
+        return None
+    samples = metadata["spToPx"]
+    if not isinstance(samples, dict) or set(samples) != {str(size) for size in SP_SAMPLE_SIZES}:
+        raise ValueError("spToPx must contain the complete native font sample set")
+    for size in SP_SAMPLE_SIZES:
+        number(samples[str(size)], f"spToPx[{size}]", positive=True)
+    return {str(size): samples[str(size)] for size in SP_SAMPLE_SIZES}
+
+
 def validate_native_geometry(metadata, image_size):
     if not isinstance(metadata, dict) or metadata.get("ready") is not True:
         raise ValueError("A completed native draw acknowledgement is required")
@@ -68,6 +83,7 @@ def validate_native_geometry(metadata, image_size):
     density = number(metadata.get("composeDensity"), "composeDensity", positive=True)
     number(metadata.get("nativeDisplayScale"), "nativeDisplayScale", positive=True)
     number(metadata.get("fontScale"), "fontScale", positive=True)
+    native_font_samples(metadata)
     if density != scale:
         raise ValueError("Compose density does not match the native content display scale")
     density_dpi = pixel(density * 160, "Android density DPI")
@@ -112,7 +128,9 @@ def validate_native_geometry(metadata, image_size):
     expected = metadata.get("expectedInterfaceOrientationRawValue")
     if any(type(item) is not int for item in (interface, requested, expected)):
         raise ValueError("Native orientation values must be integers")
-    if interface not in (1, 3, 4) or interface != expected or {1: 1, 3: 4, 4: 3}.get(requested) != interface:
+    # UIKit reverses the landscape enum names, but explicitly assigns the same
+    # raw values: UIInterfaceOrientationLandscapeRight = UIDeviceOrientationLandscapeLeft.
+    if interface not in (1, 3, 4) or interface != expected or requested != interface:
         raise ValueError("Requested device orientation and observed interface orientation disagree")
     if (width > height) != (interface in (3, 4)) or (window_width > window_height) != (interface in (3, 4)):
         raise ValueError("Native dimensions disagree with the recorded orientation")
@@ -203,6 +221,7 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
                 "orientation": "landscape" if metadata["interfaceOrientationRawValue"] in (3, 4) else "portrait",
                 "interfaceOrientationRawValue": metadata["interfaceOrientationRawValue"]}
     profile_id = "ios-native-" + sha256(json.dumps(viewport, sort_keys=True).encode()).hexdigest()[:16]
+    font_samples = native_font_samples(metadata)
     profile = {"schemaVersion": 1, "profileId": profile_id, "scenario": metadata["scenario"], **viewport,
                "sourceReferences": references, "sourceCaptureBackend": "xctest-application-window",
                "androidSettings": {"wmSize": f"{viewport['widthPx']}x{viewport['heightPx']}",
@@ -213,7 +232,11 @@ def extract(png_path, geometry_path, output_directory, *, safe_area_interior=Fal
                "nativeLibraryDateText": metadata["libraryDateText"],
                "nativeFontScaling": {"requestedLargeText": metadata["requestedLargeText"],
                     "preferredContentSizeCategory": metadata["preferredContentSizeCategory"],
-                    "spToPxObservations": None, "scalingEquivalence": "pending",
+                    "spToPxObservations": font_samples, "sampleSizesSp": list(SP_SAMPLE_SIZES),
+                    "nativeObservationsComplete": font_samples is not None,
+                    "comparisonReadiness": ("native samples recorded; awaiting matching Android observations"
+                                            if font_samples is not None else "pending native samples"),
+                    "scalingEquivalence": "pending", "fontShapingParityVerified": False,
                     "warning": "Equal fontScale values do not establish equal large-text sizing; Android 14+ uses nonlinear scaling. Record actual sp-to-px conversions on both platforms."},
                "nativeTiming": {"settleDelayAfterDrawSeconds": metadata["settleDelayAfterDrawSeconds"],
                                 "clock": "real display frames", "deterministicClockMatched": False},

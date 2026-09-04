@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 from PIL import Image, ImageCms, PngImagePlugin
-from extract_native_profile import extract, validate_native_geometry
+from extract_native_profile import SP_SAMPLE_SIZES, extract, validate_native_geometry
 
 
 class NativeProfileExtraction(unittest.TestCase):
@@ -64,8 +64,39 @@ class NativeProfileExtraction(unittest.TestCase):
             self.assertEqual("portrait", profile["orientation"])
             self.assertEqual("Sep 3, 2026 at 5:00\u202fAM", profile["nativeLibraryDateText"])
             self.assertEqual("pending", profile["nativeFontScaling"]["scalingEquivalence"])
+            self.assertIsNone(profile["nativeFontScaling"]["spToPxObservations"])
+            self.assertEqual("pending native samples", profile["nativeFontScaling"]["comparisonReadiness"])
+            self.assertFalse(profile["nativeFontScaling"]["nativeObservationsComplete"])
             self.assertFalse(profile["appearanceParityVerified"])
             self.assertFalse(profile["nativeTiming"]["deterministicClockMatched"])
+
+    def test_native_font_samples_are_preserved_without_deriving_them_from_font_scale(self):
+        # Deliberately nonlinear synthetic observations prove extraction retains
+        # actual measurements instead of calculating size*density*fontScale.
+        samples = {str(size): size * 2 + 0.25 for size in SP_SAMPLE_SIZES}
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            metadata = self.geometry() | {"spToPx": samples, "fontScale": 1.5, "requestedLargeText": True}
+            png, geometry = self.input_files(directory, metadata)
+            result = extract(png, geometry, directory / "out")
+            profile = json.loads((directory / "out/android-viewport-profile.json").read_text(encoding="utf-8"))
+            scaling = profile["nativeFontScaling"]
+            self.assertEqual(samples, scaling["spToPxObservations"])
+            self.assertEqual(samples, result["nativeMetadata"]["spToPx"])
+            self.assertTrue(scaling["nativeObservationsComplete"])
+            self.assertEqual("native samples recorded; awaiting matching Android observations", scaling["comparisonReadiness"])
+            self.assertEqual("pending", scaling["scalingEquivalence"])
+            self.assertFalse(scaling["fontShapingParityVerified"])
+
+    def test_present_native_font_samples_must_be_complete_positive_finite_numbers(self):
+        samples = {str(size): float(size * 2) for size in SP_SAMPLE_SIZES}
+        invalid = [None, {}, {key: value for key, value in samples.items() if key != "64"},
+                   samples | {"13": 26}, samples | {"12": True}, samples | {"12": "24"},
+                   samples | {"12": 0}, samples | {"12": -1},
+                   samples | {"12": float("nan")}, samples | {"12": float("inf")}]
+        for value in invalid:
+            with self.subTest(samples=value), self.assertRaisesRegex(ValueError, "spToPx"):
+                validate_native_geometry(self.geometry() | {"spToPx": value}, (20, 30))
 
     def test_icc_profile_is_preserved_and_its_hash_is_recorded(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -136,6 +167,17 @@ class NativeProfileExtraction(unittest.TestCase):
         for change in changes:
             with self.subTest(change=change), self.assertRaises(ValueError):
                 validate_native_geometry(self.geometry() | change, (20, 30))
+
+    def test_landscape_device_and_interface_names_differ_but_raw_values_match(self):
+        for raw in (3, 4):
+            metadata = self.geometry() | {"windowBoundsPoints": [0, 0, 15, 10],
+                "contentBoundsInWindowPoints": [2, 1, 11, 8], "contentWidthPx": 22, "contentHeightPx": 16,
+                "capturedWindowWidthPx": 30, "capturedWindowHeightPx": 20,
+                "interfaceOrientationRawValue": raw, "expectedInterfaceOrientationRawValue": raw,
+                "requestedDeviceOrientationRawValue": raw}
+            self.assertEqual([4, 2, 26, 18], validate_native_geometry(metadata, (30, 20))["fullContentRectPx"])
+            with self.assertRaises(ValueError):
+                validate_native_geometry(metadata | {"requestedDeviceOrientationRawValue": 7 - raw}, (30, 20))
 
     def test_invalid_capture_produces_no_extraction(self):
         with tempfile.TemporaryDirectory() as temporary:

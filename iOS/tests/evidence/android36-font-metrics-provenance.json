@@ -1,0 +1,29 @@
+{
+  "captureKind": "Android instrumentation in application zygote; no renderer modifications",
+  "deviceSerial": "emulator-5580",
+  "api": 36,
+  "density": 2.625,
+  "fontScale": 1,
+  "gitHead": "c402dece69cc068b09712ab75301e50ae394c2ff",
+  "probeSource": "iOS/tests/android/FontMetricsProbeTest.kt",
+  "probeSourceSha256": "21958c6f4ae7e880a2cad05942d56b95fa4911db4b34a1408ff686593990eb6a",
+  "metricsSha256": "30fd68b8ecf6dcb409bbb4efec01b9ccc64bfaa899fadec1bf57270ff5f4b52e",
+  "unitTests": {
+    "task": ":app:testPlayDebugUnitTest",
+    "tests": 70,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "instrumentation": {
+    "class": "com.icy.lyrics.parity.FontMetricsProbeTest",
+    "tests": 1,
+    "result": "passed",
+    "durationSeconds": 7.467
+  },
+  "apkSha256": {
+    "app-play-debug.apk": "23b21a287c0f31b59114700952e0ad8ba1b692e75b31e699e49acc6c61288900",
+    "app-play-debug-androidTest.apk": "8b2ea2de9728a12da0cc3f31b28e97edce3b69dfa2132a49c9d6f11320a005b8"
+  },
+  "scope": "Measurements only; original20 baseline images were not overwritten. fontSize28sp at73.5px, header weights400/700, native paint requestedflags1/129; actual flags include Android default bits."
+}

@@ -49,12 +49,16 @@ internal class IosAndroidFontFallback(
 
   private fun family(file: String, index: Int, weight: Int): FontFamily = families.getOrPut(Triple(file, index, weight)) {
     val base = typefaces.getOrPut(file to index) {
-      val data = Data.makeFromBytes(assetLoader("font/$file"))
-      try { requireNotNull(FontMgr.default.makeFromData(data, index)) { "Cannot load Android fallback font $file/$index" } }
+      val original = assetLoader("font/$file")
+      // CoreText's Skia adapter accepts only collection index zero. Select the
+      // original face by repacking its tables, never by substituting a font.
+      val bytes = if (file.endsWith(".ttc")) standaloneFontCollectionFace(original, index) else original
+      val data = Data.makeFromBytes(bytes)
+      try { requireNotNull(FontMgr.default.makeFromData(data, 0)) { "Cannot load Android fallback font $file/$index" } }
       finally { data.close() }
     }
     val variable = file.endsWith("-VF.ttf") || file.endsWith(".ttc")
-    val variant = if (variable) base.makeClone(arrayOf(FontVariation("wght", weight.toFloat())), index) else base
+    val variant = if (variable) base.makeClone(arrayOf(FontVariation("wght", weight.toFloat())), 0) else base
     FontFamily(Typeface(variant, "icy-android36-$file-$index-$weight"))
   }
 }

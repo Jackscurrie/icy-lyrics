@@ -1,4 +1,4 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class, androidx.compose.ui.text.ExperimentalTextApi::class)
 
 package com.icy.lyrics.ui
 
@@ -11,6 +11,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler as ComposeBackHandler
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.FontHinting
+import androidx.compose.ui.text.FontRasterizationSettings
+import androidx.compose.ui.text.FontSmoothing
+import androidx.compose.ui.text.PlatformParagraphStyle
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
@@ -73,6 +79,16 @@ class IosIcyUiPlatform(
   }
   private val fallbackFonts by lazy { IosAndroidFontFallback(assetLoader) }
   override fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: FontWeight?) = fallbackFonts.apply(text, weight)
+  // Android's current TextMotion.Static clears SUBPIXEL_TEXT_FLAG and enables
+  // font hinting. All canonical text uses that default. CMP's Apple default
+  // instead enables fractional glyph positions, changing measured line widths.
+  private val paragraphRasterization = PlatformParagraphStyle(FontRasterizationSettings(
+    smoothing = FontSmoothing.AntiAlias, hinting = FontHinting.Normal,
+    subpixelPositioning = false, autoHintingForced = false,
+  ))
+  override fun textStyle(style: TextStyle): TextStyle = style.copy(platformStyle = PlatformTextStyle(
+    spanStyle = style.platformStyle?.spanStyle, paragraphStyle = paragraphRasterization,
+  ))
   override fun monotonicTimeMs(): Long = fixedFrameTimeNanos?.div(1_000_000)
     ?: (NSProcessInfo.processInfo.systemUptime * 1_000).toLong()
   override fun monotonicTimeNanos(): Long = fixedFrameTimeNanos ?: (CACurrentMediaTime() * 1_000_000_000).toLong()

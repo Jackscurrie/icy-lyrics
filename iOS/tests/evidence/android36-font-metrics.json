@@ -1,0 +1,6304 @@
+{
+  "density": 2.625,
+  "fontScale": 1,
+  "compose": [
+    {
+      "name": "headlineMedium-400",
+      "text": "Play something in Spotify",
+      "widthPx": 825,
+      "heightPx": 95,
+      "firstBaseline": 72,
+      "lastBaseline": 72,
+      "lines": [
+        {
+          "left": 0,
+          "right": 824.46484,
+          "width": 824.46484,
+          "baseline": 72,
+          "top": 0,
+          "bottom": 95
+        }
+      ],
+      "characterLayoutBoxes": [
+        {
+          "utf16Offset": 0,
+          "character": "P",
+          "layoutBox": [
+            0,
+            0,
+            46,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 1,
+          "character": "l",
+          "layoutBox": [
+            46,
+            0,
+            64,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 2,
+          "character": "a",
+          "layoutBox": [
+            64,
+            0,
+            103.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 3,
+          "character": "y",
+          "layoutBox": [
+            103.46484,
+            0,
+            138.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 4,
+          "character": " ",
+          "layoutBox": [
+            138.46484,
+            0,
+            156.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 5,
+          "character": "s",
+          "layoutBox": [
+            156.46484,
+            0,
+            194.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 6,
+          "character": "o",
+          "layoutBox": [
+            194.46484,
+            0,
+            236.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 7,
+          "character": "m",
+          "layoutBox": [
+            236.46484,
+            0,
+            300.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 8,
+          "character": "e",
+          "layoutBox": [
+            300.46484,
+            0,
+            339.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 9,
+          "character": "t",
+          "layoutBox": [
+            339.46484,
+            0,
+            363.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 10,
+          "character": "h",
+          "layoutBox": [
+            363.46484,
+            0,
+            403.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 11,
+          "character": "i",
+          "layoutBox": [
+            403.46484,
+            0,
+            421.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 12,
+          "character": "n",
+          "layoutBox": [
+            421.46484,
+            0,
+            461.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 13,
+          "character": "g",
+          "layoutBox": [
+            461.46484,
+            0,
+            502.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 14,
+          "character": " ",
+          "layoutBox": [
+            502.46484,
+            0,
+            520.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 15,
+          "character": "i",
+          "layoutBox": [
+            520.46484,
+            0,
+            538.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 16,
+          "character": "n",
+          "layoutBox": [
+            538.46484,
+            0,
+            578.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 17,
+          "character": " ",
+          "layoutBox": [
+            578.46484,
+            0,
+            596.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 18,
+          "character": "S",
+          "layoutBox": [
+            596.46484,
+            0,
+            639.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 19,
+          "character": "p",
+          "layoutBox": [
+            639.46484,
+            0,
+            680.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 20,
+          "character": "o",
+          "layoutBox": [
+            680.46484,
+            0,
+            722.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 21,
+          "character": "t",
+          "layoutBox": [
+            722.46484,
+            0,
+            746.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 22,
+          "character": "i",
+          "layoutBox": [
+            746.46484,
+            0,
+            764.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 23,
+          "character": "f",
+          "layoutBox": [
+            764.46484,
+            0,
+            789.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 24,
+          "character": "y",
+          "layoutBox": [
+            789.46484,
+            0,
+            824.46484,
+            95
+          ]
+        }
+      ],
+      "fontSizeSp": 28,
+      "lineHeightSp": 36,
+      "fontWeight": 400,
+      "fontFamily": "FontFamily.SansSerif",
+      "letterSpacing": "0.0.sp",
+      "actualComposePaint": {
+        "flags": 1283,
+        "antiAlias": true,
+        "subpixelText": false,
+        "linearText": false,
+        "hinting": 1,
+        "textSizePx": 73.5,
+        "textScaleX": 1,
+        "textSkewX": 0,
+        "letterSpacingEm": 0,
+        "typefaceWeight": 400,
+        "textLocale": "en-US",
+        "measureText": 825,
+        "textBounds": [
+          6,
+          -56,
+          824,
+          16
+        ],
+        "utf16Advances": [
+          46,
+          18,
+          39.464844,
+          35,
+          18,
+          38,
+          42,
+          64,
+          39,
+          24,
+          40,
+          18,
+          40,
+          41,
+          18,
+          18,
+          40,
+          18,
+          43,
+          41,
+          42,
+          24,
+          18,
+          25,
+          35
+        ],
+        "sumUtf16Advances": 824.46484,
+        "fontMetrics": {
+          "top": -77.6272,
+          "ascent": -68.18848,
+          "descent": 17.944336,
+          "bottom": 19.918213,
+          "leading": 0
+        },
+        "shapedAdvance": 824.46484,
+        "shapedAscent": -67.72461,
+        "shapedDescent": 17.822266,
+        "fonts": [
+          {
+            "file": "\/system\/fonts\/Roboto-Regular.ttf",
+            "ttcIndex": 0,
+            "weight": 400,
+            "slant": 0,
+            "axes": [
+              {
+                "tag": "wdth",
+                "value": 100
+              }
+            ],
+            "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+          }
+        ],
+        "glyphs": [
+          {
+            "id": 53,
+            "x": 0,
+            "y": 0,
+            "advance": 47,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              6,
+              -53,
+              44,
+              0
+            ]
+          },
+          {
+            "id": 81,
+            "x": 46,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -56,
+              13,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 64,
+            "y": 0,
+            "advance": 40,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              1
+            ]
+          },
+          {
+            "id": 94,
+            "x": 103.46484,
+            "y": 0,
+            "advance": 35,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -40,
+              35,
+              16
+            ]
+          },
+          {
+            "id": 5,
+            "x": 138.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 156.46484,
+            "y": 0,
+            "advance": 38,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              35,
+              1
+            ]
+          },
+          {
+            "id": 84,
+            "x": 194.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              39,
+              1
+            ]
+          },
+          {
+            "id": 82,
+            "x": 236.46484,
+            "y": 0,
+            "advance": 65,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              60,
+              0
+            ]
+          },
+          {
+            "id": 74,
+            "x": 300.46484,
+            "y": 0,
+            "advance": 39,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              1
+            ]
+          },
+          {
+            "id": 89,
+            "x": 339.46484,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -49,
+              22,
+              1
+            ]
+          },
+          {
+            "id": 77,
+            "x": 363.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -56,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 403.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 83,
+            "x": 421.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 76,
+            "x": 461.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              16
+            ]
+          },
+          {
+            "id": 5,
+            "x": 502.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 520.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 83,
+            "x": 538.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 5,
+            "x": 578.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 56,
+            "x": 596.46484,
+            "y": 0,
+            "advance": 44,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -54,
+              42,
+              1
+            ]
+          },
+          {
+            "id": 85,
+            "x": 639.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              39,
+              16
+            ]
+          },
+          {
+            "id": 84,
+            "x": 680.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              39,
+              1
+            ]
+          },
+          {
+            "id": 89,
+            "x": 722.46484,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -49,
+              22,
+              1
+            ]
+          },
+          {
+            "id": 78,
+            "x": 746.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 75,
+            "x": 764.46484,
+            "y": 0,
+            "advance": 26,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -57,
+              26,
+              0
+            ]
+          },
+          {
+            "id": 94,
+            "x": 789.46484,
+            "y": 0,
+            "advance": 35,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -40,
+              35,
+              16
+            ]
+          }
+        ],
+        "rasterInkRgbAbove150": [
+          6,
+          -56,
+          822,
+          15
+        ]
+      }
+    },
+    {
+      "name": "headlineMedium-700",
+      "text": "Play something in Spotify",
+      "widthPx": 839,
+      "heightPx": 95,
+      "firstBaseline": 72,
+      "lastBaseline": 72,
+      "lines": [
+        {
+          "left": 0,
+          "right": 838.46484,
+          "width": 838.46484,
+          "baseline": 72,
+          "top": 0,
+          "bottom": 95
+        }
+      ],
+      "characterLayoutBoxes": [
+        {
+          "utf16Offset": 0,
+          "character": "P",
+          "layoutBox": [
+            0,
+            0,
+            47,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 1,
+          "character": "l",
+          "layoutBox": [
+            47,
+            0,
+            66,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 2,
+          "character": "a",
+          "layoutBox": [
+            66,
+            0,
+            104.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 3,
+          "character": "y",
+          "layoutBox": [
+            104.46484,
+            0,
+            141.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 4,
+          "character": " ",
+          "layoutBox": [
+            141.46484,
+            0,
+            159.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 5,
+          "character": "s",
+          "layoutBox": [
+            159.46484,
+            0,
+            197.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 6,
+          "character": "o",
+          "layoutBox": [
+            197.46484,
+            0,
+            238.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 7,
+          "character": "m",
+          "layoutBox": [
+            238.46484,
+            0,
+            301.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 8,
+          "character": "e",
+          "layoutBox": [
+            301.46484,
+            0,
+            340.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 9,
+          "character": "t",
+          "layoutBox": [
+            340.46484,
+            0,
+            365.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 10,
+          "character": "h",
+          "layoutBox": [
+            365.46484,
+            0,
+            406.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 11,
+          "character": "i",
+          "layoutBox": [
+            406.46484,
+            0,
+            425.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 12,
+          "character": "n",
+          "layoutBox": [
+            425.46484,
+            0,
+            466.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 13,
+          "character": "g",
+          "layoutBox": [
+            466.46484,
+            0,
+            508.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 14,
+          "character": " ",
+          "layoutBox": [
+            508.46484,
+            0,
+            526.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 15,
+          "character": "i",
+          "layoutBox": [
+            526.46484,
+            0,
+            545.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 16,
+          "character": "n",
+          "layoutBox": [
+            545.46484,
+            0,
+            586.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 17,
+          "character": " ",
+          "layoutBox": [
+            586.46484,
+            0,
+            604.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 18,
+          "character": "S",
+          "layoutBox": [
+            604.46484,
+            0,
+            649.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 19,
+          "character": "p",
+          "layoutBox": [
+            649.46484,
+            0,
+            690.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 20,
+          "character": "o",
+          "layoutBox": [
+            690.46484,
+            0,
+            731.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 21,
+          "character": "t",
+          "layoutBox": [
+            731.46484,
+            0,
+            756.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 22,
+          "character": "i",
+          "layoutBox": [
+            756.46484,
+            0,
+            775.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 23,
+          "character": "f",
+          "layoutBox": [
+            775.46484,
+            0,
+            801.46484,
+            95
+          ]
+        },
+        {
+          "utf16Offset": 24,
+          "character": "y",
+          "layoutBox": [
+            801.46484,
+            0,
+            838.46484,
+            95
+          ]
+        }
+      ],
+      "fontSizeSp": 28,
+      "lineHeightSp": 36,
+      "fontWeight": 700,
+      "fontFamily": "FontFamily.SansSerif",
+      "letterSpacing": "0.0.sp",
+      "actualComposePaint": {
+        "flags": 1283,
+        "antiAlias": true,
+        "subpixelText": false,
+        "linearText": false,
+        "hinting": 1,
+        "textSizePx": 73.5,
+        "textScaleX": 1,
+        "textSkewX": 0,
+        "letterSpacingEm": 0,
+        "typefaceWeight": 700,
+        "textLocale": "en-US",
+        "measureText": 839,
+        "textBounds": [
+          4,
+          -56,
+          839,
+          16
+        ],
+        "utf16Advances": [
+          47,
+          19,
+          38.464844,
+          37,
+          18,
+          38,
+          41,
+          63,
+          39,
+          25,
+          41,
+          19,
+          41,
+          42,
+          18,
+          19,
+          41,
+          18,
+          45,
+          41,
+          41,
+          25,
+          19,
+          26,
+          37
+        ],
+        "sumUtf16Advances": 838.46484,
+        "fontMetrics": {
+          "top": -77.6272,
+          "ascent": -68.18848,
+          "descent": 17.944336,
+          "bottom": 19.918213,
+          "leading": 0
+        },
+        "shapedAdvance": 838.46484,
+        "shapedAscent": -67.72461,
+        "shapedDescent": 17.822266,
+        "fonts": [
+          {
+            "file": "\/system\/fonts\/Roboto-Regular.ttf",
+            "ttcIndex": 0,
+            "weight": 400,
+            "slant": 0,
+            "axes": [
+              {
+                "tag": "wdth",
+                "value": 100
+              }
+            ],
+            "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+          }
+        ],
+        "glyphs": [
+          {
+            "id": 53,
+            "x": 0,
+            "y": 0,
+            "advance": 47,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              6,
+              -53,
+              44,
+              0
+            ]
+          },
+          {
+            "id": 81,
+            "x": 47,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -56,
+              13,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 66,
+            "y": 0,
+            "advance": 40,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              1
+            ]
+          },
+          {
+            "id": 94,
+            "x": 104.46484,
+            "y": 0,
+            "advance": 35,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -40,
+              35,
+              16
+            ]
+          },
+          {
+            "id": 5,
+            "x": 141.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 159.46484,
+            "y": 0,
+            "advance": 38,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              35,
+              1
+            ]
+          },
+          {
+            "id": 84,
+            "x": 197.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              39,
+              1
+            ]
+          },
+          {
+            "id": 82,
+            "x": 238.46484,
+            "y": 0,
+            "advance": 65,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              60,
+              0
+            ]
+          },
+          {
+            "id": 74,
+            "x": 301.46484,
+            "y": 0,
+            "advance": 39,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              1
+            ]
+          },
+          {
+            "id": 89,
+            "x": 340.46484,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -49,
+              22,
+              1
+            ]
+          },
+          {
+            "id": 77,
+            "x": 365.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -56,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 406.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 83,
+            "x": 425.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 76,
+            "x": 466.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              37,
+              16
+            ]
+          },
+          {
+            "id": 5,
+            "x": 508.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 526.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 83,
+            "x": 545.46484,
+            "y": 0,
+            "advance": 41,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              36,
+              0
+            ]
+          },
+          {
+            "id": 5,
+            "x": 586.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 56,
+            "x": 604.46484,
+            "y": 0,
+            "advance": 44,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -54,
+              42,
+              1
+            ]
+          },
+          {
+            "id": 85,
+            "x": 649.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -40,
+              39,
+              16
+            ]
+          },
+          {
+            "id": 84,
+            "x": 690.46484,
+            "y": 0,
+            "advance": 42,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -40,
+              39,
+              1
+            ]
+          },
+          {
+            "id": 89,
+            "x": 731.46484,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -49,
+              22,
+              1
+            ]
+          },
+          {
+            "id": 78,
+            "x": 756.46484,
+            "y": 0,
+            "advance": 18,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              5,
+              -54,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 75,
+            "x": 775.46484,
+            "y": 0,
+            "advance": 26,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -57,
+              26,
+              0
+            ]
+          },
+          {
+            "id": 94,
+            "x": 801.46484,
+            "y": 0,
+            "advance": 35,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -40,
+              35,
+              16
+            ]
+          }
+        ],
+        "rasterInkRgbAbove150": [
+          5,
+          -56,
+          837,
+          15
+        ]
+      }
+    },
+    {
+      "name": "bodyLarge-400",
+      "text": "The player appears as soon as Spotify publishes its media session.",
+      "widthPx": 1334,
+      "heightPx": 63,
+      "firstBaseline": 46,
+      "lastBaseline": 46,
+      "lines": [
+        {
+          "left": 0,
+          "right": 1332.7383,
+          "width": 1332.7383,
+          "baseline": 46,
+          "top": 0,
+          "bottom": 63
+        }
+      ],
+      "characterLayoutBoxes": [
+        {
+          "utf16Offset": 0,
+          "character": "T",
+          "layoutBox": [
+            0,
+            0,
+            25.65625,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 1,
+          "character": "h",
+          "layoutBox": [
+            25.65625,
+            0,
+            49.96875,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 2,
+          "character": "e",
+          "layoutBox": [
+            49.96875,
+            0,
+            73.28125,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 3,
+          "character": " ",
+          "layoutBox": [
+            73.28125,
+            0,
+            84.59375,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 4,
+          "character": "p",
+          "layoutBox": [
+            84.59375,
+            0,
+            109.90625,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 5,
+          "character": "l",
+          "layoutBox": [
+            109.90625,
+            0,
+            121.21875,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 6,
+          "character": "a",
+          "layoutBox": [
+            121.21875,
+            0,
+            145.22266,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 7,
+          "character": "y",
+          "layoutBox": [
+            145.22266,
+            0,
+            166.26953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 8,
+          "character": "e",
+          "layoutBox": [
+            166.26953,
+            0,
+            189.58203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 9,
+          "character": "r",
+          "layoutBox": [
+            189.58203,
+            0,
+            204.89453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 10,
+          "character": " ",
+          "layoutBox": [
+            204.89453,
+            0,
+            216.20703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 11,
+          "character": "a",
+          "layoutBox": [
+            216.20703,
+            0,
+            240.51953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 12,
+          "character": "p",
+          "layoutBox": [
+            240.51953,
+            0,
+            265.83203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 13,
+          "character": "p",
+          "layoutBox": [
+            265.83203,
+            0,
+            291.14453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 14,
+          "character": "e",
+          "layoutBox": [
+            291.14453,
+            0,
+            314.45703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 15,
+          "character": "a",
+          "layoutBox": [
+            314.45703,
+            0,
+            338.76953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 16,
+          "character": "r",
+          "layoutBox": [
+            338.76953,
+            0,
+            354.08203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 17,
+          "character": "s",
+          "layoutBox": [
+            354.08203,
+            0,
+            377.39453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 18,
+          "character": " ",
+          "layoutBox": [
+            377.39453,
+            0,
+            388.70703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 19,
+          "character": "a",
+          "layoutBox": [
+            388.70703,
+            0,
+            413.01953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 20,
+          "character": "s",
+          "layoutBox": [
+            413.01953,
+            0,
+            436.33203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 21,
+          "character": " ",
+          "layoutBox": [
+            436.33203,
+            0,
+            447.64453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 22,
+          "character": "s",
+          "layoutBox": [
+            447.64453,
+            0,
+            470.95703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 23,
+          "character": "o",
+          "layoutBox": [
+            470.95703,
+            0,
+            496.26953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 24,
+          "character": "o",
+          "layoutBox": [
+            496.26953,
+            0,
+            521.58203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 25,
+          "character": "n",
+          "layoutBox": [
+            521.58203,
+            0,
+            545.89453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 26,
+          "character": " ",
+          "layoutBox": [
+            545.89453,
+            0,
+            557.20703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 27,
+          "character": "a",
+          "layoutBox": [
+            557.20703,
+            0,
+            581.51953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 28,
+          "character": "s",
+          "layoutBox": [
+            581.51953,
+            0,
+            604.83203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 29,
+          "character": " ",
+          "layoutBox": [
+            604.83203,
+            0,
+            616.14453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 30,
+          "character": "S",
+          "layoutBox": [
+            616.14453,
+            0,
+            642.45703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 31,
+          "character": "p",
+          "layoutBox": [
+            642.45703,
+            0,
+            667.76953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 32,
+          "character": "o",
+          "layoutBox": [
+            667.76953,
+            0,
+            693.08203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 33,
+          "character": "t",
+          "layoutBox": [
+            693.08203,
+            0,
+            708.39453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 34,
+          "character": "i",
+          "layoutBox": [
+            708.39453,
+            0,
+            719.70703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 35,
+          "character": "f",
+          "layoutBox": [
+            719.70703,
+            0,
+            736.01953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 36,
+          "character": "y",
+          "layoutBox": [
+            736.01953,
+            0,
+            757.33203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 37,
+          "character": " ",
+          "layoutBox": [
+            757.33203,
+            0,
+            768.64453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 38,
+          "character": "p",
+          "layoutBox": [
+            768.64453,
+            0,
+            793.95703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 39,
+          "character": "u",
+          "layoutBox": [
+            793.95703,
+            0,
+            818.26953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 40,
+          "character": "b",
+          "layoutBox": [
+            818.26953,
+            0,
+            843.58203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 41,
+          "character": "l",
+          "layoutBox": [
+            843.58203,
+            0,
+            854.89453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 42,
+          "character": "i",
+          "layoutBox": [
+            854.89453,
+            0,
+            866.20703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 43,
+          "character": "s",
+          "layoutBox": [
+            866.20703,
+            0,
+            889.51953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 44,
+          "character": "h",
+          "layoutBox": [
+            889.51953,
+            0,
+            913.83203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 45,
+          "character": "e",
+          "layoutBox": [
+            913.83203,
+            0,
+            937.14453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 46,
+          "character": "s",
+          "layoutBox": [
+            937.14453,
+            0,
+            960.45703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 47,
+          "character": " ",
+          "layoutBox": [
+            960.45703,
+            0,
+            971.76953,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 48,
+          "character": "i",
+          "layoutBox": [
+            971.76953,
+            0,
+            983.08203,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 49,
+          "character": "t",
+          "layoutBox": [
+            983.08203,
+            0,
+            998.39453,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 50,
+          "character": "s",
+          "layoutBox": [
+            998.39453,
+            0,
+            1021.70703,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 51,
+          "character": " ",
+          "layoutBox": [
+            1021.70703,
+            0,
+            1033.0195,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 52,
+          "character": "m",
+          "layoutBox": [
+            1033.0195,
+            0,
+            1071.332,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 53,
+          "character": "e",
+          "layoutBox": [
+            1071.332,
+            0,
+            1094.6445,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 54,
+          "character": "d",
+          "layoutBox": [
+            1094.6445,
+            0,
+            1119.957,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 55,
+          "character": "i",
+          "layoutBox": [
+            1119.957,
+            0,
+            1131.2695,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 56,
+          "character": "a",
+          "layoutBox": [
+            1131.2695,
+            0,
+            1155.582,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 57,
+          "character": " ",
+          "layoutBox": [
+            1155.582,
+            0,
+            1166.8945,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 58,
+          "character": "s",
+          "layoutBox": [
+            1166.8945,
+            0,
+            1190.207,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 59,
+          "character": "e",
+          "layoutBox": [
+            1190.207,
+            0,
+            1213.5195,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 60,
+          "character": "s",
+          "layoutBox": [
+            1213.5195,
+            0,
+            1236.832,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 61,
+          "character": "s",
+          "layoutBox": [
+            1236.832,
+            0,
+            1260.1445,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 62,
+          "character": "i",
+          "layoutBox": [
+            1260.1445,
+            0,
+            1271.457,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 63,
+          "character": "o",
+          "layoutBox": [
+            1271.457,
+            0,
+            1296.7695,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 64,
+          "character": "n",
+          "layoutBox": [
+            1296.7695,
+            0,
+            1321.082,
+            63
+          ]
+        },
+        {
+          "utf16Offset": 65,
+          "character": ".",
+          "layoutBox": [
+            1321.082,
+            0,
+            1332.7383,
+            63
+          ]
+        }
+      ],
+      "fontSizeSp": 16,
+      "lineHeightSp": 24,
+      "fontWeight": 400,
+      "fontFamily": "FontFamily.SansSerif",
+      "letterSpacing": "0.5.sp",
+      "actualComposePaint": {
+        "flags": 1283,
+        "antiAlias": true,
+        "subpixelText": false,
+        "linearText": false,
+        "hinting": 1,
+        "textSizePx": 42,
+        "textScaleX": 1,
+        "textSkewX": 0,
+        "letterSpacingEm": 0.03125,
+        "typefaceWeight": 400,
+        "textLocale": "en-US",
+        "measureText": 1333,
+        "textBounds": [
+          1,
+          -32,
+          1331,
+          9
+        ],
+        "utf16Advances": [
+          25.65625,
+          24.3125,
+          23.3125,
+          11.3125,
+          25.3125,
+          11.3125,
+          24.003906,
+          21.046875,
+          23.3125,
+          15.3125,
+          11.3125,
+          24.3125,
+          25.3125,
+          25.3125,
+          23.3125,
+          24.3125,
+          15.3125,
+          23.3125,
+          11.3125,
+          24.3125,
+          23.3125,
+          11.3125,
+          23.3125,
+          25.3125,
+          25.3125,
+          24.3125,
+          11.3125,
+          24.3125,
+          23.3125,
+          11.3125,
+          26.3125,
+          25.3125,
+          25.3125,
+          15.3125,
+          11.3125,
+          16.3125,
+          21.3125,
+          11.3125,
+          25.3125,
+          24.3125,
+          25.3125,
+          11.3125,
+          11.3125,
+          23.3125,
+          24.3125,
+          23.3125,
+          23.3125,
+          11.3125,
+          11.3125,
+          15.3125,
+          23.3125,
+          11.3125,
+          38.3125,
+          23.3125,
+          25.3125,
+          11.3125,
+          24.3125,
+          11.3125,
+          23.3125,
+          23.3125,
+          23.3125,
+          23.3125,
+          11.3125,
+          25.3125,
+          24.3125,
+          11.65625
+        ],
+        "sumUtf16Advances": 1332.7383,
+        "fontMetrics": {
+          "top": -44.3584,
+          "ascent": -38.964844,
+          "descent": 10.253906,
+          "bottom": 11.381836,
+          "leading": 0
+        },
+        "shapedAdvance": 1334.0508,
+        "shapedAscent": -38.964844,
+        "shapedDescent": 10.253906,
+        "fonts": [
+          {
+            "file": "\/system\/fonts\/Roboto-Regular.ttf",
+            "ttcIndex": 0,
+            "weight": 400,
+            "slant": 0,
+            "axes": [
+              {
+                "tag": "wdth",
+                "value": 100
+              }
+            ],
+            "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+          }
+        ],
+        "glyphs": [
+          {
+            "id": 57,
+            "x": 0.65625,
+            "y": 0,
+            "advance": 25,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -30,
+              25,
+              0
+            ]
+          },
+          {
+            "id": 77,
+            "x": 26.96875,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -32,
+              21,
+              0
+            ]
+          },
+          {
+            "id": 74,
+            "x": 51.28125,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 74.59375,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 85,
+            "x": 85.90625,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              22,
+              9
+            ]
+          },
+          {
+            "id": 81,
+            "x": 111.21875,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -32,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 122.53125,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 94,
+            "x": 146.53516,
+            "y": 0,
+            "advance": 20,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -23,
+              20,
+              9
+            ]
+          },
+          {
+            "id": 74,
+            "x": 167.58203,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 87,
+            "x": 190.89453,
+            "y": 0,
+            "advance": 14,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 5,
+            "x": 206.20703,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 217.51953,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 85,
+            "x": 241.83203,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              22,
+              9
+            ]
+          },
+          {
+            "id": 85,
+            "x": 267.14453,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              22,
+              9
+            ]
+          },
+          {
+            "id": 74,
+            "x": 292.45703,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 70,
+            "x": 315.76953,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 87,
+            "x": 340.08203,
+            "y": 0,
+            "advance": 14,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              14,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 355.39453,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 378.70703,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 390.01953,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 414.33203,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 437.64453,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 448.95703,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 84,
+            "x": 472.26953,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              23,
+              1
+            ]
+          },
+          {
+            "id": 84,
+            "x": 497.58203,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              23,
+              1
+            ]
+          },
+          {
+            "id": 83,
+            "x": 522.89453,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              0
+            ]
+          },
+          {
+            "id": 5,
+            "x": 547.20703,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 558.51953,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 582.83203,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 606.14453,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 56,
+            "x": 617.45703,
+            "y": 0,
+            "advance": 25,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -31,
+              24,
+              1
+            ]
+          },
+          {
+            "id": 85,
+            "x": 643.76953,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              22,
+              9
+            ]
+          },
+          {
+            "id": 84,
+            "x": 669.08203,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              23,
+              1
+            ]
+          },
+          {
+            "id": 89,
+            "x": 694.39453,
+            "y": 0,
+            "advance": 14,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -28,
+              13,
+              1
+            ]
+          },
+          {
+            "id": 78,
+            "x": 709.70703,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -31,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 75,
+            "x": 721.01953,
+            "y": 0,
+            "advance": 15,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -32,
+              15,
+              0
+            ]
+          },
+          {
+            "id": 94,
+            "x": 737.33203,
+            "y": 0,
+            "advance": 20,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -23,
+              20,
+              9
+            ]
+          },
+          {
+            "id": 5,
+            "x": 758.64453,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 85,
+            "x": 769.95703,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              22,
+              9
+            ]
+          },
+          {
+            "id": 90,
+            "x": 795.26953,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 71,
+            "x": 819.58203,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -32,
+              22,
+              1
+            ]
+          },
+          {
+            "id": 81,
+            "x": 844.89453,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              3,
+              -32,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 856.20703,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -31,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 867.51953,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 77,
+            "x": 890.83203,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -32,
+              21,
+              0
+            ]
+          },
+          {
+            "id": 74,
+            "x": 915.14453,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 938.45703,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 961.76953,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 78,
+            "x": 973.08203,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -31,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 89,
+            "x": 984.39453,
+            "y": 0,
+            "advance": 14,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              -28,
+              13,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 999.70703,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 1023.01953,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 82,
+            "x": 1034.332,
+            "y": 0,
+            "advance": 37,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              34,
+              0
+            ]
+          },
+          {
+            "id": 74,
+            "x": 1072.6445,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 73,
+            "x": 1095.957,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -32,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 78,
+            "x": 1121.2695,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -31,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 70,
+            "x": 1132.582,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "x": 1156.8945,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "x": 1168.207,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 74,
+            "x": 1191.5195,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              21,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 1214.832,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 88,
+            "x": 1238.1445,
+            "y": 0,
+            "advance": 22,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              20,
+              1
+            ]
+          },
+          {
+            "id": 78,
+            "x": 1261.457,
+            "y": 0,
+            "advance": 10,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -31,
+              8,
+              0
+            ]
+          },
+          {
+            "id": 84,
+            "x": 1272.7695,
+            "y": 0,
+            "advance": 24,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              1,
+              -23,
+              23,
+              1
+            ]
+          },
+          {
+            "id": 83,
+            "x": 1298.082,
+            "y": 0,
+            "advance": 23,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -23,
+              21,
+              0
+            ]
+          },
+          {
+            "id": 19,
+            "x": 1322.3945,
+            "y": 0,
+            "advance": 11,
+            "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+            "inkBoundsRelativeToGlyphOrigin": [
+              2,
+              -5,
+              8,
+              1
+            ]
+          }
+        ],
+        "rasterInkRgbAbove150": [
+          1,
+          -32,
+          1329,
+          8
+        ]
+      }
+    }
+  ],
+  "nativePaint": [
+    {
+      "flags": 1283,
+      "antiAlias": true,
+      "subpixelText": false,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 400,
+      "textLocale": "en-US",
+      "measureText": 825,
+      "textBounds": [
+        6,
+        -56,
+        824,
+        16
+      ],
+      "utf16Advances": [
+        46,
+        18,
+        39.464844,
+        35,
+        18,
+        38,
+        42,
+        64,
+        39,
+        24,
+        40,
+        18,
+        40,
+        41,
+        18,
+        18,
+        40,
+        18,
+        43,
+        41,
+        42,
+        24,
+        18,
+        25,
+        35
+      ],
+      "sumUtf16Advances": 824.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 824.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 46,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 64,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 103.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 138.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 156.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 194.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 236.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 300.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 339.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 363.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 403.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 421.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 461.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 502.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 520.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 538.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 578.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 596.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 639.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 680.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 722.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 746.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 764.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 789.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        6,
+        -56,
+        822,
+        15
+      ],
+      "familyRequest": "default",
+      "weightRequest": 400
+    },
+    {
+      "flags": 1411,
+      "antiAlias": true,
+      "subpixelText": true,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 400,
+      "textLocale": "en-US",
+      "measureText": 825,
+      "textBounds": [
+        6,
+        -56,
+        824,
+        16
+      ],
+      "utf16Advances": [
+        46,
+        18,
+        39.464844,
+        35,
+        18,
+        38,
+        42,
+        64,
+        39,
+        24,
+        40,
+        18,
+        40,
+        41,
+        18,
+        18,
+        40,
+        18,
+        43,
+        41,
+        42,
+        24,
+        18,
+        25,
+        35
+      ],
+      "sumUtf16Advances": 824.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 824.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 46,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 64,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 103.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 138.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 156.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 194.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 236.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 300.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 339.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 363.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 403.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 421.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 461.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 502.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 520.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 538.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 578.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 596.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 639.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 680.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 722.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 746.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 764.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 789.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        6,
+        -56,
+        822,
+        15
+      ],
+      "familyRequest": "default",
+      "weightRequest": 400
+    },
+    {
+      "flags": 1283,
+      "antiAlias": true,
+      "subpixelText": false,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 700,
+      "textLocale": "en-US",
+      "measureText": 839,
+      "textBounds": [
+        4,
+        -56,
+        839,
+        16
+      ],
+      "utf16Advances": [
+        47,
+        19,
+        38.464844,
+        37,
+        18,
+        38,
+        41,
+        63,
+        39,
+        25,
+        41,
+        19,
+        41,
+        42,
+        18,
+        19,
+        41,
+        18,
+        45,
+        41,
+        41,
+        25,
+        19,
+        26,
+        37
+      ],
+      "sumUtf16Advances": 838.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 838.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 47,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 66,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 104.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 141.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 159.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 197.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 238.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 301.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 340.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 365.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 406.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 425.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 466.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 508.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 526.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 545.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 586.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 604.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 649.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 690.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 731.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 756.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 775.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 801.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        5,
+        -56,
+        837,
+        15
+      ],
+      "familyRequest": "default",
+      "weightRequest": 700
+    },
+    {
+      "flags": 1411,
+      "antiAlias": true,
+      "subpixelText": true,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 700,
+      "textLocale": "en-US",
+      "measureText": 839,
+      "textBounds": [
+        4,
+        -56,
+        839,
+        16
+      ],
+      "utf16Advances": [
+        47,
+        19,
+        38.464844,
+        37,
+        18,
+        38,
+        41,
+        63,
+        39,
+        25,
+        41,
+        19,
+        41,
+        42,
+        18,
+        19,
+        41,
+        18,
+        45,
+        41,
+        41,
+        25,
+        19,
+        26,
+        37
+      ],
+      "sumUtf16Advances": 838.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 838.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 47,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 66,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 104.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 141.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 159.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 197.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 238.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 301.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 340.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 365.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 406.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 425.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 466.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 508.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 526.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 545.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 586.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 604.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 649.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 690.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 731.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 756.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 775.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 801.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        5,
+        -56,
+        837,
+        15
+      ],
+      "familyRequest": "default",
+      "weightRequest": 700
+    },
+    {
+      "flags": 1283,
+      "antiAlias": true,
+      "subpixelText": false,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 400,
+      "textLocale": "en-US",
+      "measureText": 825,
+      "textBounds": [
+        6,
+        -56,
+        824,
+        16
+      ],
+      "utf16Advances": [
+        46,
+        18,
+        39.464844,
+        35,
+        18,
+        38,
+        42,
+        64,
+        39,
+        24,
+        40,
+        18,
+        40,
+        41,
+        18,
+        18,
+        40,
+        18,
+        43,
+        41,
+        42,
+        24,
+        18,
+        25,
+        35
+      ],
+      "sumUtf16Advances": 824.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 824.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 46,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 64,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 103.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 138.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 156.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 194.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 236.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 300.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 339.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 363.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 403.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 421.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 461.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 502.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 520.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 538.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 578.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 596.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 639.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 680.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 722.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 746.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 764.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 789.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        6,
+        -56,
+        822,
+        15
+      ],
+      "familyRequest": "sans-serif",
+      "weightRequest": 400
+    },
+    {
+      "flags": 1411,
+      "antiAlias": true,
+      "subpixelText": true,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 400,
+      "textLocale": "en-US",
+      "measureText": 825,
+      "textBounds": [
+        6,
+        -56,
+        824,
+        16
+      ],
+      "utf16Advances": [
+        46,
+        18,
+        39.464844,
+        35,
+        18,
+        38,
+        42,
+        64,
+        39,
+        24,
+        40,
+        18,
+        40,
+        41,
+        18,
+        18,
+        40,
+        18,
+        43,
+        41,
+        42,
+        24,
+        18,
+        25,
+        35
+      ],
+      "sumUtf16Advances": 824.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 824.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 46,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 64,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 103.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 138.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 156.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 194.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 236.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 300.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 339.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 363.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 403.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 421.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 461.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 502.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 520.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 538.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 578.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 596.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 639.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 680.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 722.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 746.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 764.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 789.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        6,
+        -56,
+        822,
+        15
+      ],
+      "familyRequest": "sans-serif",
+      "weightRequest": 400
+    },
+    {
+      "flags": 1283,
+      "antiAlias": true,
+      "subpixelText": false,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 700,
+      "textLocale": "en-US",
+      "measureText": 839,
+      "textBounds": [
+        4,
+        -56,
+        839,
+        16
+      ],
+      "utf16Advances": [
+        47,
+        19,
+        38.464844,
+        37,
+        18,
+        38,
+        41,
+        63,
+        39,
+        25,
+        41,
+        19,
+        41,
+        42,
+        18,
+        19,
+        41,
+        18,
+        45,
+        41,
+        41,
+        25,
+        19,
+        26,
+        37
+      ],
+      "sumUtf16Advances": 838.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 838.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 47,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 66,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 104.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 141.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 159.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 197.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 238.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 301.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 340.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 365.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 406.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 425.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 466.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 508.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 526.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 545.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 586.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 604.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 649.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 690.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 731.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 756.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 775.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 801.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        5,
+        -56,
+        837,
+        15
+      ],
+      "familyRequest": "sans-serif",
+      "weightRequest": 700
+    },
+    {
+      "flags": 1411,
+      "antiAlias": true,
+      "subpixelText": true,
+      "linearText": false,
+      "hinting": 1,
+      "textSizePx": 73.5,
+      "textScaleX": 1,
+      "textSkewX": 0,
+      "letterSpacingEm": 0,
+      "typefaceWeight": 700,
+      "textLocale": "en-US",
+      "measureText": 839,
+      "textBounds": [
+        4,
+        -56,
+        839,
+        16
+      ],
+      "utf16Advances": [
+        47,
+        19,
+        38.464844,
+        37,
+        18,
+        38,
+        41,
+        63,
+        39,
+        25,
+        41,
+        19,
+        41,
+        42,
+        18,
+        19,
+        41,
+        18,
+        45,
+        41,
+        41,
+        25,
+        19,
+        26,
+        37
+      ],
+      "sumUtf16Advances": 838.46484,
+      "fontMetrics": {
+        "top": -77.6272,
+        "ascent": -68.18848,
+        "descent": 17.944336,
+        "bottom": 19.918213,
+        "leading": 0
+      },
+      "shapedAdvance": 838.46484,
+      "shapedAscent": -67.72461,
+      "shapedDescent": 17.822266,
+      "fonts": [
+        {
+          "file": "\/system\/fonts\/Roboto-Regular.ttf",
+          "ttcIndex": 0,
+          "weight": 400,
+          "slant": 0,
+          "axes": [
+            {
+              "tag": "wdth",
+              "value": 100
+            }
+          ],
+          "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"
+        }
+      ],
+      "glyphs": [
+        {
+          "id": 53,
+          "x": 0,
+          "y": 0,
+          "advance": 47,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            6,
+            -53,
+            44,
+            0
+          ]
+        },
+        {
+          "id": 81,
+          "x": 47,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            13,
+            0
+          ]
+        },
+        {
+          "id": 70,
+          "x": 66,
+          "y": 0,
+          "advance": 40,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 94,
+          "x": 104.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 141.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 88,
+          "x": 159.46484,
+          "y": 0,
+          "advance": 38,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            35,
+            1
+          ]
+        },
+        {
+          "id": 84,
+          "x": 197.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 82,
+          "x": 238.46484,
+          "y": 0,
+          "advance": 65,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            60,
+            0
+          ]
+        },
+        {
+          "id": 74,
+          "x": 301.46484,
+          "y": 0,
+          "advance": 39,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 340.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 77,
+          "x": 365.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -56,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 406.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 425.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 76,
+          "x": 466.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            37,
+            16
+          ]
+        },
+        {
+          "id": 5,
+          "x": 508.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 78,
+          "x": 526.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 83,
+          "x": 545.46484,
+          "y": 0,
+          "advance": 41,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            36,
+            0
+          ]
+        },
+        {
+          "id": 5,
+          "x": 586.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": 56,
+          "x": 604.46484,
+          "y": 0,
+          "advance": 44,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -54,
+            42,
+            1
+          ]
+        },
+        {
+          "id": 85,
+          "x": 649.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -40,
+            39,
+            16
+          ]
+        },
+        {
+          "id": 84,
+          "x": 690.46484,
+          "y": 0,
+          "advance": 42,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            3,
+            -40,
+            39,
+            1
+          ]
+        },
+        {
+          "id": 89,
+          "x": 731.46484,
+          "y": 0,
+          "advance": 24,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -49,
+            22,
+            1
+          ]
+        },
+        {
+          "id": 78,
+          "x": 756.46484,
+          "y": 0,
+          "advance": 18,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            5,
+            -54,
+            14,
+            0
+          ]
+        },
+        {
+          "id": 75,
+          "x": 775.46484,
+          "y": 0,
+          "advance": 26,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            2,
+            -57,
+            26,
+            0
+          ]
+        },
+        {
+          "id": 94,
+          "x": 801.46484,
+          "y": 0,
+          "advance": 35,
+          "font": "\/system\/fonts\/Roboto-Regular.ttf\/0\/400",
+          "inkBoundsRelativeToGlyphOrigin": [
+            0,
+            -40,
+            35,
+            16
+          ]
+        }
+      ],
+      "rasterInkRgbAbove150": [
+        5,
+        -56,
+        837,
+        15
+      ],
+      "familyRequest": "sans-serif",
+      "weightRequest": 700
+    }
+  ],
+  "header": "Play something in Spotify",
+  "body": "The player appears as soon as Spotify publishes its media session.",
+  "sdk": 36,
+  "buildFingerprint": "google\/sdk_gphone64_x86_64\/emu64xa:16\/BE2A.250530.026.D1\/13818094:user\/release-keys",
+  "note": "Compose character boxes are layout cells; shaped glyph bounds and raster ink are separate measurements. No renderer style changes."
+}

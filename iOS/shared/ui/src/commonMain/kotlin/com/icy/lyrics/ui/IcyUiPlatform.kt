@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 
@@ -21,6 +22,8 @@ interface IcyUiPlatform {
   val aboutDescription: String
   /** Null retains Android's existing default font and its existing metrics. */
   val fontFamily: FontFamily? get() = null
+  /** Match the platform's rasterization policy without changing layout/style values. */
+  fun textStyle(style: TextStyle): TextStyle = style
   /** Screenshot fixtures can freeze frame time without replacing the player UI. */
   val fixedFrameTimeNanos: Long? get() = null
   fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: androidx.compose.ui.text.font.FontWeight?): androidx.compose.ui.text.AnnotatedString = text
@@ -54,24 +57,26 @@ val LocalIcyUiPlatform = staticCompositionLocalOf<IcyUiPlatform> {
 
 @Composable internal fun icyTypography(): Typography {
   val original = MaterialTheme.typography
-  val family = LocalIcyUiPlatform.current.fontFamily ?: return original
-  return remember(original, family) {
+  val platform = LocalIcyUiPlatform.current
+  val family = platform.fontFamily ?: return original
+  return remember(original, family, platform) {
+    fun TextStyle.adapt() = platform.textStyle(copy(fontFamily = family))
     original.copy(
-      displayLarge = original.displayLarge.copy(fontFamily = family),
-      displayMedium = original.displayMedium.copy(fontFamily = family),
-      displaySmall = original.displaySmall.copy(fontFamily = family),
-      headlineLarge = original.headlineLarge.copy(fontFamily = family),
-      headlineMedium = original.headlineMedium.copy(fontFamily = family),
-      headlineSmall = original.headlineSmall.copy(fontFamily = family),
-      titleLarge = original.titleLarge.copy(fontFamily = family),
-      titleMedium = original.titleMedium.copy(fontFamily = family),
-      titleSmall = original.titleSmall.copy(fontFamily = family),
-      bodyLarge = original.bodyLarge.copy(fontFamily = family),
-      bodyMedium = original.bodyMedium.copy(fontFamily = family),
-      bodySmall = original.bodySmall.copy(fontFamily = family),
-      labelLarge = original.labelLarge.copy(fontFamily = family),
-      labelMedium = original.labelMedium.copy(fontFamily = family),
-      labelSmall = original.labelSmall.copy(fontFamily = family),
+      displayLarge = original.displayLarge.adapt(),
+      displayMedium = original.displayMedium.adapt(),
+      displaySmall = original.displaySmall.adapt(),
+      headlineLarge = original.headlineLarge.adapt(),
+      headlineMedium = original.headlineMedium.adapt(),
+      headlineSmall = original.headlineSmall.adapt(),
+      titleLarge = original.titleLarge.adapt(),
+      titleMedium = original.titleMedium.adapt(),
+      titleSmall = original.titleSmall.adapt(),
+      bodyLarge = original.bodyLarge.adapt(),
+      bodyMedium = original.bodyMedium.adapt(),
+      bodySmall = original.bodySmall.adapt(),
+      labelLarge = original.labelLarge.adapt(),
+      labelMedium = original.labelMedium.adapt(),
+      labelSmall = original.labelSmall.adapt(),
     )
   }
 }
@@ -94,9 +99,9 @@ internal class IcyTextMeasurer(private val delegate: TextMeasurer, private val f
     maxLines: Int = Int.MAX_VALUE,
   ): androidx.compose.ui.text.TextLayoutResult = delegate.measure(
     text = platform.fontFallback(text, style.fontWeight),
-    style = if (family != null && (style.fontFamily == null || style.fontFamily == FontFamily.Default)) {
+    style = platform.textStyle(if (family != null && (style.fontFamily == null || style.fontFamily == FontFamily.Default)) {
       style.copy(fontFamily = family)
-    } else style,
+    } else style),
     constraints = constraints,
     softWrap = softWrap, overflow = overflow, maxLines = maxLines,
   )

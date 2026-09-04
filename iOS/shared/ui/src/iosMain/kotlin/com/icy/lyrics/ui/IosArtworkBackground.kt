@@ -23,8 +23,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint as ComposePaint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.skiaCanvas
+import androidx.compose.ui.graphics.skiaPaint
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -54,9 +56,7 @@ import kotlin.math.max
   Box(modifier.fillMaxSize().background(Color.Black)) {
     if (animated && artwork != null) IosKawarpBackground(artwork, isPlaying)
     else if (enabled) IosStaticArtworkBackground(artwork)
-    Canvas(Modifier.fillMaxSize()) {
-      drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.10f), Color.Black.copy(alpha = 0.62f))))
-    }
+    AndroidDitheredGradient(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.10f), Color.Black.copy(alpha = 0.62f))))
     content()
   }
 }
@@ -67,8 +67,21 @@ import kotlin.math.max
     bitmap = artwork, contentDescription = null, contentScale = ContentScale.Crop,
     modifier = Modifier.fillMaxSize().blur(54.dp), alpha = 0.52f,
   )
+  AndroidDitheredGradient(Brush.verticalGradient(listOf(colors.first.copy(alpha = 0.34f), colors.second.copy(alpha = 0.18f), Color.Black)))
+}
+
+/** Android Compose enables dithering on its Canvas paint; Skia-backed Compose does not. */
+internal fun androidBackgroundGradientPaint(): ComposePaint = ComposePaint().apply {
+  isAntiAlias = true
+  skiaPaint.isDither = true
+}
+
+@Composable private fun AndroidDitheredGradient(brush: Brush) {
+  val paint = remember { androidBackgroundGradientPaint() }
+  DisposableEffect(paint) { onDispose { paint.skiaPaint.close() } }
   Canvas(Modifier.fillMaxSize()) {
-    drawRect(Brush.verticalGradient(listOf(colors.first.copy(alpha = 0.34f), colors.second.copy(alpha = 0.18f), Color.Black)))
+    brush.applyTo(size, paint, 1f)
+    drawIntoCanvas { it.drawRect(0f, 0f, size.width, size.height, paint) }
   }
 }
 

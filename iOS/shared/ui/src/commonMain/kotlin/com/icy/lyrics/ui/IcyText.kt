@@ -37,16 +37,18 @@ import androidx.compose.ui.unit.TextUnit
   style: TextStyle = LocalTextStyle.current,
 ) {
   val original = AnnotatedString(text)
-  val annotated = LocalIcyUiPlatform.current.fontFallback(original, fontWeight ?: style.fontWeight)
+  val platform = LocalIcyUiPlatform.current
+  val annotated = platform.fontFallback(original, fontWeight ?: style.fontWeight)
+  val renderedStyle = platform.textStyle(style)
   if (annotated === original) {
     MaterialText(text = text, modifier = modifier, color = color, fontSize = fontSize,
       fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily, letterSpacing = letterSpacing,
       textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight, overflow = overflow,
-      softWrap = softWrap, maxLines = maxLines, minLines = minLines, onTextLayout = onTextLayout, style = style)
+      softWrap = softWrap, maxLines = maxLines, minLines = minLines, onTextLayout = onTextLayout, style = renderedStyle)
   } else {
     MaterialText(text = annotated, modifier = modifier, color = color, fontSize = fontSize,
       fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily, letterSpacing = letterSpacing,
       textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight, overflow = overflow,
-      softWrap = softWrap, maxLines = maxLines, minLines = minLines, onTextLayout = onTextLayout ?: {}, style = style)
+      softWrap = softWrap, maxLines = maxLines, minLines = minLines, onTextLayout = onTextLayout ?: {}, style = renderedStyle)
   }
 }

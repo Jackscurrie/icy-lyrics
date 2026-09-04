@@ -58,22 +58,72 @@ xcrun simctl boot "$simulator"
 xcrun simctl bootstatus "$simulator" -b
 
 # Run the shared model/parser, persistence and shader-math tests on the simulator.
-# Collect independent module failures in one run while preserving a failing exit
-# status. Xcode tests and IPA packaging still require this complete gate to pass.
+# Collect independent failures, including Swift/UI diagnostics, before enforcing
+# the complete gate. A framework left by an earlier run must never qualify.
 phase 'Running shared native tests and linking the simulator framework'
-bash gradlew --no-daemon --continue -Picy.iosSimulator="$simulator" :shared:lyrics:verificationTest :shared:lyrics:iosSimulatorArm64Test \
+simulator_framework="$ROOT/shared/ui/build/bin/iosSimulatorArm64/debugFramework/IcyShared.framework"
+rm -rf "$simulator_framework"
+native_test_status=0
+swift_test_status=null
+attachment_status=null
+framework_ready=false
+record_stage_status() {
+  printf '{"nativeExitCode":%s,"swiftExitCode":%s,"attachmentExportExitCode":%s,"freshArm64Framework":%s}\n' \
+    "$native_test_status" "$swift_test_status" "$attachment_status" "$framework_ready" > build/reports/simulator-stage-results.json
+}
+if bash gradlew --no-daemon --continue -Picy.iosSimulator="$simulator" :shared:lyrics:verificationTest :shared:lyrics:iosSimulatorArm64Test \
   :shared:platform:iosSimulatorArm64Test :shared:ui:iosSimulatorArm64Test \
-  :shared:ui:linkDebugFrameworkIosSimulatorArm64 --stacktrace 2>&1 | tee build/reports/kotlin-simulator.log
+  :shared:ui:linkDebugFrameworkIosSimulatorArm64 --stacktrace 2>&1 | tee build/reports/kotlin-simulator.log; then
+  :
+else
+  native_test_status=$?
+fi
+if [[ -s "$simulator_framework/IcyShared" && -s "$simulator_framework/Headers/IcyShared.h" &&
+      -s "$simulator_framework/Modules/module.modulemap" ]] &&
+    xcrun lipo -verify_arch arm64 "$simulator_framework/IcyShared"; then
+  framework_ready=true
+else
+  record_stage_status
+  echo 'No fresh arm64 simulator framework; Swift/UI diagnostics cannot run.' >&2
+  if (( native_test_status != 0 )); then exit "$native_test_status"; else exit 1; fi
+fi
 rm -rf "$ROOT/app/Frameworks/IcyShared.framework"
-ditto shared/ui/build/bin/iosSimulatorArm64/debugFramework/IcyShared.framework app/Frameworks/IcyShared.framework
+ditto "$simulator_framework" app/Frameworks/IcyShared.framework
 # KSP may create schema output during the initial Kotlin build. Capture after it,
 # before the Xcode simulator build/tests, and reject source edits during that run.
 source_fingerprint="$(python3 scripts/source_fingerprint.py)"
 
 phase 'Running Swift tests and capturing the simulator interface'
-xcodebuild "${common[@]}" -configuration Debug -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
-  -resultBundlePath build/SimulatorTests.xcresult test 2>&1 | tee build/reports/xcode-simulator.log
-xcrun xcresulttool export attachments --path build/SimulatorTests.xcresult --output-path build/reports/ios-captures
+swift_test_status=0
+if xcodebuild "${common[@]}" -configuration Debug -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
+  -resultBundlePath build/SimulatorTests.xcresult test 2>&1 | tee build/reports/xcode-simulator.log; then
+  :
+else
+  swift_test_status=$?
+fi
+# Failing tests can contain the only useful launch log or partially drawn image.
+# Exporting that evidence must never produce a successful verification marker.
+if [[ -d build/SimulatorTests.xcresult ]]; then
+  attachment_status=0
+  if xcrun xcresulttool export attachments --path build/SimulatorTests.xcresult --output-path build/reports/ios-captures; then
+    :
+  else
+    attachment_status=$?
+  fi
+fi
+record_stage_status
+if (( native_test_status != 0 )); then
+  echo "Native tests failed ($native_test_status); Swift/UI diagnostics were collected independently. No verification or IPA." >&2
+  exit "$native_test_status"
+fi
+if (( swift_test_status != 0 )); then
+  echo "Swift/UI tests failed ($swift_test_status). No verification or IPA." >&2
+  exit "$swift_test_status"
+fi
+if [[ "$attachment_status" != 0 ]]; then
+  echo 'Simulator results or attachment export are missing/failed. No verification or IPA.' >&2
+  exit 1
+fi
 python3 scripts/record_simulator_result.py build/SimulatorTests.xcresult "$simulator" "$runtime" --source-fingerprint "$source_fingerprint"
 
 # A device build is separate: a simulator .app must never enter the IPA.

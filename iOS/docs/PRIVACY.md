@@ -72,8 +72,8 @@ those credentials from its own interface.
   requires a successful check of saved references. It does not scan for older
   orphaned files or promise cleanup after a process crash or storage failure.
   The original file in your chosen Files provider is never deleted by this
-  action. These native cleanup regressions still await macOS test execution
-  and physical-device verification.
+  action. All eight native cleanup regressions passed in macOS simulator run
+  33855937655. Physical-device verification remains pending.
 - Positive provider cache entries normally expire after three days; negative
   lookups after one hour. Initialization removes expired entries and trims the
   cache to 250 records. During an active session, an expired result
