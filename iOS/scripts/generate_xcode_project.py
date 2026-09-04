@@ -98,6 +98,7 @@ for name, directory, product_type in (
     products.append(product)
     options = dict(PRODUCT_NAME="$(TARGET_NAME)", PRODUCT_BUNDLE_IDENTIFIER="$(ICY_BUNDLE_ID)"+("" if is_app else "."+name),
                    SDKROOT="iphoneos",SUPPORTED_PLATFORMS="iphoneos iphonesimulator",TARGETED_DEVICE_FAMILY="1",
+                   ARCHS="arm64",ONLY_ACTIVE_ARCH="YES",
                    IPHONEOS_DEPLOYMENT_TARGET="16.0",SWIFT_VERSION="5.0",SWIFT_STRICT_CONCURRENCY="minimal",
                    CLANG_ENABLE_MODULES="YES",ENABLE_USER_SCRIPT_SANDBOXING="NO",CODE_SIGN_STYLE="Automatic",
                    FRAMEWORK_SEARCH_PATHS=["$(inherited)","$(SRCROOT)/Frameworks"],
@@ -105,7 +106,7 @@ for name, directory, product_type in (
     dependencies=[]
     if is_app:
         options.update(INFOPLIST_FILE="IcyLyrics/Info.plist",GENERATE_INFOPLIST_FILE="NO",
-                       ASSETCATALOG_COMPILER_APPICON_NAME="AppIcon",ONLY_ACTIVE_ARCH="YES",
+                       ASSETCATALOG_COMPILER_APPICON_NAME="AppIcon",
                        OTHER_LDFLAGS=["$(inherited)","-ObjC","-lsqlite3","-lc++","-framework","Metal","-framework","CoreText","-framework","CoreGraphics","-framework","QuartzCore","-framework","Security"])
     else:
         proxy=add("proxy:"+name,"PBXContainerItemProxy",containerPortal=project_id,proxyType=1,remoteGlobalIDString=app_target,remoteInfo="IcyLyrics")

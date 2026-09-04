@@ -154,7 +154,6 @@ fun LyricsCanvas(
   }
 
   val reducedMotion = rememberReducedMotionEnabled()
-  val fixedFrame = LocalIcyUiPlatform.current.fixedFrameTimeNanos
   val engine = remember(document) { LyricsSceneEngine() }
   val targetScene = engine.frame(
     document = document,
@@ -168,7 +167,7 @@ fun LyricsCanvas(
       reducedMotion = reducedMotion,
     ),
   )
-  val scene = if (fixedFrame != null) targetScene else rememberAnimatedLyricsScene(document, targetScene, reducedMotion)
+  val scene = rememberAnimatedLyricsScene(document, targetScene, reducedMotion)
   var userScrollOffsetPx by remember(document) { mutableFloatStateOf(0f) }
   var userHasScrolled by remember(document) { mutableStateOf(false) }
   var isUserDragging by remember(document) { mutableStateOf(false) }

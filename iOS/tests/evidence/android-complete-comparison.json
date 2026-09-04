@@ -1,0 +1,597 @@
+{
+  "comparison": "Exact RGBA pixels; no masks, resizing, tolerances, or accepted differences.",
+  "baselineProductionSourcesUnchanged": true,
+  "sourceChecks": [
+    {
+      "path": "android-v2/app/src/main/AndroidManifest.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsApplication.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/IcyLyricsViewModel.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/LyricsRetryPolicy.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/MainActivity.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/IcyNotificationListenerService.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/NowPlaying.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/media/SpotifyMediaSessionTracker.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/AppModels.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/ArtworkBackground.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/IcyLyricsApp.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LegalInfo.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/java/com/icy/lyrics/ui/LyricsCanvas.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/agpl_3_0_or_later.txt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/raw/third_party_notices.txt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/colors.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/strings.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/values/styles.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/backup_rules.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/app/src/main/res/xml/data_extraction_rules.xml",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/AnimationMath.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/FullscreenMath.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsScene.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/animation/LyricsSceneSpringAnimator.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/model/LyricsModels.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/IcyLyricsJsonParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LrcParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsFileParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/LyricsfileYamlParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/parser/TtmlParser.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/LyricsOrchestrator.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/provider/ProviderContracts.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/lyrics/src/main/kotlin/com/icy/lyrics/core/lyrics/timing/PlaybackClock.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/AppServices.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyCredentialStore.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyLoopbackCallback.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/auth/SpotifyPkceClient.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Daos.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/Entities.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/database/IcyLyricsDatabase.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/diagnostics/Diagnostics.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/migration/LegacyPreferenceCleaner.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/network/OkHttpAwait.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LocalTtmlProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/LrclibProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/PlatformLyricsResolver.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyLyricsProvider.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpicyPayloadDecoder.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/provider/SpotifyTrackResolver.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/AppSettings.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/settings/SettingsRepository.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/LyricsStorageRepositories.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/storage/TrackKeys.kt",
+      "unchanged": true
+    },
+    {
+      "path": "android-v2/core/platform/src/main/kotlin/com/icy/lyrics/core/platform/timing/BluetoothTiming.kt",
+      "unchanged": true
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "onboarding",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "10db963a98e455ef7123e3242606bf4346e57ed330e22b95e62c294869d5ef90",
+      "extractedSha256": "10db963a98e455ef7123e3242606bf4346e57ed330e22b95e62c294869d5ef90",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "empty",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "11486f1345c1736e24a581de76c17d0ce3aa050b8efd829d3288438fa9018494",
+      "extractedSha256": "11486f1345c1736e24a581de76c17d0ce3aa050b8efd829d3288438fa9018494",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "extractedSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait-long",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "f4fb453f18d346d59449b56deca6390603fe7b3f15ee51cc0b568b69479bd6bf",
+      "extractedSha256": "f4fb453f18d346d59449b56deca6390603fe7b3f15ee51cc0b568b69479bd6bf",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "portrait-failed",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "3363556fd60abb6f2a59b5f3f3f968e82221ce2b0a4b8cbeb86222796ca8ca65",
+      "extractedSha256": "3363556fd60abb6f2a59b5f3f3f968e82221ce2b0a4b8cbeb86222796ca8ca65",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "background-static",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "extractedSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "background-disabled",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "ca5f643b767b6c52df20a4703e3f1f87d7521df9d8899bb0cb05f75a1bee84a8",
+      "extractedSha256": "ca5f643b767b6c52df20a4703e3f1f87d7521df9d8899bb0cb05f75a1bee84a8",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "reduced-motion",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "extractedSha256": "232362a149395328ba96090f2db41a70900d25d1697084e8f6d3b3c2663a4a0f",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "settings",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "90e8bf262af090c559ace0e4c107d0c55858577a202586f7f7a2f4732264d937",
+      "extractedSha256": "90e8bf262af090c559ace0e4c107d0c55858577a202586f7f7a2f4732264d937",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "library",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "b7eb3d86859e91612257af9843dd996be4d6268cbf86de2e070746c17f23b3e9",
+      "extractedSha256": "b7eb3d86859e91612257af9843dd996be4d6268cbf86de2e070746c17f23b3e9",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "library-empty",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "9938f98902c22d0cb62fb17ca41630058715cff806e01724c988a2aa7727a36a",
+      "extractedSha256": "9938f98902c22d0cb62fb17ca41630058715cff806e01724c988a2aa7727a36a",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "legal",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "2ae944637a2535dbdddfd16a53636d7eb12b123ba0fc1d3387067190aa99e69e",
+      "extractedSha256": "2ae944637a2535dbdddfd16a53636d7eb12b123ba0fc1d3387067190aa99e69e",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "diagnostics",
+      "baselineSizePx": [
+        1080,
+        2400
+      ],
+      "extractedSizePx": [
+        1080,
+        2400
+      ],
+      "baselineSha256": "b6162c93f008aa9ce91c63ecfb58478ec7d097f73b8c87e000bce2562bc50ccc",
+      "extractedSha256": "b6162c93f008aa9ce91c63ecfb58478ec7d097f73b8c87e000bce2562bc50ccc",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-artwork",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "b67375d2f7416762d38c3c1995bcf574ae2c198bad1b8491754d1b619875042b",
+      "extractedSha256": "b67375d2f7416762d38c3c1995bcf574ae2c198bad1b8491754d1b619875042b",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-titles",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "8fdd7d3e31719ac2258547bcb2106c4a0238a104043faa3cfe8733699400a976",
+      "extractedSha256": "8fdd7d3e31719ac2258547bcb2106c4a0238a104043faa3cfe8733699400a976",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-mixed",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "5235bb6ac320ef8de2ddb160e72f9bdf825540e97dabbdb8085a559cf06c6d09",
+      "extractedSha256": "5235bb6ac320ef8de2ddb160e72f9bdf825540e97dabbdb8085a559cf06c6d09",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-lyrics",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "358dcb6b95d28f9bdc619225a1a6549cb91b9ca4a2cdd2a7325a6b5a5b954737",
+      "extractedSha256": "358dcb6b95d28f9bdc619225a1a6549cb91b9ca4a2cdd2a7325a6b5a5b954737",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "landscape-mixed-right",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "b4e07839da0a78e5e19ec79e2672dc73b0ec77011559e0cd5cc4ffc6193335db",
+      "extractedSha256": "b4e07839da0a78e5e19ec79e2672dc73b0ec77011559e0cd5cc4ffc6193335db",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "multilingual",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "e8792f294dfb8bdecfee96956192ec18f0f958c7674cad8e2b822439620775a1",
+      "extractedSha256": "e8792f294dfb8bdecfee96956192ec18f0f958c7674cad8e2b822439620775a1",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    },
+    {
+      "scenario": "syllables",
+      "baselineSizePx": [
+        2400,
+        1080
+      ],
+      "extractedSizePx": [
+        2400,
+        1080
+      ],
+      "baselineSha256": "0da19b7a0651aaddc787436e975a50322b406abde28a2b46d8f48101f625c049",
+      "extractedSha256": "0da19b7a0651aaddc787436e975a50322b406abde28a2b46d8f48101f625c049",
+      "status": "identical",
+      "changedPixels": 0,
+      "totalPixels": 2592000,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0.0
+    }
+  ],
+  "allIdentical": true
+}

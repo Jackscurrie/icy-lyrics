@@ -1,0 +1,96 @@
+{
+  "captureDateLocal": "2026-09-04",
+  "scope": "Android original versus extracted renderer; all 20 scenarios freshly captured with the final fixture path.",
+  "comparedPixels": 51840000,
+  "changedPixels": 0,
+  "renderer": "NVIDIA GeForce RTX 5060 Ti via Android Emulator host GLES; Vulkan disabled",
+  "emulatorVersion": "36.5.11.0 (build 15261927)",
+  "avdNaturalSizes": {
+    "portrait": [
+      1080,
+      2400
+    ],
+    "landscape": [
+      2400,
+      1080
+    ]
+  },
+  "androidDensityDpi": 420,
+  "animationClock": "Compose test clock autoAdvance=false; each fixture advanced by 2000ms in the same complete orientation-specific order.",
+  "fixtureCorrection": "Removed fixed-frame target-scene bypass; both trees run the original spring animator. Ordinary production animation behavior is unchanged.",
+  "investigation": "Initial target-scene bypass yielded 3063 differing syllable pixels; corrected standalone capture versus seventh-in-sequence baseline yielded 1057. Corrected full sequence yielded exact equality. Prior nonzero captures retained under investigation/.",
+  "rotationAttempt": "Host renderer remained alive, but natural-landscape AVD did not apply portrait rotation; dimension assertion failed before screenshots. Separate natural-portrait AVD used successfully.",
+  "historicalEvidencePreserved": "android-portrait-parity.zip is the earlier 13-scenario archive and has not been overwritten.",
+  "deviceMetadata": {
+    "baseline": {
+      "portrait": {
+        "serial": "emulator-5584",
+        "tree": "baseline",
+        "size": "Physical size: 1080x2400",
+        "density": "Physical density: 420",
+        "device": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys",
+        "fontScale": "1.0",
+        "timezone": "America/Los_Angeles",
+        "requestedRotation": 0,
+        "orientation": "portrait",
+        "gles": "GLES: Google (NVIDIA Corporation), Android Emulator OpenGL ES Translator (NVIDIA GeForce RTX 5060 Ti/PCIe/SSE2), OpenGL ES 3.1 (4.5.0 NVIDIA 616.56)",
+        "apkSha256": {
+          "app-play-debug.apk": "6b0a8373ca415bd7e342bba2b7340ef2db751de84e03eeb9b43af4e312ebe289",
+          "app-play-debug-androidTest.apk": "14642fd89f5e71b824d8d23028fb37ea0c42f94eda49890f7e4205e10cb628b0"
+        }
+      },
+      "landscape": {
+        "serial": "emulator-5582",
+        "tree": "baseline",
+        "size": "Physical size: 2400x1080",
+        "density": "Physical density: 420",
+        "device": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys",
+        "fontScale": "1.0",
+        "timezone": "America/Los_Angeles",
+        "gles": "GLES: Google (NVIDIA Corporation), Android Emulator OpenGL ES Translator (NVIDIA GeForce RTX 5060 Ti/PCIe/SSE2), OpenGL ES 3.1 (4.5.0 NVIDIA 616.56)",
+        "apkSha256": {
+          "app-play-debug.apk": "6b0a8373ca415bd7e342bba2b7340ef2db751de84e03eeb9b43af4e312ebe289",
+          "app-play-debug-androidTest.apk": "14642fd89f5e71b824d8d23028fb37ea0c42f94eda49890f7e4205e10cb628b0"
+        }
+      }
+    },
+    "extracted": {
+      "portrait": {
+        "serial": "emulator-5584",
+        "tree": "extracted",
+        "size": "Physical size: 1080x2400",
+        "density": "Physical density: 420",
+        "device": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys",
+        "fontScale": "1.0",
+        "timezone": "America/Los_Angeles",
+        "requestedRotation": 0,
+        "orientation": "portrait",
+        "gles": "GLES: Google (NVIDIA Corporation), Android Emulator OpenGL ES Translator (NVIDIA GeForce RTX 5060 Ti/PCIe/SSE2), OpenGL ES 3.1 (4.5.0 NVIDIA 616.56)",
+        "apkSha256": {
+          "app-play-debug.apk": "7acc009476e40098766889de587e445850b31ddc98269325e2c0e5a3f1cde551",
+          "app-play-debug-androidTest.apk": "43c735fba7c839c3a7e64fa068465f5917494fc36d112a95bdb55cb80fe5e3e7"
+        }
+      },
+      "landscape": {
+        "serial": "emulator-5582",
+        "tree": "extracted",
+        "size": "Physical size: 2400x1080",
+        "density": "Physical density: 420",
+        "device": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys",
+        "fontScale": "1.0",
+        "timezone": "America/Los_Angeles",
+        "gles": "GLES: Google (NVIDIA Corporation), Android Emulator OpenGL ES Translator (NVIDIA GeForce RTX 5060 Ti/PCIe/SSE2), OpenGL ES 3.1 (4.5.0 NVIDIA 616.56)",
+        "apkSha256": {
+          "app-play-debug.apk": "7acc009476e40098766889de587e445850b31ddc98269325e2c0e5a3f1cde551",
+          "app-play-debug-androidTest.apk": "43c735fba7c839c3a7e64fa068465f5917494fc36d112a95bdb55cb80fe5e3e7"
+        }
+      }
+    }
+  },
+  "fixtureSourceSha256": {
+    "iOS/shared/ui/src/commonMain/kotlin/com/icy/lyrics/ui/LyricsCanvas.kt": "257cb40a5bfc779bc0878d81f024a9b6daad81d549654901c584ab2666ce7cc6",
+    "iOS/shared/ui/src/commonMain/kotlin/com/icy/lyrics/ui/IcyParityFixtures.kt": "9e27e2e53111c9564373831339c90f47d8408fdbe5f854ff754b620322a06114",
+    "iOS/shared/ui/src/commonMain/kotlin/com/icy/lyrics/ui/IcyParityFixtureScreen.kt": "b8dc8761b76e9092a8687dd0f806f867b9a8ad1fca41b31e08645042dceb83df",
+    "iOS/tests/android/IcyParityScreenshotTest.kt": "8e146aac16da693b075ec3ca958ce7979c6f0147085b68e3d011dd0797532e3f"
+  }
+}

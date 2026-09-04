@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class ParityCaptureTests: XCTestCase {
     let portrait = ["onboarding", "empty", "portrait", "portrait-long", "portrait-failed",
@@ -12,8 +13,9 @@ final class ParityCaptureTests: XCTestCase {
     func testLandscapeLeftFixtures() { capture(landscape, orientation: .landscapeLeft) }
     func testLandscapeRightFixtures() { capture(landscape, orientation: .landscapeRight) }
     func testLargeTextFixture() {
-        capture(["portrait-long", "multilingual"], orientation: .portrait,
-                extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let largeText = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        capture(["portrait-long"], orientation: .portrait, extraArguments: largeText)
+        capture(["multilingual"], orientation: .landscapeLeft, extraArguments: largeText)
     }
     private func capture(_ scenarios: [String], orientation: UIDeviceOrientation, extraArguments: [String] = []) {
         for scenario in scenarios {
@@ -23,18 +25,70 @@ final class ParityCaptureTests: XCTestCase {
             app.launch()
             XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30), "Fixture did not launch: \(scenario)")
             XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 15))
-            // Give the Compose/Metal surface time to deliver its deterministic frame.
-            // Rendering assertions and strict pixel comparison are separate from this capture test.
-            let rendered = expectation(description: "Compose surface frame")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { rendered.fulfill() }
-            wait(for: [rendered], timeout: 5)
+            let marker = app.descendants(matching: .any).matching(identifier: "icy-parity-ready").firstMatch
+            XCTAssertTrue(marker.waitForExistence(timeout: 20), "Fixture draw acknowledgement is missing")
+            let isLandscape = orientation == .landscapeLeft || orientation == .landscapeRight
+            let expectedInterface = interfaceOrientation(for: orientation)
+            let rendered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let metadata = self.readMetadata(marker),
+                      metadata["ready"] as? Bool == true,
+                      metadata["scenario"] as? String == scenario,
+                      metadata["interfaceOrientationRawValue"] as? Int == expectedInterface.rawValue,
+                      let width = metadata["contentWidthPx"] as? Int,
+                      let height = metadata["contentHeightPx"] as? Int else { return false }
+                return width > 0 && height > 0 && (width > height) == isLandscape
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [rendered], timeout: 30), .completed,
+                           "Compose did not draw the requested orientation: \(scenario)")
+            // Keep the existing settling interval, now measured after a real
+            // matching draw. This is not deterministic spring-clock sampling.
+            let settling = expectation(description: "Post-draw settling interval")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { settling.fulfill() }
+            wait(for: [settling], timeout: 5)
+            guard var metadata = readMetadata(marker) else { XCTFail("Invalid fixture metadata"); return }
+            XCTAssertEqual(metadata["interfaceOrientationRawValue"] as? Int, expectedInterface.rawValue)
+            XCTAssertEqual(metadata["timezone"] as? String, "America/Los_Angeles")
+            if !extraArguments.isEmpty {
+                XCTAssertEqual(metadata["preferredContentSizeCategory"] as? String,
+                               "UICTContentSizeCategoryAccessibilityXXXL")
+                XCTAssertGreaterThan((metadata["fontScale"] as? NSNumber)?.doubleValue ?? 0, 1)
+            }
             let shot = app.windows.firstMatch.screenshot()
-            XCTAssertGreaterThan(shot.pngRepresentation.count, 5000)
+            guard let pixels = shot.image.cgImage else { XCTFail("Screenshot has no pixels"); return }
+            XCTAssertEqual(pixels.width > pixels.height, isLandscape)
+            metadata["capturedWindowWidthPx"] = pixels.width
+            metadata["capturedWindowHeightPx"] = pixels.height
+            metadata["requestedDeviceOrientationRawValue"] = orientation.rawValue
+            metadata["expectedInterfaceOrientationRawValue"] = expectedInterface.rawValue
+            metadata["requestedLargeText"] = !extraArguments.isEmpty
+            metadata["settleDelayAfterDrawSeconds"] = 2
+            let name = "\(scenario)-\(orientation.rawValue)\(extraArguments.isEmpty ? "" : "-large-text")"
             let attachment = XCTAttachment(screenshot: shot)
-            attachment.name = "\(scenario)-\(orientation.rawValue)\(extraArguments.isEmpty ? "" : "-large-text")"
+            attachment.name = name
             attachment.lifetime = .keepAlways
             add(attachment)
+            let details = try! JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys])
+            let geometry = XCTAttachment(data: details, uniformTypeIdentifier: "public.json")
+            geometry.name = name + "-geometry"
+            geometry.lifetime = .keepAlways
+            add(geometry)
             app.terminate()
+        }
+    }
+
+    private func readMetadata(_ marker: XCUIElement) -> [String: Any]? {
+        guard let value = marker.value as? String, let bytes = value.data(using: .utf8) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: bytes)) as? [String: Any]
+    }
+
+    private func interfaceOrientation(for device: UIDeviceOrientation) -> UIInterfaceOrientation {
+        // UIKit names landscape interfaces opposite to device rotation:
+        // https://developer.apple.com/documentation/uikit/uiinterfaceorientation
+        switch device {
+        case .portrait: return .portrait
+        case .landscapeLeft: return .landscapeRight
+        case .landscapeRight: return .landscapeLeft
+        default: preconditionFailure("Unsupported parity capture orientation")
         }
     }
 }

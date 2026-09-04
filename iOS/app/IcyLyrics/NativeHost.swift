@@ -69,7 +69,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         #if DEBUG
         if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "--icy-fixture"),
            ProcessInfo.processInfo.arguments.indices.contains(index + 1) {
-            return IosParityKt.createIcyParityViewController(scenarioId: ProcessInfo.processInfo.arguments[index + 1])
+            return ParityFixtureViewController(scenario: ProcessInfo.processInfo.arguments[index + 1])
         }
         #endif
         return controller.makeViewController()

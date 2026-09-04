@@ -2,7 +2,7 @@
 
 The Android V2 presentation is now canonical Kotlin/Compose source under `shared/ui`. Android compiles those same files with its original Android toolchain. This isolated build adds the iPhone adapters, Swift shell, and resignable IPA packaging. There is no App Store submission or paid Apple signing setup.
 
-**Status: source port implemented; desktop/Android CI and 90 native Kotlin simulator tests passed; Swift application build and appearance acceptance pending.** See [validation status](docs/VALIDATION.md). All 13 archived Android portrait scenarios match the original pixel-for-pixel after extraction. The shared simulator framework now links, but the Swift application and its screenshot tests have not passed yet, and physical-iPhone testing has not started. An IPA must not be described as simulator-verified until the complete macOS job passes. Android-identical iPhone appearance remains an acceptance requirement.
+**Status: source port implemented; desktop/Android CI, 90 native Kotlin simulator tests, and Swift application compilation/linking passed; application tests and appearance acceptance pending.** See [validation status](docs/VALIDATION.md). All 20 archived Android portrait and landscape scenarios match the original pixel-for-pixel after extraction. The simulator app now compiles and links, but its Swift tests and screenshot captures have not passed yet, and physical-iPhone testing has not started. An IPA must not be described as simulator-verified until the complete macOS job passes. Android-identical iPhone appearance remains an acceptance requirement.
 
 All new authored work is inside this folder. The only integrations outside it are edits to existing Android source/build files and the existing `.github/workflows/ci.yml`. Android's existing `play`/`personal` boundary, application ID, database opening, settings keys, launcher edits, and native MediaSession handling are retained.
 
@@ -20,7 +20,7 @@ The generated device output is `build/delivery/IcyLyrics-unsigned.ipa`, with `SH
 
 - [Architecture and behavior](docs/ARCHITECTURE.md)
 - [Validation and outstanding acceptance checks](docs/VALIDATION.md)
-- [Measured Android screenshot results](tests/ANDROID-VERIFICATION.md) and [original/extracted capture archive](tests/evidence/android-portrait-parity.zip)
+- [Measured Android screenshot results](tests/ANDROID-VERIFICATION.md) and [original/extracted capture archive](tests/evidence/android-complete-parity.zip)
 - `scripts/generate_xcode_project.py`: regenerate the checked-in Xcode project after adding Swift sources; `--check` checks reproducibility.
 - `scripts/bootstrap_spotify.py`: fetch the exact, SHA-256-checked Spotify iOS SDK 5.0.1 into ignored `app/Frameworks`.
 - `tests/prepare_android_baseline.py`, `tests/capture_android_parity.py`: original-versus-extracted Android capture harness. The baseline uses the frozen pre-extraction source; never recapture it from already-extracted production code.

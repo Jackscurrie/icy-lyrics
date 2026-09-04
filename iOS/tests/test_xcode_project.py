@@ -44,6 +44,14 @@ class XcodeProjectValidation(unittest.TestCase):
             target=project.objects[project.uid("target:"+name)]
             self.assertEqual([project.app_target],[project.objects[key]["target"] for key in target["dependencies"]])
 
+    def test_application_and_tests_match_the_arm64_kotlin_framework(self):
+        # An Intel test bundle cannot import the ARM-only host app's Swift module.
+        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests"):
+            for variant in ("Debug", "Release"):
+                settings=project.objects[project.uid(f"config:{name}:{variant}")]["buildSettings"]
+                self.assertEqual("arm64",settings["ARCHS"])
+                self.assertEqual("YES",settings["ONLY_ACTIVE_ARCH"])
+
     def test_committed_project_matches_deterministic_generation(self):
         project.main(["--check"])
 
