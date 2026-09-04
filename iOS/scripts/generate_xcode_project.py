@@ -71,6 +71,7 @@ for name, directory, product_type in (
     ("IcyLyrics", "IcyLyrics", "com.apple.product-type.application"),
     ("IcyLyricsTests", "IcyLyricsTests", "com.apple.product-type.bundle.unit-test"),
     ("IcyLyricsUITests", "IcyLyricsUITests", "com.apple.product-type.bundle.ui-testing"),
+    ("IcyLyricsExtendedUITests", "IcyLyricsExtendedUITests", "com.apple.product-type.bundle.ui-testing"),
 ):
     is_app = name == "IcyLyrics"
     source_refs = [file("source:"+path.relative_to(APP).as_posix(), path.relative_to(APP).as_posix(), "sourcecode.swift")
@@ -145,11 +146,21 @@ ET.SubElement(scheme,"ArchiveAction",buildConfiguration="Release",revealArchiveI
 ET.indent(scheme)
 scheme_output='<?xml version="1.0" encoding="UTF-8"?>\n'+ET.tostring(scheme,encoding="unicode")+"\n"
 
+# A separate test bundle/scheme keeps the original 29 UIKit captures untouched.
+extended_scheme = ET.fromstring(scheme_output)
+extended_testables = extended_scheme.find("./TestAction/Testables")
+extended_testables.clear()
+reference(ET.SubElement(extended_testables, "TestableReference", skipped="NO"), "IcyLyricsExtendedUITests")
+ET.indent(extended_scheme)
+extended_scheme_output = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(extended_scheme, encoding="unicode") + "\n"
+
 def main(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument("--check",action="store_true")
     args=parser.parse_args(argv)
-    for path,content in ((APP/"IcyLyrics.xcodeproj/project.pbxproj",output),(APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyrics.xcscheme",scheme_output)):
+    for path,content in ((APP/"IcyLyrics.xcodeproj/project.pbxproj",output),
+                         (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyrics.xcscheme",scheme_output),
+                         (APP/"IcyLyrics.xcodeproj/xcshareddata/xcschemes/IcyLyricsExtendedParity.xcscheme",extended_scheme_output)):
         if args.check:
             if not path.exists() or path.read_text(encoding="utf-8")!=content: raise SystemExit(f"Stale generated project: {path}")
         else:

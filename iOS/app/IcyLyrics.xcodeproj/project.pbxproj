@@ -505,10 +505,136 @@
 			"productReference" = 8A602E11325A9A1B2AA96A93;
 			"productType" = "com.apple.product-type.bundle.ui-testing";
 		};
+		F7BEEB4F4D9A271D6FE0C9CD = {
+			"isa" = "PBXFileReference";
+			"path" = "IcyLyricsExtendedUITests/ExtendedParityCaptureTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		AEEC949E58E93C57A3DDAAC3 = {
+			"isa" = "PBXGroup";
+			"name" = "IcyLyricsExtendedUITests";
+			"children" = (F7BEEB4F4D9A271D6FE0C9CD);
+			"sourceTree" = "<group>";
+		};
+		39CD9F72498DBCF0FBB7E3E6 = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F7BEEB4F4D9A271D6FE0C9CD;
+		};
+		EA641D613B9EE3CC7C4409D4 = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (39CD9F72498DBCF0FBB7E3E6);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		5714D561EDFADAA8E530437C = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		A9457042137FBBB06AA401A2 = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		B75D68359F69E8D3DC2393AD = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"path" = "IcyLyricsExtendedUITests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+			"includeInIndex" = 0;
+		};
+		F60DE66FD1015D26D237857C = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = 244210E48437B6556980A702;
+			"proxyType" = 1;
+			"remoteGlobalIDString" = FC2503C5B690BF6200E9673D;
+			"remoteInfo" = "IcyLyrics";
+		};
+		310349630CB68F12D0117C53 = {
+			"isa" = "PBXTargetDependency";
+			"target" = FC2503C5B690BF6200E9673D;
+			"targetProxy" = F60DE66FD1015D26D237857C;
+		};
+		4A1D1525EABE7139554BDE26 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsExtendedUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ARCHS" = "arm64";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"ENABLE_TESTABILITY" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+			};
+		};
+		74839DCF96039C889AB4AEF4 = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"baseConfigurationReference" = B79606FB3AFEA5BD1609ED40;
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "$(ICY_BUNDLE_ID).IcyLyricsExtendedUITests";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"ARCHS" = "arm64";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SWIFT_VERSION" = "5.0";
+				"SWIFT_STRICT_CONCURRENCY" = "minimal";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "NO";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"FRAMEWORK_SEARCH_PATHS" = ("$(inherited)", "$(SRCROOT)/Frameworks");
+				"LD_RUNPATH_SEARCH_PATHS" = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"TEST_TARGET_NAME" = "IcyLyrics";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+				"ENABLE_TESTABILITY" = "NO";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		9BF58C3CE701EBD64ED567F1 = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (4A1D1525EABE7139554BDE26, 74839DCF96039C889AB4AEF4);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Release";
+		};
+		BF2669AE159C2D046C3D7AE1 = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = 9BF58C3CE701EBD64ED567F1;
+			"buildPhases" = (EA641D613B9EE3CC7C4409D4, 5714D561EDFADAA8E530437C, A9457042137FBBB06AA401A2);
+			"buildRules" = ();
+			"dependencies" = (310349630CB68F12D0117C53);
+			"name" = "IcyLyricsExtendedUITests";
+			"productName" = "IcyLyricsExtendedUITests";
+			"productReference" = B75D68359F69E8D3DC2393AD;
+			"productType" = "com.apple.product-type.bundle.ui-testing";
+		};
 		0A3E27B8CA818264D75C8D81 = {
 			"isa" = "PBXGroup";
 			"name" = "Products";
-			"children" = (25B92B697A1B32E0AC9CA0C1, 1BDC3544A33FE692640F6C27, 8A602E11325A9A1B2AA96A93);
+			"children" = (25B92B697A1B32E0AC9CA0C1, 1BDC3544A33FE692640F6C27, 8A602E11325A9A1B2AA96A93, B75D68359F69E8D3DC2393AD);
 			"sourceTree" = "<group>";
 		};
 		E2AA269EB967A8853A258BFA = {
@@ -519,7 +645,7 @@
 		};
 		4813494D137E1631BBA301D5 = {
 			"isa" = "PBXGroup";
-			"children" = (04212D98F0A776D11F81B7AC, 660C34C1659FB0C821D0D3D5, 11D44BDA95BD67F1B2C1EEFA, B79606FB3AFEA5BD1609ED40, 8BF729FFE074CAEE622C0292, E2AA269EB967A8853A258BFA, 0A3E27B8CA818264D75C8D81);
+			"children" = (04212D98F0A776D11F81B7AC, 660C34C1659FB0C821D0D3D5, 11D44BDA95BD67F1B2C1EEFA, AEEC949E58E93C57A3DDAAC3, B79606FB3AFEA5BD1609ED40, 8BF729FFE074CAEE622C0292, E2AA269EB967A8853A258BFA, 0A3E27B8CA818264D75C8D81);
 			"sourceTree" = "<group>";
 		};
 		184B519F8E1416CCE38CFFD7 = {
@@ -569,7 +695,7 @@
 			"productRefGroup" = 0A3E27B8CA818264D75C8D81;
 			"projectDirPath" = "";
 			"projectRoot" = "";
-			"targets" = (FC2503C5B690BF6200E9673D, 497D736836F9568554B14210, 0600AD124F60FE19BB893348);
+			"targets" = (FC2503C5B690BF6200E9673D, 497D736836F9568554B14210, 0600AD124F60FE19BB893348, BF2669AE159C2D046C3D7AE1);
 		};
 	};
 	"rootObject" = 244210E48437B6556980A702;

@@ -18,12 +18,16 @@ The first iOS evidence contains 18 actual raster captures. All 13 completed port
 
 Two pinned platform defaults differ: Android's Compose gradient paint enables dithering, and its default `TextMotion.Static` disables fractional glyph positioning. The iOS adapters now request those same policies while retaining all original colors, dimensions, type sizes and font axes. New native font/paragraph metrics and the next capture run must establish their actual effect; these source corrections do not themselves prove identical rendering.
 
+[Run 33859647445](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33859647445), revision `7115b2e`, passed all **108 native Kotlin tests**: 83 lyrics, 10 persistence/import and 15 UI tests, with zero failures or skipped tests. The original CJK faces now load successfully, and all 20 offscreen raster captures completed. The simulator framework linked. A newly added architecture-check command placed its input after `lipo -verify_arch`; Apple treats that trailing input as another architecture. Both command sites now use Apple's input-first ordering, with a regression that rejects the old invocation. Swift/UI execution and IPA packaging did not run on this revision.
+
+All 20 strict image comparisons still report differences. The original artifact is [9932285807](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33859647445/artifacts/9932285807), 12,455,110 bytes, SHA-256 `a8c6c78ae90e825f74eaa56e9dadc9a828cd28643369950f8cd6e6f10b813f9c`. Native Compose measurements show the 28sp header at 829/843 pixels for weights 400/700 versus Android's 825/839; iOS baseline 72.805664 versus Android's 72. The matched positioning policy alone does not fix font metrics. Dithering increased the number of differing raster background pixels; in the unobstructed static background their maximum channel difference remains 3/255. This result requires investigation against production UIKit/Metal and is not an appearance pass.
+
 ## Passed locally
 
 - Shared lyrics JVM verification: 83 tests, including original parser cases and portability/limits/Unicode/integer-boundary cases.
 - Android core lyrics regression: 73 original tests against extracted canonical code.
 - Android platform regression: 69 tests covering provider behavior, matching, local persistence, migrations/settings and timing.
-- Android app regression: 68 tests, including 11 new controller tests for stale imports, late provider responses, cancellation, queue promotion and settings races, plus 4 shared artwork-math tests.
+- Android app regression: 70 tests, including 11 new controller tests for stale imports, late provider responses, cancellation, queue promotion and settings races, 4 shared artwork-math tests, and 2 original CJK table-preservation cases.
 - Android Play debug lint and public/private distribution-boundary verification.
 - Both iOS production dependency graphs: 71 native libraries each; both test graphs: 73 each, with no duplicate identities or missing native dependencies. Material3 remains pinned to 1.9.0. Common metadata forwarding duplicates are resolved without removing native binary dependencies.
 - Common and iOS Kotlin metadata compilation, including iPhone service/controller/platform/shader source. This is type-checking; it is not a native framework link or an Xcode build.

@@ -81,7 +81,8 @@ class IosIcyUiPlatform(
   override fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: FontWeight?) = fallbackFonts.apply(text, weight)
   // Android's current TextMotion.Static clears SUBPIXEL_TEXT_FLAG and enables
   // font hinting. All canonical text uses that default. CMP's Apple default
-  // instead enables fractional glyph positions, changing measured line widths.
+  // instead enables fractional glyph positions. Match the policy, then verify
+  // actual shaping metrics and pixels separately for each renderer.
   private val paragraphRasterization = PlatformParagraphStyle(FontRasterizationSettings(
     smoothing = FontSmoothing.AntiAlias, hinting = FontHinting.Normal,
     subpixelPositioning = false, autoHintingForced = false,

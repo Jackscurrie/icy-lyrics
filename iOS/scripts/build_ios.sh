@@ -4,6 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 [[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Use an Apple Silicon macOS runner.' >&2; exit 1; }
 mkdir -p build/reports build/delivery
+rm -f build/reports/retained-ios-simulator.txt
 finish() {
   # Preserve native-generated schemas even when a later test fails. They must
   # be reviewed and committed, not exempted from the exact-source release gate.
@@ -17,8 +18,14 @@ finish() {
   fi
   git status --porcelain=v1 --untracked-files=all -- . ../android-v2 ../.github/workflows/ci.yml > build/reports/source-status.txt || true
   if [[ -n "${simulator:-}" ]]; then
-    xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
-    xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+    if [[ "${ICY_ADDITIONAL_IOS_PARITY:-false}" == true ]]; then
+      # Explicit workflow-dispatch diagnostics run as a separate step, even
+      # after a failed main gate. That step's cleanup owns this simulator.
+      printf '%s\n' "$simulator" > build/reports/retained-ios-simulator.txt
+    else
+      xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
+      xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+    fi
   fi
 }
 trap finish EXIT
@@ -80,7 +87,7 @@ else
 fi
 if [[ -s "$simulator_framework/IcyShared" && -s "$simulator_framework/Headers/IcyShared.h" &&
       -s "$simulator_framework/Modules/module.modulemap" ]] &&
-    xcrun lipo -verify_arch arm64 "$simulator_framework/IcyShared"; then
+    xcrun lipo "$simulator_framework/IcyShared" -verify_arch arm64; then
   framework_ready=true
 else
   record_stage_status

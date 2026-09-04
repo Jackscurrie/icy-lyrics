@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "suite": "extended-v1",
+  "archive": "android-extended-v1-reference.zip",
+  "archiveBytes": 2248624,
+  "archiveSha256": "942e7641952cdf42b69008d0bee7c4e501e1672335c13e6e92abdb3ddd94ee22",
+  "caseCount": 11,
+  "caseOrder": [
+    "portrait-expanded",
+    "settings-fullscreen",
+    "settings-sources",
+    "settings-troubleshooting",
+    "settings-privacy",
+    "token-consent",
+    "legal-lower",
+    "legal-agpl",
+    "legal-agpl-scrolled",
+    "legal-third-party",
+    "legal-third-party-scrolled"
+  ],
+  "widthPx": 1080,
+  "heightPx": 2400,
+  "density": 2.625,
+  "fontScale": 1,
+  "safeDrawingInsetsPx": [
+    0,
+    63,
+    0,
+    63
+  ],
+  "fullDisplayCaptureIncludesSystemBars": true,
+  "caseClocksAndActions": "See each raw capture JSON in the archive",
+  "baselineProductionVerifiedFiles": 57,
+  "appearanceParityVerified": false,
+  "iosComparison": "pending"
+}

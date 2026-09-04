@@ -38,7 +38,15 @@ xcodebuild() {
   return "$SWIFT_EXIT"
 }
 xcrun() {
-  if [[ "$1" == lipo ]]; then return "$ARCH_EXIT"; fi
+  if [[ "$1" == lipo ]]; then
+    # Apple lipo consumes every argument after -verify_arch as an architecture.
+    # The input binary must precede that option, unlike our former permissive fake.
+    if [[ $# != 4 || ! -s "$2" || "$3" != -verify_arch || "$4" != arm64 ]]; then
+      echo 'Invalid Apple lipo input/architecture argument ordering' >&2
+      return 96
+    fi
+    return "$ARCH_EXIT"
+  fi
   if [[ "$1" == xcresulttool ]]; then echo export >> events; return "$ATTACHMENT_EXIT"; fi
   return 97
 }
@@ -61,7 +69,7 @@ class SimulatorStageGates(unittest.TestCase):
     def _formatMessage(self, msg, standardMsg):
         return super()._formatMessage(msg, standardMsg) + "\n" + getattr(self, "stage_diagnostics", "")
 
-    def run_stages(self, *, stale_framework=False, **overrides):
+    def run_stages(self, *, stale_framework=False, stages=STAGES, **overrides):
         environment = os.environ | {"NATIVE_EXIT": "0", "SWIFT_EXIT": "0", "ATTACHMENT_EXIT": "0",
                                     "MAKE_FRAMEWORK": "1", "MAKE_RESULT": "1", "ARCH_EXIT": "0", "VERIFIER_EXIT": "0"}
         environment.update({key: str(value) for key, value in overrides.items()})
@@ -73,7 +81,7 @@ class SimulatorStageGates(unittest.TestCase):
                     target = old / item
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text("stale")
-            completed = subprocess.run([BASH, "-s"], input=PRELUDE + STAGES + "\necho device >> events\n",
+            completed = subprocess.run([BASH, "-s"], input=PRELUDE + stages + "\necho device >> events\n",
                                        cwd=root, env=environment, text=True, capture_output=True, timeout=20)
             event_path = root / "events"
             report_path = root / "build/reports/simulator-stage-results.json"
@@ -139,6 +147,17 @@ class SimulatorStageGates(unittest.TestCase):
         self.assertEqual(events, ["native"])
         self.assertFalse(status["freshArm64Framework"])
         self.assertFalse(marker)
+
+    def test_apple_lipo_rejects_binary_after_variable_length_architecture_list(self):
+        wrong_order = STAGES.replace('lipo "$simulator_framework/IcyShared" -verify_arch arm64',
+                                     'lipo -verify_arch arm64 "$simulator_framework/IcyShared"')
+        self.assertNotEqual(wrong_order, STAGES)
+        code, events, status, marker = self.run_stages(stages=wrong_order)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(events, ["native"])
+        self.assertFalse(status["freshArm64Framework"])
+        self.assertFalse(marker)
+        self.assertIn("Invalid Apple lipo", self.stage_diagnostics)
 
     def test_only_complete_success_reaches_verifier_and_device_stage(self):
         code, events, status, marker = self.run_stages()

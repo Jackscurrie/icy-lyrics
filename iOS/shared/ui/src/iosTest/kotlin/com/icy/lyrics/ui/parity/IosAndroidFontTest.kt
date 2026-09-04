@@ -7,6 +7,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import com.icy.lyrics.ui.LocalIcyUiPlatform
 import com.icy.lyrics.ui.icyTypography
 import com.icy.lyrics.ui.standaloneFontCollectionFace
@@ -37,7 +38,8 @@ class IosAndroidFontTest {
         val text = "Play something in Spotify"
         val measurements = listOf(400, 700).map { weight ->
           val style = typography.headlineMedium.copy(fontWeight = FontWeight(weight))
-          val result = measurer.measure(text, style, softWrap = false, maxLines = 1)
+          val result = measurer.measure(text, style, softWrap = false, maxLines = 1,
+            constraints = Constraints(maxWidth = 20_000))
           buildJsonObject {
             put("requestedWeight", weight)
             put("fontSizeSp", style.fontSize.value)

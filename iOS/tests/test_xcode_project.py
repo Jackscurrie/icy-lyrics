@@ -13,7 +13,7 @@ class XcodeProjectValidation(unittest.TestCase):
         references={value["path"]:key for key,value in project.objects.items()
                     if value["isa"]=="PBXFileReference" and value.get("lastKnownFileType")=="sourcecode.swift"}
         sources={path.relative_to(project.APP).as_posix()
-                 for directory in ("IcyLyrics","IcyLyricsTests","IcyLyricsUITests")
+                 for directory in ("IcyLyrics","IcyLyricsTests","IcyLyricsUITests","IcyLyricsExtendedUITests")
                  for path in (project.APP/directory).rglob("*.swift")}
         self.assertEqual(sources,set(references))
         for path,identifier in references.items():
@@ -47,11 +47,25 @@ class XcodeProjectValidation(unittest.TestCase):
 
     def test_application_and_tests_match_the_arm64_kotlin_framework(self):
         # An Intel test bundle cannot import the ARM-only host app's Swift module.
-        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests"):
+        for name in ("IcyLyrics", "IcyLyricsTests", "IcyLyricsUITests", "IcyLyricsExtendedUITests"):
             for variant in ("Debug", "Release"):
                 settings=project.objects[project.uid(f"config:{name}:{variant}")]["buildSettings"]
                 self.assertEqual("arm64",settings["ARCHS"])
                 self.assertEqual("YES",settings["ONLY_ACTIVE_ARCH"])
+
+    def test_extended_capture_bundle_is_opt_in_and_depends_only_on_the_app(self):
+        default = ET.fromstring(project.scheme_output)
+        extended = ET.fromstring(project.extended_scheme_output)
+        def names(scheme):
+            return {item.attrib["BlueprintName"] for item in scheme.findall("./TestAction/Testables/TestableReference/BuildableReference")}
+        self.assertEqual({"IcyLyricsTests", "IcyLyricsUITests"}, names(default))
+        self.assertEqual({"IcyLyricsExtendedUITests"}, names(extended))
+        target = project.objects[project.uid("target:IcyLyricsExtendedUITests")]
+        self.assertEqual("com.apple.product-type.bundle.ui-testing", target["productType"])
+        self.assertEqual([project.app_target], [project.objects[key]["target"] for key in target["dependencies"]])
+        sources = project.objects[project.uid("sources:IcyLyricsExtendedUITests")]["files"]
+        self.assertEqual(["IcyLyricsExtendedUITests/ExtendedParityCaptureTests.swift"],
+                         [project.objects[project.objects[key]["fileRef"]]["path"] for key in sources])
 
     def test_compose_required_phone_frame_duration_entry_is_enabled(self):
         # Compose's native PlistSanityCheck aborts application launch without it.

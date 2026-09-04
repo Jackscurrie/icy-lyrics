@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      additional_ios_parity:
+        description: 'Run opt-in extended UIKit surfaces and motion capture evidence'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -55,6 +61,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
       SPOTIFY_CLIENT_ID: ${{ vars.ICY_IOS_SPOTIFY_CLIENT_ID }}
       ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
+      ICY_ADDITIONAL_IOS_PARITY: ${{ github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -73,7 +80,22 @@ jobs:
           restore-keys: |
             icy-ios-${{ runner.os }}-${{ runner.arch }}-xcode26.4.1-v1-
       - name: Verify simulator and package the unsigned device application
+        id: ios_build
         run: bash iOS/scripts/build_ios.sh
+      - name: Capture opt-in additional iPhone parity evidence
+        if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
+        run: bash iOS/scripts/capture_additional_ios.sh
+      - name: Clean up the retained additional-capture simulator
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
+        shell: bash
+        run: |
+          if [[ -f iOS/build/reports/retained-ios-simulator.txt ]]; then
+            simulator="$(cat iOS/build/reports/retained-ios-simulator.txt)"
+            if [[ "$simulator" =~ ^[a-fA-F0-9-]{36}$ ]]; then
+              xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
+              xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+            fi
+          fi
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -83,9 +105,24 @@ jobs:
             iOS/build/reports/
             iOS/build/SimulatorTests.xcresult/
             iOS/shared/*/build/reports/tests/
+            !iOS/build/reports/extended-ios/**
+            !iOS/build/reports/additional-parity/**
+            !iOS/build/reports/deterministic-ios-captures/mixed-lyrics-motion-v1/**
+            !iOS/build/reports/motion-ios-tests/**
+          if-no-files-found: warn
+      - name: Upload opt-in additional parity evidence
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-ios-additional-parity
+          path: |
+            iOS/build/reports/additional-parity/
+            iOS/build/reports/extended-ios/
+            iOS/build/reports/deterministic-ios-captures/mixed-lyrics-motion-v1/
+            iOS/build/reports/motion-ios-tests/
           if-no-files-found: warn
       - name: Upload encrypted delivery for the owner
-        if: success()
+        if: '!cancelled() && steps.ios_build.outcome == ''success'''
         uses: actions/upload-artifact@v7
         with:
           name: icy-lyrics-owner-encrypted
@@ -95,7 +132,7 @@ jobs:
           if-no-files-found: error
       - name: Upload resignable IPA after distribution review
         # User's requested SDK/source-license gate; this is not an App Store signing gate.
-        if: success() && vars.ICY_IOS_BINARY_DISTRIBUTION_CLEARED == 'true'
+        if: '!cancelled() && steps.ios_build.outcome == ''success'' && vars.ICY_IOS_BINARY_DISTRIBUTION_CLEARED == ''true'''
         uses: actions/upload-artifact@v7
         with:
           name: icy-lyrics-unsigned-iphone

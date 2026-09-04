@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "suite": "mixed-lyrics-motion-v1",
+  "archive": "android-motion-v1-reference.zip",
+  "archiveBytes": 23256905,
+  "archiveSha256": "e5e9022384c8cbaf2ea7708fa66d37851716ee1fd6a1def948ac843b81398bf3",
+  "frameCount": 44,
+  "framesPerSide": 22,
+  "sides": [
+    "LEFT",
+    "RIGHT"
+  ],
+  "widthPx": 2400,
+  "heightPx": 1080,
+  "density": 2.625,
+  "fontScale": 1,
+  "safeDrawingInsetsPx": [
+    0,
+    63,
+    0,
+    63
+  ],
+  "singleCompositionPerSide": true,
+  "originalProductionFilesVerified": 57,
+  "repeatIdenticalPngCount": 44,
+  "appearanceParityVerified": false,
+  "iosComparison": "pending"
+}

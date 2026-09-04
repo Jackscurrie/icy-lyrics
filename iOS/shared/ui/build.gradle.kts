@@ -1,5 +1,7 @@
 import java.util.Properties
+import java.security.MessageDigest
 import java.util.zip.ZipFile
+import groovy.json.JsonOutput
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
@@ -78,11 +80,39 @@ kotlin {
 // The offscreen test runner reads the same checked-in bytes without depending on an app bundle.
 val deterministicCaptureAssets = layout.projectDirectory.dir("assets")
 val deterministicCaptureOutput = rootProject.layout.buildDirectory.dir("reports/deterministic-ios-captures")
+val captureMotion = providers.gradleProperty("icy.captureMotion").map(String::toBooleanStrict).orElse(false)
 tasks.withType<KotlinNativeSimulatorTest>().configureEach {
   inputs.dir(deterministicCaptureAssets)
   outputs.dir(deterministicCaptureOutput)
   environment("SIMCTL_CHILD_ICY_DETERMINISTIC_ASSET_ROOT", deterministicCaptureAssets.asFile.absolutePath)
   environment("SIMCTL_CHILD_ICY_DETERMINISTIC_OUTPUT_ROOT", deterministicCaptureOutput.get().asFile.absolutePath)
+  // Compile the motion suite normally, but leave the original default capture run unchanged.
+  inputs.property("icy.captureMotion", captureMotion)
+  if (!captureMotion.get()) {
+    filter.excludeTestsMatching("com.icy.lyrics.ui.parity.DeterministicIosMotionCaptureTest")
+  } else {
+    // An explicit motion run must not overwrite the default simulator verification reports.
+    val motionReports = rootProject.layout.buildDirectory.dir("reports/motion-ios-tests/$name")
+    reports.junitXml.outputLocation.set(motionReports.map { it.dir("xml") })
+    reports.html.outputLocation.set(motionReports.map { it.dir("html") })
+    binaryResultsDirectory.set(motionReports.map { it.dir("binary") })
+    fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes)
+      .joinToString("") { "%02x".format(it) }
+    val motionSources = mapOf(
+      "referenceSourceManifestSha256" to rootProject.file("tests/baseline/android-source-manifest.json"),
+      "motionFixtureSourceSha256" to file("src/commonMain/kotlin/com/icy/lyrics/ui/IcyMotionFixtureScreen.kt"),
+      "fixtureDataSourceSha256" to file("src/commonMain/kotlin/com/icy/lyrics/ui/IcyParityFixtures.kt"),
+    )
+    inputs.files(motionSources.values)
+    val sourceIdentity = mapOf("textHashEncoding" to "utf8-lf") + motionSources.mapValues { (_, source) ->
+      sha256(source.readText(Charsets.UTF_8).replace("\r\n", "\n").toByteArray(Charsets.UTF_8))
+    }
+    val fontHashes = file("assets/font").listFiles().orEmpty()
+      .filter { it.extension in setOf("ttf", "ttc") }.sortedBy { it.name }
+      .associate { "font/${it.name}" to sha256(it.readBytes()) }
+    environment("SIMCTL_CHILD_ICY_MOTION_SOURCE_IDENTITY", JsonOutput.toJson(sourceIdentity))
+    environment("SIMCTL_CHILD_ICY_MOTION_FONT_HASHES", JsonOutput.toJson(fontHashes))
+  }
 }
 
 // This resolves and inspects the actual external native archives even on Windows;
