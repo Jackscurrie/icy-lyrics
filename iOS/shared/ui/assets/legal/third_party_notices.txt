@@ -1,5 +1,14 @@
 # Third-party notices
 
+## Native iPhone renderer
+
+The iPhone port uses Skiko 0.144.6 and its pinned Skia m144-22f58c9fd4 build.
+Full upstream renderer and dependency licenses, copyright notices, and source
+provenance accompany this document in legal/native (native/ relative to this
+file). These files retain their original licenses.
+
+This software is based in part on the work of the Independent JPEG Group.
+
 ## Spicy Lyrics
 
 Icy Lyrics is a modified, independently distributed fork of [Spicy Lyrics](https://github.com/spikerko/spicy-lyrics).

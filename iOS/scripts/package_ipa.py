@@ -9,6 +9,7 @@ import hashlib
 import json
 import plistlib
 import posixpath
+import re
 import shutil
 import struct
 import subprocess
@@ -18,6 +19,100 @@ import zipfile
 from source_fingerprint import fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
+
+def validate_committed_source(repo):
+    """A simulator/device match is insufficient if neither matches the published commit."""
+    status=subprocess.check_output(["git","status","--porcelain=v1","-z","--untracked-files=all","--",
+                                    "iOS","android-v2",".github/workflows/ci.yml"],cwd=repo)
+    if status:
+        changes=", ".join(repr(record.decode("utf-8",errors="replace"))
+                          for record in status.split(b"\0") if record)
+        raise ValueError("Corresponding source differs from HEAD. Commit or revert the port, Android V2, "
+                         "or workflow changes, then rerun simulator verification before packaging. "
+                         "Unexpected generated schema changes must also be reviewed and committed. "
+                         f"Git status: {changes}")
+
+def corresponding_source(commit):
+    """Pin delivery source references to the exact verified Git object, never a branch."""
+    if not re.fullmatch(r"[0-9a-f]{40}",commit):
+        raise ValueError("Corresponding source requires a full Git commit SHA")
+    repository="https://github.com/Jackscurrie/icy-lyrics"
+    revision=f"{repository}/blob/{commit}"
+    return {"repository":repository,"commit":commit,
+            "browseUrl":f"{repository}/tree/{commit}",
+            "archiveUrl":f"{repository}/archive/{commit}.zip",
+            "buildInstructionsUrl":f"{revision}/iOS/README.md",
+            "installInstructionsUrl":f"{revision}/iOS/docs/INSTALL-WINDOWS.md",
+            "licenseUrl":f"{revision}/LICENSE",
+            "distributionReviewUrl":f"{revision}/iOS/docs/DISTRIBUTION-REVIEW.md"}
+
+def committed_asset_hashes(commit, repo=ROOT.parent):
+    """Read canonical resource bytes from Git, independent of checkout line endings."""
+    corresponding_source(commit)  # Reject refs/options; only a full commit is accepted.
+    prefix="iOS/shared/ui/assets/"
+    records=subprocess.check_output(["git","ls-tree","-r","-z",commit,"--",prefix],cwd=repo)
+    entries=[]
+    for record in records.split(b"\0"):
+        if not record: continue
+        metadata,path=record.split(b"\t",1)
+        mode,kind,object_id=metadata.split()
+        name=path.decode("utf-8")
+        if mode not in (b"100644",b"100755") or kind!=b"blob" or not name.startswith(prefix):
+            raise ValueError("Committed visual resources must be regular Git blobs")
+        entries.append((name.removeprefix(prefix),object_id))
+    if not entries: raise ValueError("No committed visual resources at the delivery revision")
+    result=subprocess.run(["git","cat-file","--batch"],cwd=repo,check=True,capture_output=True,
+                          input=b"".join(object_id+b"\n" for _,object_id in entries)).stdout
+    hashes={}
+    offset=0
+    for name,expected_id in entries:
+        end=result.index(b"\n",offset)
+        object_id,kind,size=result[offset:end].split()
+        start=end+1
+        finish=start+int(size)
+        if object_id!=expected_id or kind!=b"blob" or result[finish:finish+1]!=b"\n":
+            raise ValueError("Invalid Git resource response")
+        hashes[name]=hashlib.sha256(memoryview(result)[start:finish]).hexdigest()
+        offset=finish+1
+    if offset!=len(result): raise ValueError("Unexpected trailing Git resource data")
+    return hashes
+
+def source_instructions(source):
+    return f"""# Source for this Icy Lyrics delivery
+
+Verified Git commit: `{source['commit']}`.
+
+- [Browse this exact revision]({source['browseUrl']})
+- [Download its source ZIP]({source['archiveUrl']})
+- [Build instructions and pinned toolchain]({source['buildInstructionsUrl']})
+- [Windows installation and refresh instructions]({source['installInstructionsUrl']})
+- [Project source license]({source['licenseUrl']})
+
+The archive includes the application source, assets, build scripts and pinned
+dependency declarations. Third-party dependencies are fetched during the build;
+Spotify's proprietary SDK source is not included. This source reference does not
+resolve the [SDK/AGPL distribution review]({source['distributionReviewUrl']}).
+
+To obtain the same source with Git:
+
+```sh
+git clone {source['repository']}.git
+cd icy-lyrics
+git checkout --detach {source['commit']}
+```
+
+On a compatible Apple Silicon Mac with the documented Xcode and JDK installed,
+run `bash iOS/scripts/build_ios.sh` from that checkout. The existing GitHub
+workflow provides the public macOS runner alternative. A registered public
+Spotify client ID is needed for a real Spotify connection, not for offline
+fixtures. No Apple signing credentials or Spotify client secret belong in the
+build. See the linked build instructions for setup and distribution prerequisites.
+
+Install a generated device IPA from Windows using `INSTALL-WINDOWS.md` beside
+this file. The unsigned IPA must be resigned; a simulator app cannot be installed
+on an iPhone. Source availability does not imply public binary clearance or
+successful physical iPhone testing.
+"""
 
 def version_tuple(value):
     parts=tuple(map(int,value.split('.')))
@@ -127,7 +222,7 @@ def validate_dependencies(binaries, executable):
                 candidate=local_path(dependency,binary)
                 if candidate not in binaries: raise ValueError(f"Unexpected or missing external dependency: {dependency}")
 
-def validate_app(app):
+def validate_app(app, *, resource_hashes=None):
     info=plistlib.loads((app/"Info.plist").read_bytes())
     assert info["CFBundlePackageType"]=="APPL", "Not an application"
     assert info["UIDeviceFamily"]==[1], "Expected iPhone-only device family"
@@ -138,10 +233,13 @@ def validate_app(app):
     assert (app/"PrivacyInfo.xcprivacy").is_file(), "Missing privacy manifest"
     assert all(path.resolve().is_relative_to(app.resolve()) for path in app.rglob("*")), "App contains a path outside its bundle"
     assert (app/"IcyAssets/font/Roboto-Regular.ttf").is_file(), "Missing baseline font"
-    for path in (ROOT/"shared/ui/assets").rglob("*"):
-        if path.is_file():
-            target=app/"IcyAssets"/path.relative_to(ROOT/"shared/ui/assets")
-            assert target.is_file() and hashlib.sha256(path.read_bytes()).digest()==hashlib.sha256(target.read_bytes()).digest(), f"Changed or missing visual resource: {path.name}"
+    if resource_hashes is None:
+        resource_hashes={path.relative_to(ROOT/"shared/ui/assets").as_posix():hashlib.sha256(path.read_bytes()).hexdigest()
+                         for path in (ROOT/"shared/ui/assets").rglob("*") if path.is_file()}
+    if not resource_hashes: raise ValueError("Missing expected visual resource hashes")
+    for name,expected in resource_hashes.items():
+        target=app/"IcyAssets"/name
+        assert target.is_file() and expected==hashlib.sha256(target.read_bytes()).hexdigest(), f"Changed or missing visual resource: {name}"
     executable=info["CFBundleExecutable"]
     assert Path(executable).name==executable, "Invalid executable path"
     binaries={executable:macho(app/executable)}
@@ -170,6 +268,8 @@ def main():
     if not app.is_relative_to((ROOT/"build").resolve()): raise SystemExit("Package only an app built under iOS/build")
     verification=json.loads((ROOT/"build/reports/simulator-verification.json").read_text())
     sha=subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip()
+    validate_committed_source(ROOT.parent)
+    source=corresponding_source(sha)
     assert verification["result"]=="passed" and verification["commit"]==sha,"Missing matching simulator verification"
     assert verification["sourceFingerprint"]==fingerprint(),"Sources changed after simulator verification"
     info,binaries=validate_app(app)
@@ -190,12 +290,14 @@ def main():
     digest=hashlib.sha256(ipa.read_bytes()).hexdigest()
     (delivery/"SHA256SUMS.txt").write_text(f"{digest}  {ipa.name}\n")
     report={"label":"simulator-verified IPA; physical iPhone validation pending", "commit":sha,
+            "correspondingSource":source,
             "verificationScope":"simulator-tested sources; device binary separately inspected, not executed",
             "createdUtc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"sha256":digest,"bytes":ipa.stat().st_size,
             "bundleIdentifier":info["CFBundleIdentifier"],"minimumOS":info["MinimumOSVersion"],"binaries":binaries,
             "visualParity":"pending cross-platform comparison and review", "publicBinaryRelease":"not cleared",
             "simulator":verification,"signing":"Main application unsigned; embedded SDK may retain upstream signature. Sideloadly must resign all components."}
     (delivery/"build-report.json").write_text(json.dumps(report,indent=2)+"\n")
+    (delivery/"SOURCE.md").write_text(source_instructions(source),encoding="utf-8")
     shutil.copy2(ROOT/"docs/INSTALL-WINDOWS.md",delivery)
     print(f"Validated {ipa.name} ({ipa.stat().st_size} bytes), SHA-256 {digest}")
 

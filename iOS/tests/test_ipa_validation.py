@@ -1,12 +1,116 @@
 """Architecture/platform rejection tests; no fake file is presented as a real IPA."""
 from pathlib import Path
+import hashlib
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
-from package_ipa import macho, validate_dependencies, validate_minimum_os
+from package_ipa import committed_asset_hashes, corresponding_source, macho, source_instructions, validate_committed_source, validate_dependencies, validate_minimum_os
+
+class CommittedSourceValidation(unittest.TestCase):
+    def setUp(self):
+        build=Path(__file__).resolve().parents[1]/"build"
+        build.mkdir(parents=True,exist_ok=True)
+        self.directory=tempfile.TemporaryDirectory(prefix="source-contract-",dir=build)
+        self.addCleanup(self.directory.cleanup)
+        self.repo=Path(self.directory.name)
+        self.git("init","--quiet")
+        self.git("config","core.autocrlf","false")
+        self.git("config","core.hooksPath",str(self.repo/"disabled-hooks"))
+        for name in ("iOS/source.kt","iOS/shared/platform/schemas/1.json","android-v2/source.kt",".github/workflows/ci.yml"):
+            path=self.repo/name
+            path.parent.mkdir(parents=True,exist_ok=True)
+            path.write_text("fixture\n",encoding="utf-8")
+        (self.repo/".gitignore").write_text("iOS/build/\n",encoding="utf-8")
+        self.git("add",".")
+        self.git("-c","user.name=Source Contract Test","-c","user.email=source-test@example.invalid",
+                 "-c","commit.gpgsign=false","commit","--quiet","-m","fixture")
+
+    def git(self,*args):
+        subprocess.run(["git",*args],cwd=self.repo,check=True,capture_output=True)
+
+    def test_clean_source_and_ignored_outputs_are_accepted(self):
+        output=self.repo/"iOS/build/generated.bin"
+        output.parent.mkdir()
+        output.write_bytes(b"generated")
+        validate_committed_source(self.repo)
+
+    def test_each_relevant_tracked_source_path_rejects_uncommitted_edits(self):
+        for name in ("iOS/source.kt","android-v2/source.kt",".github/workflows/ci.yml"):
+            with self.subTest(name=name):
+                path=self.repo/name
+                path.write_text("changed\n",encoding="utf-8")
+                with self.assertRaisesRegex(ValueError,"differs from HEAD"):
+                    validate_committed_source(self.repo)
+                path.write_text("fixture\n",encoding="utf-8")
+
+    def test_staging_a_change_does_not_make_it_part_of_the_reported_commit(self):
+        (self.repo/"iOS/source.kt").write_text("staged change\n",encoding="utf-8")
+        self.git("add","iOS/source.kt")
+        with self.assertRaisesRegex(ValueError,"Commit or revert"):
+            validate_committed_source(self.repo)
+
+    def test_untracked_source_is_rejected(self):
+        for name in ("iOS/new.kt","android-v2/new.kt"):
+            with self.subTest(name=name):
+                path=self.repo/name
+                path.write_text("new source\n",encoding="utf-8")
+                with self.assertRaisesRegex(ValueError,"differs from HEAD"):
+                    validate_committed_source(self.repo)
+                path.unlink()
+
+    def test_changed_generated_schema_is_not_silently_exempt(self):
+        (self.repo/"iOS/shared/platform/schemas/1.json").write_text("new schema\n",encoding="utf-8")
+        with self.assertRaisesRegex(ValueError,"schema changes"):
+            validate_committed_source(self.repo)
+
+    def test_deleted_source_is_rejected(self):
+        (self.repo/"iOS/source.kt").unlink()
+        with self.assertRaisesRegex(ValueError,"differs from HEAD"):
+            validate_committed_source(self.repo)
+
+    def test_unrelated_desktop_work_does_not_block_the_ios_source_contract(self):
+        (self.repo/"desktop-notes.txt").write_text("unrelated\n",encoding="utf-8")
+        validate_committed_source(self.repo)
+
+    def test_resource_hashes_use_committed_bytes_despite_windows_checkout_line_endings(self):
+        assets=self.repo/"iOS/shared/ui/assets"
+        assets.mkdir(parents=True)
+        text=b"upstream notice\nsecond line\n"
+        binary=bytes(range(256))
+        (assets/"notice.txt").write_bytes(text)
+        (assets/"binary.dat").write_bytes(binary)
+        self.git("add","iOS/shared/ui/assets")
+        self.git("-c","user.name=Source Contract Test","-c","user.email=source-test@example.invalid",
+                 "-c","commit.gpgsign=false","commit","--quiet","-m","resource fixture")
+        commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=self.repo,text=True).strip()
+        (assets/"notice.txt").write_bytes(text.replace(b"\n",b"\r\n"))
+        self.assertEqual({"notice.txt":hashlib.sha256(text).hexdigest(),"binary.dat":hashlib.sha256(binary).hexdigest()},
+                         committed_asset_hashes(commit,self.repo))
+
+class CorrespondingSourceMetadata(unittest.TestCase):
+    def test_all_delivery_links_pin_the_same_full_revision(self):
+        commit="0123456789abcdef0123456789abcdef01234567"
+        source=corresponding_source(commit)
+        self.assertEqual(commit,source["commit"])
+        self.assertEqual(f"https://github.com/Jackscurrie/icy-lyrics/archive/{commit}.zip",source["archiveUrl"])
+        for key,url in source.items():
+            if key.endswith("Url"):
+                with self.subTest(key=key):
+                    self.assertTrue(url.startswith(source["repository"]+"/"))
+                    self.assertIn("/"+commit,url)
+        instructions=source_instructions(source)
+        self.assertIn(f"git checkout --detach {commit}",instructions)
+        self.assertIn(source["archiveUrl"],instructions)
+        self.assertIn(source["buildInstructionsUrl"],instructions)
+
+    def test_mutable_or_malformed_revisions_cannot_be_published_as_source_links(self):
+        for commit in ("", "main", "HEAD", "0123456", "../main", "a"*39, "a"*41, "g"*40, "a"*40+"\n"):
+            with self.subTest(commit=commit),self.assertRaisesRegex(ValueError,"full Git commit"):
+                corresponding_source(commit)
 
 class MachOValidation(unittest.TestCase):
     def inspect(self,cpu=0x0100000C,platform=2,encrypted=0):

@@ -6,3 +6,7 @@ gradlew text eol=lf
 *.ttc binary
 *.png binary
 *.jar binary
+
+# Visual resources and upstream notices retain their exact committed bytes on
+# Windows and macOS. Do not apply checkout newline conversion to these assets.
+/shared/ui/assets/** -text

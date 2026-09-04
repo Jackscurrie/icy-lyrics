@@ -42,11 +42,12 @@ class IosServices private constructor(
   private val local: LocalTtmlRepository,
   private val cache: LyricsCacheRepository,
   private val diagnostics: DiagnosticRepository,
-  private val localProvider: LocalTtmlProvider,
+  localProvider: LocalTtmlProvider,
   private val catalog: SpotifyTrackResolver,
   private val resolver: PlatformLyricsResolver,
   private val timings: DeviceTimingRepository,
 ) {
+  private val imports = IosLocalTtmlImports(database.localTtmlDao(), provider = localProvider)
   val settings: Flow<AppSettings> get() = settingsRepository.settings
   val library: Flow<List<StoredLocalTtml>> get() = local.observeLibrary()
   val diagnosticEvents: Flow<List<DiagnosticEvent>> get() = diagnostics.observeRecent()
@@ -71,9 +72,9 @@ class IosServices private constructor(
   }
 
   suspend fun importTtml(track: TrackIdentity, rawTtml: String, sourceUri: String? = null) {
-    localProvider.import(track, rawTtml, sourceUri = sourceUri)
+    imports.import(track, rawTtml, sourceUri)
   }
-  suspend fun deleteSavedLyrics(trackKey: String): Boolean = local.deleteByTrackKey(trackKey)
+  suspend fun deleteSavedLyrics(trackKey: String): Boolean = imports.delete(trackKey)
   suspend fun clearDiagnostics() { diagnostics.clear() }
   fun effectiveTiming(route: Flow<BluetoothRoute?>): Flow<EffectiveTimingOffset> =
     BluetoothTimingResolver(settingsRepository, timings, route).effectiveOffset

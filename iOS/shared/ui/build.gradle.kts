@@ -1,6 +1,7 @@
 import java.util.Properties
 import java.util.zip.ZipFile
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 plugins {
   kotlin("multiplatform")
@@ -65,25 +66,47 @@ kotlin {
     }
     commonTest.dependencies { implementation(kotlin("test")) }
     iosMain.dependencies { implementation("org.jetbrains.compose.ui:ui-backhandler:1.11.1") }
+    iosTest.dependencies {
+      implementation("org.jetbrains.compose.ui:ui-test:1.11.1")
+      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+      implementation("com.squareup.okio:okio:3.16.4")
+    }
   }
+}
+
+// simctl passes only variables with SIMCTL_CHILD_ into the simulator process.
+// The offscreen test runner reads the same checked-in bytes without depending on an app bundle.
+val deterministicCaptureAssets = layout.projectDirectory.dir("assets")
+val deterministicCaptureOutput = rootProject.layout.buildDirectory.dir("reports/deterministic-ios-captures")
+tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+  inputs.dir(deterministicCaptureAssets)
+  outputs.dir(deterministicCaptureOutput)
+  environment("SIMCTL_CHILD_ICY_DETERMINISTIC_ASSET_ROOT", deterministicCaptureAssets.asFile.absolutePath)
+  environment("SIMCTL_CHILD_ICY_DETERMINISTIC_OUTPUT_ROOT", deterministicCaptureOutput.get().asFile.absolutePath)
 }
 
 // This resolves and inspects the actual external native archives even on Windows;
 // compiling project KLIBs or linking an Apple framework still requires macOS.
 val verifyNativeDependencyGraph by tasks.registering {
   group = "verification"
-  description = "Checks both iOS native dependency graphs for duplicate KLIBs and the Material 3 parity pin."
+  description = "Checks both iOS main/test native graphs for duplicate KLIBs and the parity version pins."
   doLast {
     val metadataModules = configurations.getByName("commonMainResolvableDependenciesMetadata")
       .incoming.resolutionResult.allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
     val duplicateMetadataForwarders = metadataModules.filter { "${it.group}:${it.module}" in migratedAndroidxModules }
     check(duplicateMetadataForwarders.isEmpty()) { "Common metadata still contains forwarding modules: $duplicateMetadataForwarders" }
-    listOf("iosArm64", "iosSimulatorArm64").forEach { target ->
-      val configuration = configurations.getByName("${target}CompileKlibraries")
+    listOf("iosArm64", "iosSimulatorArm64").flatMap {
+      listOf("${it}CompileKlibraries", "${it}TestCompileKlibraries")
+    }.forEach { target ->
+      val configuration = configurations.getByName(target)
       val modules = configuration.incoming.resolutionResult.allComponents
         .mapNotNull { it.id as? ModuleComponentIdentifier }
       val material3 = modules.single { it.group == "org.jetbrains.compose.material3" && it.module == "material3" }
       check(material3.version == "1.9.0") { "Material 3 must remain 1.9.0 for Android 1.4.0 visual parity." }
+      if (target.endsWith("TestCompileKlibraries")) {
+        val uiTest = modules.single { it.group == "org.jetbrains.compose.ui" && it.module == "ui-test" }
+        check(uiTest.version == "1.11.1") { "The isolated insets test hook is pinned to Compose UI Test 1.11.1." }
+      }
 
       val artifacts = configuration.incoming.artifactView {
         componentFilter { it is ModuleComponentIdentifier }

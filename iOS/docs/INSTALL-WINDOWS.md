@@ -2,12 +2,42 @@
 
 Use these instructions only with the generated device IPA. A simulator `.app` is not installable on an iPhone. The IPA needs signing on your computer; it is not an App Store download.
 
+For an owner-only encrypted GitHub artifact, first follow
+`iOS/docs/OWNER-TRANSFER.md` in its exact source revision to recover the
+verified IPA. The encrypted path preserves the public
+plaintext distribution gate and requires the owner's original local key.
+
 ## Before installation
 
 - iPhone running iOS 16 or later, Windows computer, USB cable, free Apple ID, and Spotify installed on the phone.
 - Download Sideloadly from its [official website](https://sideloadly.io/). Follow its current Windows prerequisites, including the web versions of iTunes/iCloud linked there.
 - Use the supplied `SHA256SUMS.txt`. In PowerShell, run `Get-FileHash -Algorithm SHA256 .\IcyLyrics-unsigned.ipa` and compare the hash exactly.
+- Keep `build-report.json` and `SOURCE.md` with the IPA. They identify its exact Git commit and link to that revision's source archive and build instructions.
 - A build without a configured Spotify client ID works for offline fixtures only. The maintainer must register the client/redirect first. Never enter an Apple password or Spotify client secret into repository files or GitHub Actions.
+
+## Source and document review
+
+Open the source link in `SOURCE.md`, or the `correspondingSource.browseUrl` in
+`build-report.json`, to inspect the code associated with this delivery. Use
+`correspondingSource.archiveUrl` to download the same revision as a ZIP, or clone
+the repository and check out the complete commit recorded in the report. Do not
+substitute the latest branch for a delivered revision when reproducing a build.
+The archive includes the iPhone build scripts under `iOS/scripts/`; running them
+requires the Apple Silicon Mac/Xcode/JDK toolchain documented in that revision's
+`iOS/README.md`, or its public GitHub macOS workflow. Windows is the installation
+host, not the Xcode build host.
+
+Packaging requires the port, Android V2 and workflow sources to match the
+reported commit, including generated Room schemas. If a build reports changed
+or untracked source, review and commit it, then rerun verification. Ignored
+build outputs and signing/configuration files are not source archive contents.
+
+Review `iOS/docs/PRIVACY.md` and `iOS/docs/END-USER-TERMS-DRAFT.md` in that exact
+source revision before testing. Both are drafts awaiting publication/adoption;
+the current in-app website policy covers Android only. These documents do not
+record acceptance or clear the separate public binary distribution requirements
+in `iOS/docs/DISTRIBUTION-REVIEW.md`. This guide does not authorize distribution
+of a build whose report says public binary release is not cleared.
 
 ## First installation
 

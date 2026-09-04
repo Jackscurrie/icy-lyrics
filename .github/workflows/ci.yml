@@ -70,6 +70,8 @@ jobs:
             ~/.gradle/wrapper
             ~/.konan
           key: icy-ios-${{ runner.os }}-${{ runner.arch }}-xcode26.4.1-v1-${{ hashFiles('iOS/**/*.gradle.kts', 'iOS/**/gradle.lockfile', 'iOS/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            icy-ios-${{ runner.os }}-${{ runner.arch }}-xcode26.4.1-v1-
       - name: Verify simulator and package the unsigned device application
         run: bash iOS/scripts/build_ios.sh
       - name: Upload validation evidence
@@ -82,6 +84,15 @@ jobs:
             iOS/build/SimulatorTests.xcresult/
             iOS/shared/*/build/reports/tests/
           if-no-files-found: warn
+      - name: Upload encrypted delivery for the owner
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-lyrics-owner-encrypted
+          # This directory contains ciphertext and public transfer metadata only.
+          # Never upload its parent: the local owner identity is stored there.
+          path: iOS/build/owner-delivery/encrypted/
+          if-no-files-found: error
       - name: Upload resignable IPA after distribution review
         # User's requested SDK/source-license gate; this is not an App Store signing gate.
         if: success() && vars.ICY_IOS_BINARY_DISTRIBUTION_CLEARED == 'true'

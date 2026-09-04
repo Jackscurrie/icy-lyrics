@@ -11,7 +11,9 @@ import org.jetbrains.skia.FontVariation
 import org.jetbrains.skia.Typeface as SkTypeface
 
 /** Explicit spans prevent CoreText choosing San Francisco, PingFang, or Apple emoji. */
-internal class IosAndroidFontFallback {
+internal class IosAndroidFontFallback(
+  private val assetLoader: (String) -> ByteArray = ::readIcyAsset,
+) {
   private val typefaces = mutableMapOf<Pair<String, Int>, SkTypeface>()
   private val families = mutableMapOf<Triple<String, Int, Int>, FontFamily>()
 
@@ -47,7 +49,7 @@ internal class IosAndroidFontFallback {
 
   private fun family(file: String, index: Int, weight: Int): FontFamily = families.getOrPut(Triple(file, index, weight)) {
     val base = typefaces.getOrPut(file to index) {
-      val data = Data.makeFromBytes(readIcyAsset("font/$file"))
+      val data = Data.makeFromBytes(assetLoader("font/$file"))
       try { requireNotNull(FontMgr.default.makeFromData(data, index)) { "Cannot load Android fallback font $file/$index" } }
       finally { data.close() }
     }

@@ -2,6 +2,7 @@
 from pathlib import Path
 import sys
 import unittest
+import plistlib
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
@@ -51,6 +52,11 @@ class XcodeProjectValidation(unittest.TestCase):
                 settings=project.objects[project.uid(f"config:{name}:{variant}")]["buildSettings"]
                 self.assertEqual("arm64",settings["ARCHS"])
                 self.assertEqual("YES",settings["ONLY_ACTIVE_ARCH"])
+
+    def test_compose_required_phone_frame_duration_entry_is_enabled(self):
+        # Compose's native PlistSanityCheck aborts application launch without it.
+        with (project.APP/"IcyLyrics/Info.plist").open("rb") as file:
+            self.assertIs(plistlib.load(file).get("CADisableMinimumFrameDurationOnPhone"), True)
 
     def test_committed_project_matches_deterministic_generation(self):
         project.main(["--check"])

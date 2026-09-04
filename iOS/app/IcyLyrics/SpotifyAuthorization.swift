@@ -140,8 +140,15 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
     private var completion: ((Result<SpotifyCredentialPurpose, Error>) -> Void)?
     private var credentialGenerations: [SpotifyCredentialPurpose: UUID] = [:]
     private var refreshTasks: [SpotifyCredentialPurpose: RefreshFlight] = [:]
+    private var revokedPurposes = Set<SpotifyCredentialPurpose>()
     weak var window: UIWindow?
     var isAuthorizing: Bool { authorizationGeneration != nil }
+    var authorizingPurpose: SpotifyCredentialPurpose? { authorizationPurpose }
+    /// Stored authorization keeps the existing Disconnect action reachable even
+    /// when an expired token needs refresh or the account is temporarily offline.
+    func hasStoredAuthorization(_ purpose: SpotifyCredentialPurpose) throws -> Bool {
+        try keychain.read(purpose) != nil
+    }
 
     init(clientID: String, callbackURL: URL,
          credentialStore: SpotifyCredentialStore? = nil,
@@ -242,6 +249,7 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
                 // browser was open; it must not overwrite this new account.
                 self.invalidateRefresh(request.purpose)
                 try self.keychain.write(credentials, purpose: request.purpose)
+                self.revokedPurposes.remove(request.purpose)
                 self.finish(.success(request.purpose), generation: request.generation)
             } catch {
                 guard self.authorizationGeneration == request.generation else { return }
@@ -252,6 +260,7 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
 
     func token(_ purpose: SpotifyCredentialPurpose, rejected: String? = nil) async throws -> String? {
         try Task.checkCancellation()
+        guard !revokedPurposes.contains(purpose) else { return nil }
         guard let existing = try keychain.read(purpose), existing.scopes == purpose.scopes else { return nil }
         // Join forced refreshes even while the previously rejected token's expiry
         // is valid. Cancelling one waiter does not cancel the shared refresh.
@@ -278,22 +287,28 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
     }
 
     func disconnect() throws {
+        // Fail closed for this process even if a Keychain deletion fails. The
+        // stored record remains visible to Disconnect so the user can retry.
+        revokedPurposes.formUnion([.playback, .lyrics])
         invalidateRefresh(.playback)
         invalidateRefresh(.lyrics)
         // Attempt both deletions even if one keychain operation fails.
         var firstError: Error?
         for purpose in [SpotifyCredentialPurpose.playback, .lyrics] {
-            do { try keychain.clear(purpose) } catch { if firstError == nil { firstError = error } }
+            do { try keychain.clear(purpose); revokedPurposes.remove(purpose) }
+            catch { if firstError == nil { firstError = error } }
         }
         cancel()
         if let firstError { throw firstError }
     }
-    /// The settings action removes lyrics-provider authorization without removing
-    /// the independent App Remote credential or cancelling a playback login.
+    /// Internal targeted revocation; the app's Disconnect control uses the full
+    /// account operation above so neither stored purpose becomes unreachable.
     func disconnect(_ purpose: SpotifyCredentialPurpose) throws {
+        revokedPurposes.insert(purpose)
         invalidateRefresh(purpose)
         defer { if authorizationPurpose == purpose { cancel() } }
         try keychain.clear(purpose)
+        revokedPurposes.remove(purpose)
     }
     func cancel() {
         let callback = completion

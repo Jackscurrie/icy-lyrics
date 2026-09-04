@@ -52,6 +52,84 @@ final class SpotifyAuthorizationTests: XCTestCase {
         XCTAssertEqual(completions, 1)
     }
 
+    func testPlaybackOnlyStoredAuthorizationRemainsAvailableWithoutNetworkOrBrowser() throws {
+        let store = MemoryCredentials()
+        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let auth = makeAuth(store, network, browsers)
+        XCTAssertTrue(try auth.hasStoredAuthorization(.playback))
+        XCTAssertFalse(try auth.hasStoredAuthorization(.lyrics))
+        XCTAssertTrue(network.requests.isEmpty)
+        XCTAssertTrue(browsers.urls.isEmpty)
+    }
+
+    func testFullDisconnectCancelsBrowserAndRejectsLateCallbackForBothStoredPurposes() async throws {
+        let store = MemoryCredentials()
+        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        store.values[.lyrics] = credentials()
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let auth = makeAuth(store, network, browsers)
+        var results = [Result<SpotifyCredentialPurpose, Error>]()
+        auth.begin(.playback) { results.append($0) }
+        let callback = browsers.callbackURL(self.callback)
+        try auth.disconnect()
+        auth.handle(callback)
+        browsers.sessions[0].completion(callback, nil)
+        await yieldToMainActor()
+        XCTAssertFalse(auth.isAuthorizing)
+        XCTAssertTrue(store.values.isEmpty)
+        XCTAssertEqual(Set(store.clearAttempts), [.playback, .lyrics])
+        XCTAssertTrue(network.requests.isEmpty)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertThrowsError(try results[0].get())
+    }
+
+    func testFullDisconnectCancelsBothRefreshesAndTheirLateResultsCannotRestoreEitherPurpose() async throws {
+        let store = MemoryCredentials()
+        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        store.values[.lyrics] = credentials()
+        let network = TokenProbe()
+        let playbackStarted = expectation(description: "playback refresh")
+        let lyricsStarted = expectation(description: "lyrics refresh")
+        network.onRequest = { if $0 == 1 { playbackStarted.fulfill() } else { lyricsStarted.fulfill() } }
+        let auth = makeAuth(store, network)
+        let playback = Task { try await auth.token(.playback) }
+        await fulfillment(of: [playbackStarted], timeout: 2)
+        let lyrics = Task { try await auth.token(.lyrics) }
+        await fulfillment(of: [lyricsStarted], timeout: 2)
+        try auth.disconnect()
+        network.respond(0, token: "late-playback", scope: "app-remote-control")
+        network.respond(1, token: "late-lyrics", scope: "user-read-currently-playing")
+        for task in [playback, lyrics] {
+            do { _ = try await task.value; XCTFail("Revoked refresh returned a token") }
+            catch { XCTAssertTrue(error is CancellationError) }
+        }
+        XCTAssertTrue(store.values.isEmpty)
+        XCTAssertFalse(try auth.hasStoredAuthorization(.playback))
+        XCTAssertFalse(try auth.hasStoredAuthorization(.lyrics))
+    }
+
+    func testFullDisconnectAttemptsBothDeletionsAndFailedPurposeCannotSupplyTokenBeforeRetry() async throws {
+        let store = MemoryCredentials()
+        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600), scopes: ["app-remote-control"])
+        store.values[.lyrics] = credentials()
+        store.clearFailures = [.playback]
+        let network = TokenProbe()
+        let auth = makeAuth(store, network)
+        XCTAssertThrowsError(try auth.disconnect())
+        XCTAssertEqual(Set(store.clearAttempts), [.playback, .lyrics])
+        XCTAssertTrue(try auth.hasStoredAuthorization(.playback)) // Keep Disconnect reachable for retry.
+        XCTAssertFalse(try auth.hasStoredAuthorization(.lyrics))
+        let token = try await auth.token(.playback)
+        XCTAssertNil(token)
+        XCTAssertTrue(network.requests.isEmpty)
+        store.clearFailures = []
+        try auth.disconnect()
+        XCTAssertFalse(try auth.hasStoredAuthorization(.playback))
+    }
+
     func testRefreshIsSingleFlightAndRetainsAnOmittedRefreshToken() async throws {
         let store = MemoryCredentials()
         store.values[.lyrics] = credentials()
@@ -213,9 +291,15 @@ final class SpotifyAuthorizationTests: XCTestCase {
 @MainActor
 private final class MemoryCredentials: SpotifyCredentialStore {
     var values: [SpotifyCredentialPurpose: SpotifyCredentials] = [:]
+    var clearFailures = Set<SpotifyCredentialPurpose>()
+    var clearAttempts = [SpotifyCredentialPurpose]()
     func read(_ purpose: SpotifyCredentialPurpose) throws -> SpotifyCredentials? { values[purpose] }
     func write(_ value: SpotifyCredentials, purpose: SpotifyCredentialPurpose) throws { values[purpose] = value }
-    func clear(_ purpose: SpotifyCredentialPurpose) throws { values[purpose] = nil }
+    func clear(_ purpose: SpotifyCredentialPurpose) throws {
+        clearAttempts.append(purpose)
+        if clearFailures.contains(purpose) { throw SpotifyAuthError.keychain(-1) }
+        values[purpose] = nil
+    }
 }
 
 @MainActor

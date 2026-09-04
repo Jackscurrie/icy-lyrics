@@ -1,0 +1,161 @@
+{
+  "skikoVersion": "0.144.6",
+  "skikoCommit": "9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+  "skiaTag": "m144-22f58c9fd4",
+  "skiaCommit": "22f58c9fd43d55bde818821c04b48fda5d7ec939",
+  "dependencySource": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/DEPS",
+  "files": [
+    {
+      "file": "skiko-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skiko/9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0/LICENSE",
+      "gitBlobSha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "file": "skiko-NOTICE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skiko/9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0/NOTICE",
+      "gitBlobSha1": "bc646e35dcbf08a6eb0404c88864cf26b55f9581",
+      "sha256": "35dd077c24768b53625101cfcc0ad853ae7e2abc08bd2a111a0267760d1406d8"
+    },
+    {
+      "file": "skia-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/LICENSE",
+      "gitBlobSha1": "e32636d5668d51ca7a938ae6cef93c795c656d7c",
+      "sha256": "5f787c1dee3c56547f09ccc2906ab5f5293c4d8dd6c8654e573216c38e908dbd"
+    },
+    {
+      "file": "skia-etc1-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/third_party/etc1/LICENSE",
+      "gitBlobSha1": "64635a4089d5bf17707df78db536f3d41fbf1cc2",
+      "sha256": "5366e97b4478f15a1e2fd7e6094337426597df28de50cd9fed3f2e7e87f1229e"
+    },
+    {
+      "file": "skia-expat-wrapper-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/third_party/expat/LICENSE",
+      "gitBlobSha1": "6b3a80f5730548cf05c2c42bee87cb3e0800f9f0",
+      "sha256": "cca48bacd6e7ed63f00b42a346bcc8549a460b41efe75d93db350fc882f54dca"
+    },
+    {
+      "file": "skia-harfbuzz-wrapper-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/third_party/harfbuzz/LICENSE",
+      "gitBlobSha1": "6b3a80f5730548cf05c2c42bee87cb3e0800f9f0",
+      "sha256": "cca48bacd6e7ed63f00b42a346bcc8549a460b41efe75d93db350fc882f54dca"
+    },
+    {
+      "file": "skia-wuffs-wrapper-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/JetBrains/skia/22f58c9fd43d55bde818821c04b48fda5d7ec939/third_party/wuffs/LICENSE",
+      "gitBlobSha1": "6c7c5be360194ef93331dfb2b0c01114ad9c263f",
+      "sha256": "e59bb5c5c6ba426a9ac4ba9fe667ad14c5166b12aa25be8af1d122b14fbe2e36"
+    },
+    {
+      "file": "icu-LICENSE.txt",
+      "source": "https://chromium.googlesource.com/chromium/deps/icu.git/+/364118a1d9da24bb5b770ac3d762ac144d6da5a4/LICENSE?format=TEXT",
+      "gitBlobSha1": "9f54372febca06e134bbc9d4700a1ebfeda13843",
+      "sha256": "17510cf7a58b4879b887ec05a45d72cf1b73544dd9ec7e72f20110ed104229ee"
+    },
+    {
+      "file": "icu-license.html.txt",
+      "source": "https://chromium.googlesource.com/chromium/deps/icu.git/+/364118a1d9da24bb5b770ac3d762ac144d6da5a4/license.html?format=TEXT",
+      "gitBlobSha1": "24846726670049cb129f1d72a9dd097ded9712d1",
+      "sha256": "c62d7697c03979f5056d28b338fafc7a1152820f7b379adf4a9d88cd37160f96"
+    },
+    {
+      "file": "harfbuzz-COPYING.txt",
+      "source": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git/+/08b52ae2e44931eef163dbad71697f911fadc323/COPYING?format=TEXT",
+      "gitBlobSha1": "1dd917e9f2e72167de69e3b5dadbc4e7db417da1",
+      "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64"
+    },
+    {
+      "file": "libjpeg-turbo-LICENSE.md.txt",
+      "source": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/LICENSE.md?format=TEXT",
+      "gitBlobSha1": "a785258bcdaeb20de639c6a060a7e3d5df17ae8f",
+      "sha256": "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430"
+    },
+    {
+      "file": "libjpeg-turbo-README.ijg.txt",
+      "source": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/README.ijg?format=TEXT",
+      "gitBlobSha1": "dbf8070cac812bcfd7eb4d407062919f69c777c8",
+      "sha256": "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6"
+    },
+    {
+      "file": "libwebp-COPYING.txt",
+      "source": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/COPYING?format=TEXT",
+      "gitBlobSha1": "7a6f99547d4d6b4c5e6d5321acfaeba313e08de3",
+      "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"
+    },
+    {
+      "file": "libwebp-PATENTS.txt",
+      "source": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/PATENTS?format=TEXT",
+      "gitBlobSha1": "caedf607e95ae4c3dc84d057fddcc301cd0e4863",
+      "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+    },
+    {
+      "file": "dng-sdk-LICENSE.txt",
+      "source": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90/LICENSE?format=TEXT",
+      "gitBlobSha1": "ad9c2722ae1dd2193fb787d978e8748db33632ab",
+      "sha256": "012e875468ac2f9a2070ee25a950588afa2735b4b2d961f491e3d72c8f572306"
+    },
+    {
+      "file": "dng-sdk-LICENSE.source_code.txt",
+      "source": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90/LICENSE.source_code?format=TEXT",
+      "gitBlobSha1": "876cca9847950a17b7aac251522a119e1f7f0610",
+      "sha256": "0c993758dd78dbb15ce6aae8aee79639b428d8ebeca6d416019939dc90fdc08f"
+    },
+    {
+      "file": "dng-sdk-LICENSE.technology.txt",
+      "source": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90/LICENSE.technology?format=TEXT",
+      "gitBlobSha1": "90cea57a291b696824ab0ac1c4fcaf4e2f52c948",
+      "sha256": "4731d85e841e1d8b5dbf7e0ba07e0b524c012f9371db3508551f996cb40c8fe6"
+    },
+    {
+      "file": "dng-sdk-NOTICE.txt",
+      "source": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90/NOTICE?format=TEXT",
+      "gitBlobSha1": "29f2a4e9564385f843fe985ddbf3a3a3b3011c43",
+      "sha256": "b60660d2a5a3ee1a49366400e7e9b01c1872356d6f08942f095d356a44deb5f6"
+    },
+    {
+      "file": "dng-sdk-PATENTS.txt",
+      "source": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90/PATENTS?format=TEXT",
+      "gitBlobSha1": "5a1eaf09d64d98c58906e7254580d7370de70be0",
+      "sha256": "bd958835863f42d8479457503a7ed716424d35b6e76ef76db06b72b109696ec4"
+    },
+    {
+      "file": "piex-LICENSE.txt",
+      "source": "https://android.googlesource.com/platform/external/piex.git/+/bb217acdca1cc0c16b704669dd6f91a1b509c406/LICENSE?format=TEXT",
+      "gitBlobSha1": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "file": "piex-NOTICE.txt",
+      "source": "https://android.googlesource.com/platform/external/piex.git/+/bb217acdca1cc0c16b704669dd6f91a1b509c406/NOTICE?format=TEXT",
+      "gitBlobSha1": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "file": "expat-COPYING.txt",
+      "source": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git/+/8e49998f003d693213b538ef765814c7d21abada/COPYING?format=TEXT",
+      "gitBlobSha1": "c6d184a8aae845ce7bf4d195b214d8244d457f8f",
+      "sha256": "31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87"
+    },
+    {
+      "file": "wuffs-LICENSE.txt",
+      "source": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git/+/e3f919ccfe3ef542cfc983a82146070258fb57f8/LICENSE?format=TEXT",
+      "gitBlobSha1": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "file": "libpng-LICENSE.txt",
+      "source": "https://github.com/JetBrains/skia/releases/download/m144-22f58c9fd4/Skia-m144-22f58c9fd4-ios-Release-arm64.zip",
+      "archiveEntry": "third_party/externals/libpng/LICENSE",
+      "archiveSha256": "995b795675795e8d8127f6ca882a1a3bdf72648ab2dd21134f758c01eaa3710c",
+      "sha256": "16d9daaafbf63a31a5bdc91d4600972548fef5aaa1244202393288dbd079c49a"
+    },
+    {
+      "file": "zlib-LICENSE.txt",
+      "source": "https://github.com/JetBrains/skia/releases/download/m144-22f58c9fd4/Skia-m144-22f58c9fd4-ios-Release-arm64.zip",
+      "archiveEntry": "third_party/externals/zlib/LICENSE",
+      "archiveSha256": "995b795675795e8d8127f6ca882a1a3bdf72648ab2dd21134f758c01eaa3710c",
+      "sha256": "e1cfcc55c325b3f78cf55df9664abaa066e2271dffe8213347d9fccdfbac8f2c"
+    }
+  ]
+}

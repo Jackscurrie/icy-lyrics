@@ -4,6 +4,24 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 [[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Use an Apple Silicon macOS runner.' >&2; exit 1; }
 mkdir -p build/reports build/delivery
+finish() {
+  # Preserve native-generated schemas even when a later test fails. They must
+  # be reviewed and committed, not exempted from the exact-source release gate.
+  if [[ -d shared/platform/schemas ]]; then
+    ditto shared/platform/schemas build/reports/generated-room-schemas || true
+  fi
+  if [[ -d build/reports/deterministic-ios-captures ]]; then
+    # Comparison failures stay visible in their own report. This is an
+    # offscreen raster lane, separate from native test/IPA verification.
+    python3 tests/compare_ios_parity.py build/reports/deterministic-ios-captures > build/reports/deterministic-comparison.log 2>&1 || true
+  fi
+  git status --porcelain=v1 --untracked-files=all -- . ../android-v2 ../.github/workflows/ci.yml > build/reports/source-status.txt || true
+  if [[ -n "${simulator:-}" ]]; then
+    xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
+    xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+  fi
+}
+trap finish EXIT
 phase() { printf '::notice title=Icy iOS build::%s\n' "$1"; }
 phase 'Checking pinned toolchains and preparing dependencies'
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode_26.4.1.app/Contents/Developer}"
@@ -15,6 +33,9 @@ printf '%s\n' "$xcode_version" > build/reports/xcode.txt
 java_version="$(java -version 2>&1)"
 printf '%s\n' "$java_version" > build/reports/java.txt
 grep -Eq '"17[."]' <<< "$java_version" || { echo 'JDK 17 is required.' >&2; exit 1; }
+python3 -m venv build/python-verification
+build/python-verification/bin/python -m pip install --disable-pip-version-check -r scripts/requirements-verification.txt
+export PATH="$ROOT/build/python-verification/bin:$PATH"
 python3 scripts/generate_xcode_project.py --check
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 scripts/bootstrap_spotify.py
@@ -33,7 +54,6 @@ runtime="$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for
 phase 'Booting the iPhone simulator'
 device_type="$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; d=[x for x in json.load(sys.stdin)["devicetypes"] if x["name"]=="iPhone 16"]; assert d,"iPhone 16 simulator type missing"; print(d[0]["identifier"])')"
 simulator="$(xcrun simctl create IcyLyricsVerification "$device_type" "$runtime")"
-trap 'xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true; xcrun simctl delete "$simulator" >/dev/null 2>&1 || true' EXIT
 xcrun simctl boot "$simulator"
 xcrun simctl bootstatus "$simulator" -b
 
@@ -65,3 +85,5 @@ xcodebuild "${common[@]}" -configuration Release -destination 'generic/platform=
   -archivePath build/IcyLyrics.xcarchive archive 2>&1 | tee build/reports/xcode-device.log
 phase 'Validating and packaging the unsigned iPhone IPA'
 python3 scripts/package_ipa.py build/IcyLyrics.xcarchive/Products/Applications/IcyLyrics.app
+phase 'Encrypting the validated IPA for the owner'
+python3 scripts/owner_transfer.py encrypt

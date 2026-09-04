@@ -48,6 +48,7 @@ internal fun readIcyAsset(relativePath: String): ByteArray {
 class IosIcyUiPlatform(
   override val versionName: String,
   override val fixedFrameTimeNanos: Long? = null,
+  private val assetLoader: (String) -> ByteArray = ::readIcyAsset,
 ) : IcyUiPlatform {
   override val onboardingInstructions =
     "Connect Spotify, allow access in the system sign-in window, then come back here."
@@ -56,7 +57,7 @@ class IosIcyUiPlatform(
   override val aboutDescription =
     "A full-screen lyrics experience for iPhone and an independently distributed modification of Spicy Lyrics."
   override val fontFamily: FontFamily by lazy {
-    val bytes = readIcyAsset("font/Roboto-Regular.ttf")
+    val bytes = assetLoader("font/Roboto-Regular.ttf")
     FontFamily((100..900 step 100).map { value ->
       val weight = FontWeight(value)
       Font(
@@ -70,7 +71,7 @@ class IosIcyUiPlatform(
       )
     })
   }
-  private val fallbackFonts by lazy { IosAndroidFontFallback() }
+  private val fallbackFonts by lazy { IosAndroidFontFallback(assetLoader) }
   override fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: FontWeight?) = fallbackFonts.apply(text, weight)
   override fun monotonicTimeMs(): Long = fixedFrameTimeNanos?.div(1_000_000)
     ?: (NSProcessInfo.processInfo.systemUptime * 1_000).toLong()
@@ -80,7 +81,7 @@ class IosIcyUiPlatform(
     timeStyle = NSDateFormatterShortStyle
   }.stringFromDate(NSDate.dateWithTimeIntervalSince1970(epochMs / 1_000.0))
   override fun copyDiagnostics(text: String) { UIPasteboard.generalPasteboard.string = text }
-  override fun legalDocument(document: IcyLegalDocument): String = readIcyAsset(
+  override fun legalDocument(document: IcyLegalDocument): String = assetLoader(
     when (document) {
       IcyLegalDocument.AGPL -> "legal/agpl_3_0_or_later.txt"
       IcyLegalDocument.THIRD_PARTY -> "legal/third_party_notices.txt"

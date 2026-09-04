@@ -40,6 +40,9 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     private var authorizationFlowGeneration = UUID()
     private var keepAwake = true
     private var lyricsConnected = false
+    private var playbackAuthorized = false
+    private var accountGeneration = UUID()
+    private var reconnectSuppressed = false
     // Kotlin retains its IosHost. The forwarding object must retain this owner
     // weakly, otherwise NativeHost and IosAppController can never be released.
     private lazy var hostForwarder = WeakIosHost(self)
@@ -86,21 +89,8 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         guard !closed, !isFixture, !active else { return }
         active = true
         UIApplication.shared.isIdleTimerDisabled = keepAwake
+        publishAuthorizationStatus()
         reconnect()
-        guard !authorization.isAuthorizing else { return }
-        authorizationStatusTask?.cancel()
-        let generation = UUID()
-        authorizationStatusGeneration = generation
-        authorizationStatusTask = Task { [weak self] in
-            guard let self else { return }
-            let connected: Bool
-            do { connected = try await self.authorization.token(.lyrics) != nil }
-            catch { connected = false }
-            guard !Task.isCancelled, !self.closed, self.active,
-                  self.authorizationStatusGeneration == generation, !self.authorization.isAuthorizing else { return }
-            self.lyricsConnected = connected
-            self.controller.authorizationChanged(inProgress: false, connected: self.lyricsConnected, message: nil)
-        }
     }
     func deactivate() {
         active = false
@@ -141,7 +131,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     }
 
     private func reconnect() {
-        guard active, !closed, !authorization.clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard active, !closed, !reconnectSuppressed, !authorization.clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         connectionTask?.cancel()
         let generation = UUID()
         connectionGeneration = generation
@@ -149,8 +139,11 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         connectionTask = Task { [weak self] in
             guard let self else { return }
             do {
-                guard let token = try await self.authorization.token(.playback), !Task.isCancelled,
-                      self.active, !self.closed, self.connectionGeneration == generation else { return }
+                let token = try await self.authorization.token(.playback)
+                guard !Task.isCancelled, self.active, !self.closed, !self.reconnectSuppressed,
+                      self.connectionGeneration == generation else { return }
+                self.publishAuthorizationStatus()
+                guard let token else { return }
                 if !self.needsFreshTransport, self.hasCreatedAppRemote, self.appRemote.isConnected,
                    self.appRemote.connectionParameters.accessToken == token {
                     self.installPlayerObserver(generation: generation)
@@ -187,16 +180,18 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         guard !closed else { return }
         authorizationStatusGeneration = UUID()
         authorizationStatusTask?.cancel()
+        authorizationStatusTask = nil
         let generation = UUID()
         authorizationFlowGeneration = generation
-        controller.authorizationChanged(inProgress: true, connected: lyricsConnected, message: nil)
+        controller.authorizationChanged(inProgress: true, connected: playbackAuthorized || lyricsConnected, message: nil)
         authorization.begin(forLyrics ? .lyrics : .playback) { [weak self] result in
             guard let self, !self.closed, self.authorizationFlowGeneration == generation else { return }
             switch result {
             case .success(let purpose):
-                if purpose == .lyrics { self.lyricsConnected = true }
-                self.controller.authorizationChanged(inProgress: false, connected: self.lyricsConnected, message: nil)
+                self.publishAuthorizationStatus()
+                if purpose == .lyrics { self.controller.lyricsAuthorizationReady() }
                 if purpose == .playback {
+                    self.reconnectSuppressed = false
                     // A user action may switch apps. Foreground reconnection never does.
                     UIApplication.shared.open(URL(string: "spotify://")!, options: [:]) { [weak self] opened in
                         guard let self, !self.closed, self.authorizationFlowGeneration == generation else { return }
@@ -205,30 +200,87 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
                     self.reconnect()
                 }
             case .failure(let error):
-                self.controller.authorizationChanged(inProgress: false, connected: self.lyricsConnected,
-                                                       message: error.localizedDescription)
+                self.publishAuthorizationStatus(message: error.localizedDescription)
             }
         }
     }
-    func cancelSpotifyAuthorization() { authorization.cancel() }
-    func disconnectSpotify() {
-        guard !closed else { return }
+    private func publishAuthorizationStatus(message: String? = nil) {
+        // A failed read must not hide a previously available Disconnect control.
+        if let value = try? authorization.hasStoredAuthorization(.playback) { playbackAuthorized = value }
+        if let value = try? authorization.hasStoredAuthorization(.lyrics) { lyricsConnected = value }
+        controller.authorizationChanged(inProgress: authorization.isAuthorizing,
+            connected: playbackAuthorized || lyricsConnected, message: message)
+    }
+    /// Invoked only by explicit provider/consent controls, never foregrounding.
+    func ensureLyricsAuthorization() {
+        guard !closed, authorizationStatusTask == nil, !authorization.isAuthorizing else { return }
+        let generation = UUID()
+        authorizationStatusGeneration = generation
+        authorizationStatusTask = Task { [weak self] in
+            guard let self else { return }
+            defer { if self.authorizationStatusGeneration == generation { self.authorizationStatusTask = nil } }
+            do {
+                let token = try await self.authorization.token(.lyrics)
+                guard !Task.isCancelled, !self.closed, self.authorizationStatusGeneration == generation else { return }
+                self.publishAuthorizationStatus()
+                if token != nil { self.controller.lyricsAuthorizationReady() }
+                else { self.connectSpotify(forLyrics: true) }
+            } catch {
+                guard !Task.isCancelled, !self.closed, self.authorizationStatusGeneration == generation else { return }
+                self.publishAuthorizationStatus(message: error.localizedDescription)
+            }
+        }
+    }
+    func cancelLyricsAuthorization() {
         authorizationStatusGeneration = UUID()
         authorizationStatusTask?.cancel()
-        // The existing settings action disconnects the narrowly scoped lyrics provider.
-        // Playback credentials remain separate and never reach that provider.
+        authorizationStatusTask = nil
+        if authorization.authorizingPurpose == .lyrics { authorization.cancel() }
+    }
+    func cancelSpotifyAuthorization() {
+        cancelLyricsAuthorization()
+        authorization.cancel()
+        publishAuthorizationStatus()
+    }
+    func disconnectSpotify() {
+        guard !closed else { return }
+        accountGeneration = UUID()
+        authorizationFlowGeneration = UUID()
+        authorizationStatusGeneration = UUID()
+        authorizationStatusTask?.cancel()
+        authorizationStatusTask = nil
+        reconnectSuppressed = true
+        connectionGeneration = UUID()
+        connectionTask?.cancel()
+        connectionTask = nil
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+        needsFreshTransport = true
+        if hasCreatedAppRemote {
+            appRemote.playerAPI?.delegate = Self.detachedRemoteDelegate
+            appRemote.delegate = Self.detachedRemoteDelegate
+            appRemote.disconnect()
+        }
+        playerObserver = nil
+        playerState = nil
+        artworkURI = nil
+        invalidateImport()
+        documentPicker?.delegate = nil
+        documentPicker?.dismiss(animated: true)
+        documentPicker = nil
+        controller.accountDisconnected()
         do {
-            try authorization.disconnect(.lyrics)
-            lyricsConnected = false
-            controller.authorizationChanged(inProgress: false, connected: false, message: "Disconnected Spotify lyrics authorization.")
-        } catch { controller.showError(message: error.localizedDescription) }
+            try authorization.disconnect()
+            publishAuthorizationStatus(message: "Spotify disconnected.")
+        } catch { publishAuthorizationStatus(message: error.localizedDescription) }
     }
     func lyricsAccessToken(rejectedToken: String?, completion: @escaping (String?) -> Void) {
+        let generation = accountGeneration
         Task { [weak self] in
             guard let self, !self.closed else { completion(nil); return }
             do {
                 let token = try await self.authorization.token(.lyrics, rejected: rejectedToken)
-                completion(self.closed ? nil : token)
+                completion(self.closed || self.accountGeneration != generation ? nil : token)
             }
             catch { completion(nil) }
         }
@@ -236,7 +288,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
 
     func appRemoteDidEstablishConnection(_ appRemote: SPTAppRemote) {
         guard hasCreatedAppRemote, appRemote === self.appRemote else { appRemote.disconnect(); return }
-        guard active, !closed else { appRemote.disconnect(); return }
+        guard active, !closed, !reconnectSuppressed else { appRemote.disconnect(); return }
         let generation = connectionGeneration
         installPlayerObserver(generation: generation)
         appRemote.playerAPI?.subscribe(toPlayerState: { [weak self] _, error in
@@ -250,12 +302,12 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         }
     }
     func appRemote(_ appRemote: SPTAppRemote, didFailConnectionAttemptWithError error: Error?) {
-        guard !closed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
+        guard !closed, !reconnectSuppressed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
         needsFreshTransport = true
         if active { controller.playbackDisconnected(message: "Open Spotify and start a song, then return to Icy Lyrics to reconnect.") }
     }
     func appRemote(_ appRemote: SPTAppRemote, didDisconnectWithError error: Error?) {
-        guard !closed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
+        guard !closed, !reconnectSuppressed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
         connectionGeneration = UUID()
         needsFreshTransport = true
         refreshTimer?.invalidate()
@@ -438,6 +490,8 @@ private final class WeakIosHost: NSObject, IosHost {
     func next() { host?.next() }
     func seekTo(positionMs: Int64) { host?.seekTo(positionMs: positionMs) }
     func connectSpotify(forLyrics: Bool) { host?.connectSpotify(forLyrics: forLyrics) }
+    func ensureLyricsAuthorization() { host?.ensureLyricsAuthorization() }
+    func cancelLyricsAuthorization() { host?.cancelLyricsAuthorization() }
     func cancelSpotifyAuthorization() { host?.cancelSpotifyAuthorization() }
     func disconnectSpotify() { host?.disconnectSpotify() }
     func pickTtml() { host?.pickTtml() }

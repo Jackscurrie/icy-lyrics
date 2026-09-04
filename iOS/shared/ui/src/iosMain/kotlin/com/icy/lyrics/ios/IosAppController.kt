@@ -28,6 +28,8 @@ interface IosHost {
   fun next()
   fun seekTo(positionMs: Long)
   fun connectSpotify(forLyrics: Boolean)
+  fun ensureLyricsAuthorization()
+  fun cancelLyricsAuthorization()
   fun cancelSpotifyAuthorization()
   fun disconnectSpotify()
   fun pickTtml()
@@ -41,6 +43,8 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
   private val snapshot = MutableStateFlow<NowPlayingSnapshot?>(null)
   private val playbackConnection = MutableStateFlow(PlaybackConnection.DISCONNECTED)
   private val uiPlatform = IosIcyUiPlatform(versionName)
+  private val providerSession = IosProviderSession()
+  private var providerActionGeneration = 0L
   private val services = IosServices.create(object : SpotifyAccessTokenSource {
     override suspend fun accessToken(): String? = requestToken(null)
     override suspend fun refreshAfterRejection(rejectedToken: String): String? = requestToken(rejectedToken)
@@ -56,7 +60,8 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
     override val diagnosticEvents get() = services.diagnosticEvents
     override suspend fun currentSettings() = services.currentSettings()
     override suspend fun updateSettings(value: com.icy.lyrics.core.platform.settings.AppSettings) = services.updateSettings(value)
-    override suspend fun resolve(track: TrackIdentity, allowCached: Boolean, requestId: Long) = services.resolve(track, allowCached, requestId)
+    override suspend fun resolve(track: TrackIdentity, allowCached: Boolean, requestId: Long) =
+      providerSession.resolve { services.resolve(track, allowCached, requestId) }
     override suspend fun importTtml(track: TrackIdentity, text: String, sourceUri: String?) = services.importTtml(track, text, sourceUri)
     override suspend fun deleteSavedLyrics(trackKey: String) = services.deleteSavedLyrics(trackKey)
     override suspend fun clearDiagnostics() = services.clearDiagnostics()
@@ -96,9 +101,9 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
           onBackgroundEnabled = { controller.setBackgroundEnabled(it) }, onKeepScreenAwake = { controller.setKeepScreenAwake(it) },
           onUseLocalTtml = { controller.setUseLocalTtml(it) }, onRevealEnabled = { controller.setRevealEnabled(it) },
           onSourceStrategy = { controller.setSourceStrategy(it) }, onDebugEnabled = { controller.setDebugEnabled(it) },
-          onSpicyEnabled = { controller.setSpicyEnabled(it) },
-          onSpicyTokenSharingConsent = { controller.setSpicyTokenSharingConsent(it) },
-          onConnectSpotify = { host.connectSpotify(true) }, onCancelSpotifyAuthorization = host::cancelSpotifyAuthorization,
+          onSpicyEnabled = ::setSpicyEnabled,
+          onSpicyTokenSharingConsent = ::setSpicyConsent,
+          onConnectSpotify = { host.connectSpotify(false) }, onCancelSpotifyAuthorization = host::cancelSpotifyAuthorization,
           onDisconnectSpotify = host::disconnectSpotify, onLrclibEnabled = { controller.setLrclibEnabled(it) },
           onShareDiagnostics = { host.shareDiagnostics(controller.state.value.diagnostics.asText()) },
           onClearDiagnostics = { controller.clearDiagnostics() }, onDeleteSavedLyrics = { controller.deleteSavedLyrics(it) },
@@ -110,6 +115,7 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
 
   fun updatePlayback(uri: String, title: String, artist: String, album: String, durationMs: Long,
                      positionMs: Long, speed: Float, playing: Boolean, actions: Long) {
+    providerSession.connect()
     playbackConnection.value = PlaybackConnection.CONNECTED
     val previous = snapshot.value
     snapshot.value = NowPlayingSnapshot("com.spotify.client", title, artist, album, durationMs.takeIf { it > 0 },
@@ -134,7 +140,42 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
   fun playbackConnecting() { playbackConnection.value = PlaybackConnection.CONNECTING }
   fun authorizationChanged(inProgress: Boolean, connected: Boolean, message: String?) {
     controller.setAuthorization(inProgress, connected, message)
-    if (connected) controller.reloadLyrics()
+    // On iOS this existing permission flag means account access is available;
+    // waiting for a first App Remote snapshot would hide Settings/Disconnect.
+    controller.refreshPermissions(connected, false)
+  }
+  fun lyricsAuthorizationReady() { controller.reloadLyrics() }
+  fun accountDisconnected() {
+    ++providerActionGeneration
+    providerSession.disconnect()
+    pendingImport = null
+    playbackConnection.value = PlaybackConnection.DISCONNECTED
+    snapshot.value = null
+    controller.setAuthorization(false, false)
+    controller.refreshPermissions(false, false)
+  }
+  private fun setSpicyEnabled(value: Boolean) {
+    val action = controller.setSpicyEnabled(value)
+    requestLyricsAuthorizationAfter(action, value)
+  }
+  private fun setSpicyConsent(value: Boolean) {
+    val action = controller.setSpicyTokenSharingConsent(value)
+    requestLyricsAuthorizationAfter(action, value)
+  }
+  private fun requestLyricsAuthorizationAfter(action: Job, requested: Boolean) {
+    val generation = ++providerActionGeneration
+    if (!requested) host.cancelLyricsAuthorization()
+    scope.launch {
+      try {
+        action.join()
+        if (!requested || action.isCancelled || generation != providerActionGeneration) return@launch
+        val settings = services.currentSettings()
+        if (generation == providerActionGeneration && settings.spicyEnabled && settings.spicyTokenSharingConsent) {
+          host.ensureLyricsAuthorization()
+        }
+      } catch (cancelled: CancellationException) { throw cancelled }
+      catch (error: Exception) { if (generation == providerActionGeneration) showError(error.message ?: "The change could not be saved.") }
+    }
   }
   fun completeImport(text: String, sourceUri: String?) {
     val track = pendingImport ?: return
@@ -143,5 +184,30 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
   }
   fun cancelImport() { pendingImport = null }
   fun showError(message: String) = controller.showMessage(message)
-  fun close() { scope.cancel(); services.close(); host.setKeepAwake(false) }
+  fun close() { providerSession.disconnect(); scope.cancel(); services.close(); host.setKeepAwake(false) }
+}
+
+/** Cancels active I/O without closing durable storage or cancelling settings writes. */
+internal class IosProviderSession {
+  private var enabled = true
+  private var generation = 0L
+  private val requests = mutableSetOf<Job>()
+  fun connect() { enabled = true }
+  fun disconnect() {
+    enabled = false
+    ++generation
+    requests.toList().forEach { it.cancel() }
+  }
+  suspend fun <T> resolve(action: suspend () -> T): T = coroutineScope {
+    if (!enabled) throw CancellationException("Spotify account disconnected")
+    val requestGeneration = generation
+    val request = coroutineContext.job
+    requests += request
+    try {
+      val value = action()
+      ensureActive()
+      if (requestGeneration != generation) throw CancellationException("Spotify account changed")
+      value
+    } finally { requests -= request }
+  }
 }
