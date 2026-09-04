@@ -46,17 +46,111 @@ def contained(root: Path, relative: str) -> Path:
     return path
 
 
+def source_tree_info(archive: Path, gitlinks: list[dict] | None = None) -> dict:
+    """Verify Gitiles contents independently of its request-time tar timestamps."""
+    rows, tree, directories, member_names = [], {}, set(), set()
+    with tarfile.open(archive, "r:gz") as bundle:
+        for member in bundle:
+            path = PurePosixPath(member.name)
+            if (not member.name or path.as_posix() != member.name or path.is_absolute()
+                    or ".." in path.parts or "\\" in member.name or ":" in member.name):
+                raise ValueError(f"Unsafe source-tree path: {member.name!r}")
+            if member.name in member_names:
+                raise ValueError(f"Duplicate source-tree member: {member.name}")
+            member_names.add(member.name)
+            if member.isdir():
+                directories.add(member.name)
+                continue # Git directories are inferred, and do not carry tar permissions/timestamps.
+            if member.isfile():
+                data = bundle.extractfile(member).read()
+                kind = "file"
+                git_mode = "100755" if member.mode & 0o111 else "100644"
+            elif member.issym():
+                data = member.linkname.encode("utf-8")
+                kind, git_mode = "symlink", "120000"
+            else:
+                raise ValueError(f"Unsupported source-tree member: {member.name}")
+            git_blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).digest()
+            parent = tree
+            for part in path.parts[:-1]:
+                child = parent.setdefault(part, {})
+                if not isinstance(child, dict):
+                    raise ValueError(f"Conflicting source-tree path: {member.name}")
+                parent = child
+            if path.name in parent:
+                raise ValueError(f"Duplicate source-tree path: {member.name}")
+            parent[path.name] = (git_mode, git_blob)
+            rows.append({"path": member.name, "kind": kind, "mode": member.mode & 0o777,
+                         "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+    # Gitiles represents a gitlink as an empty directory. Restore only the locked
+    # commit metadata for tree verification; never fetch or build the submodule.
+    for link in gitlinks or []:
+        path = PurePosixPath(link["path"])
+        if (path.as_posix() != link["path"] or path.is_absolute() or ".." in path.parts
+                or "\\" in link["path"] or ":" in link["path"] or link["path"] not in directories):
+            raise ValueError("Invalid/missing locked gitlink placeholder")
+        if any(row["path"] == link["path"] or row["path"].startswith(link["path"] + "/") for row in rows):
+            raise ValueError("Unexpected source inside an unpopulated gitlink")
+        parent = tree
+        for part in path.parts[:-1]:
+            parent = parent.setdefault(part, {})
+        if path.name in parent:
+            raise ValueError("Conflicting gitlink")
+        parent[path.name] = ("160000", bytes.fromhex(link["commit"]))
+        rows.append({"path": link["path"], "kind": "gitlink", "commit": link["commit"]})
+
+    # Directory headers are not Git objects, but extraction materializes them.
+    # Permit omitted ancestor headers and the locked empty gitlink directory;
+    # reject additional paths even when they would not affect the Git tree hash.
+    expected_directories = {link["path"] for link in gitlinks or []}
+    for row in rows:
+        expected_directories.update(parent.as_posix() for parent in PurePosixPath(row["path"]).parents
+                                    if parent != PurePosixPath("."))
+    unexpected_directories = directories - expected_directories
+    if unexpected_directories:
+        raise ValueError(f"Unexpected source-tree directories: {sorted(unexpected_directories)}")
+
+    def git_tree(node):
+        body = bytearray()
+        # Git compares directory names as if they end with '/'.
+        for name, value in sorted(node.items(), key=lambda item: (item[0] + ("/" if isinstance(item[1], dict) else "")).encode("utf-8")):
+            mode, object_id = ("40000", git_tree(value)) if isinstance(value, dict) else value
+            body += mode.encode() + b" " + name.encode("utf-8") + b"\0" + object_id
+        return hashlib.sha1(b"tree " + str(len(body)).encode() + b"\0" + body).digest()
+
+    canonical = json.dumps(sorted(rows, key=lambda row: row["path"]), ensure_ascii=True,
+                           separators=(",", ":"), sort_keys=True).encode("utf-8")
+    return {"sourceTreeSha256": hashlib.sha256(canonical).hexdigest(),
+            "gitTreeSha1": git_tree(tree).hex(), "sourceFiles": len(rows) - len(gitlinks or [])}
+
+
+def verify_archive(entry: dict, path: Path) -> dict:
+    observed = {"sha256": digest(path), "bytes": path.stat().st_size}
+    if "sourceTreeSha256" in entry:
+        try:
+            observed.update(source_tree_info(path, entry.get("gitlinks")))
+        except Exception as error:
+            raise ValueError(f"Cannot verify source archive: {entry['name']}; observed={observed}; {error}") from error
+        if any(observed[key] != entry[key] for key in ("sourceTreeSha256", "gitTreeSha1", "sourceFiles")):
+            raise ValueError(f"Source tree differs from lock: {entry['name']}; observed={observed}; "
+                             f"expected sourceTreeSha256={entry['sourceTreeSha256']}, gitTreeSha1={entry['gitTreeSha1']}")
+    elif observed["sha256"] != entry["sha256"] or observed["bytes"] != entry["bytes"]:
+        raise ValueError(f"Archive differs from lock: {entry['name']}; observed={observed}; "
+                         f"expected sha256={entry['sha256']}, bytes={entry['bytes']}")
+    return observed
+
+
 def fetch(entry: dict, downloads: Path) -> Path:
-    path = downloads / (entry["sha256"] + "-" + entry["name"])
+    cache_key = "tree-" + entry["sourceTreeSha256"] if "sourceTreeSha256" in entry else entry["sha256"]
+    path = downloads / (cache_key + "-" + entry["name"])
     if not path.exists():
         partial = path.with_suffix(path.suffix + ".partial-" + uuid.uuid4().hex)
         with urllib.request.urlopen(entry["url"], timeout=120) as source, partial.open("xb") as output:
             shutil.copyfileobj(source, output)
-        if digest(partial) != entry["sha256"] or partial.stat().st_size != entry["bytes"]:
-            raise ValueError(f"Downloaded bytes differ from locked archive: {entry['name']}")
+        verify_archive(entry, partial) # A failure retains the rejected bytes locally, without extracting.
         partial.replace(path)
-    if digest(path) != entry["sha256"] or path.stat().st_size != entry["bytes"]:
-        raise ValueError(f"Cached archive differs from lock: {path}")
+    else:
+        verify_archive(entry, path)
     return path
 
 
@@ -239,8 +333,11 @@ def prepare(work: Path, lock: dict) -> dict:
     sources, tools_dir, fonts = work / "skia", work / "tools", work / "fonts"
     tools_dir.mkdir()
     fonts.mkdir()
+    archive_evidence = []
     for entry in lock["archives"]:
         archive = fetch(entry, downloads)
+        archive_evidence.append({"name": entry["name"], **verify_archive(entry, archive)})
+        write_json(work / "verified-inputs.json", archive_evidence)
         if entry["kind"] == "tar":
             extract_tar(archive, contained(work, entry["destination"]), entry.get("stripPrefix", ""))
         else:
@@ -279,6 +376,7 @@ def prepare(work: Path, lock: dict) -> dict:
         shutil.copyfile(IOS / "shared/ui/assets/font" / name, notices / name)
     shutil.copyfile(HERE / "sources.lock.json", work / "sources.lock.json")
     return {"skia": str(sources), "build": str(build), "tools": str(tools_dir), "fonts": str(fonts),
+            "verifiedArchives": archive_evidence,
             "sources": {p.name: digest(p) for p in HERE.iterdir() if p.is_file()}}
 
 

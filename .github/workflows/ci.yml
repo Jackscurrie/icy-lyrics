@@ -16,6 +16,11 @@ on:
         type: boolean
         required: false
         default: false
+      font_backend_only:
+        description: 'Run only the standalone font experiment; skip desktop, Android, and iPhone builds'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ permissions:
 jobs:
   extension:
     name: Desktop extension
+    if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -37,6 +43,7 @@ jobs:
 
   android-play:
     name: Android Play distribution
+    if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
     runs-on: ubuntu-latest
     env:
       ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
@@ -59,7 +66,7 @@ jobs:
   ios-sideload:
     name: iPhone simulator and resignable IPA
     # Standard public-repository runners only: never opt into billed private/larger runners.
-    if: github.event.repository.private == false
+    if: github.event.repository.private == false && (github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true)
     runs-on: macos-26
     timeout-minutes: 90
     env:
@@ -87,20 +94,6 @@ jobs:
       - name: Verify simulator and package the unsigned device application
         id: ios_build
         run: bash iOS/scripts/build_ios.sh
-      - name: Capture opt-in additional iPhone parity evidence
-        if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
-        run: bash iOS/scripts/capture_additional_ios.sh
-      - name: Clean up the retained additional-capture simulator
-        if: always() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
-        shell: bash
-        run: |
-          if [[ -f iOS/build/reports/retained-ios-simulator.txt ]]; then
-            simulator="$(cat iOS/build/reports/retained-ios-simulator.txt)"
-            if [[ "$simulator" =~ ^[a-fA-F0-9-]{36}$ ]]; then
-              xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
-              xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
-            fi
-          fi
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -115,6 +108,20 @@ jobs:
             !iOS/build/reports/deterministic-ios-captures/mixed-lyrics-motion-v1/**
             !iOS/build/reports/motion-ios-tests/**
           if-no-files-found: warn
+      - name: Capture opt-in additional iPhone parity evidence
+        if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
+        run: bash iOS/scripts/capture_additional_ios.sh
+      - name: Clean up the retained additional-capture simulator
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
+        shell: bash
+        run: |
+          if [[ -f iOS/build/reports/retained-ios-simulator.txt ]]; then
+            simulator="$(cat iOS/build/reports/retained-ios-simulator.txt)"
+            if [[ "$simulator" =~ ^[a-fA-F0-9-]{36}$ ]]; then
+              xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
+              xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+            fi
+          fi
       - name: Upload opt-in additional parity evidence
         if: always() && github.event_name == 'workflow_dispatch' && inputs.additional_ios_parity
         uses: actions/upload-artifact@v7
@@ -159,7 +166,7 @@ jobs:
     name: Optional standalone font backend experiment
     # Independent diagnostic job on a standard public-repository runner only.
     # This never supplies an app verification marker or a delivery artifact.
-    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && inputs.font_backend_probe
+    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && (inputs.font_backend_probe || inputs.font_backend_only)
     runs-on: macos-26
     timeout-minutes: 45
     env:
@@ -184,6 +191,7 @@ jobs:
           path: |
             iOS/build/freetype-probe/ci/run.json
             iOS/build/freetype-probe/ci/sources.lock.json
+            iOS/build/freetype-probe/ci/verified-inputs.json
             iOS/build/freetype-probe/ci/validation.json
             iOS/build/freetype-probe/ci/android-context-comparison.json
             iOS/build/freetype-probe/ci/android36-font-metrics.json

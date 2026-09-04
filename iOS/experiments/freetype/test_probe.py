@@ -148,6 +148,116 @@ class ProbeTest(unittest.TestCase):
         for entry in lock["fonts"]:
             self.assertEqual(entry["sha256"], probe.digest(probe.IOS / "shared/ui/assets/font" / entry["file"]))
 
+    def archive(self, name, mtime, content=b"original", mode=0o644, filename="font-source.c"):
+        path = self.root / name
+        with tarfile.open(path, "w:gz") as bundle:
+            member = tarfile.TarInfo(filename)
+            member.mtime, member.size, member.mode = mtime, len(content), mode
+            bundle.addfile(member, io.BytesIO(content))
+        return path
+
+    def test_gitiles_timestamp_changes_preserve_verified_source_identity(self):
+        first = self.archive("first.tgz", 1234.125)
+        second = self.archive("second.tgz", 5678.625)
+        self.assertNotEqual(probe.digest(first), probe.digest(second))
+        entry = {"name": "dependency.tgz", **probe.source_tree_info(first)}
+        self.assertEqual(entry["gitTreeSha1"], probe.verify_archive(entry, second)["gitTreeSha1"])
+
+    def test_source_changes_paths_and_executable_bits_are_still_rejected(self):
+        original = self.archive("first.tgz", 1234)
+        entry = {"name": "dependency.tgz", **probe.source_tree_info(original)}
+        for options in ({"content": b"tampered"}, {"mode": 0o755}, {"mode": 0o664}, {"filename": "other.c"}):
+            changed = self.archive("changed.tgz", 5678, **options)
+            with self.assertRaisesRegex(ValueError, "Source tree differs.*observed=.*sha256"):
+                probe.verify_archive(entry, changed)
+
+    def test_archive_rejection_reports_actual_hash_and_length(self):
+        path = self.root / "broken.tgz"
+        path.write_bytes(b"not an archive")
+        entry = {"name": "broken.tgz", "sourceTreeSha256": "0" * 64}
+        with self.assertRaises(ValueError) as failure:
+            probe.verify_archive(entry, path)
+        self.assertIn(probe.digest(path), str(failure.exception))
+        self.assertIn("'bytes': 14", str(failure.exception))
+
+    def test_gitlink_is_empty_and_cannot_supply_unverified_source(self):
+        archive = self.root / "gitlink.tgz"
+        gitlinks = [{"path": "subprojects/dlg", "commit": "72dfcc858c040c54a6a0b88fcb7e70ee186d3167"}]
+        for inject_source in (False, True):
+            with tarfile.open(archive, "w:gz") as bundle:
+                directory = tarfile.TarInfo("subprojects/dlg")
+                directory.type = tarfile.DIRTYPE
+                bundle.addfile(directory)
+                if inject_source:
+                    member = tarfile.TarInfo("subprojects/dlg/extra.c")
+                    member.size = 4
+                    bundle.addfile(member, io.BytesIO(b"code"))
+            if inject_source:
+                with self.assertRaisesRegex(ValueError, "Unexpected source inside"):
+                    probe.source_tree_info(archive, gitlinks)
+            else:
+                self.assertEqual(0, probe.source_tree_info(archive, gitlinks)["sourceFiles"])
+
+    def test_directory_headers_allow_only_verified_ancestors_and_locked_gitlinks(self):
+        original = self.archive("original.tgz", 1234, filename="source/code.c")
+        entry = {"name": "source.tgz", **probe.source_tree_info(original)}
+        with tarfile.open(self.root / "directories.tgz", "w:gz") as bundle:
+            directory = tarfile.TarInfo("source")
+            directory.type, directory.mtime, directory.mode = tarfile.DIRTYPE, 5678, 0o700
+            bundle.addfile(directory)
+            member = tarfile.TarInfo("source/code.c")
+            member.size = len(b"original")
+            bundle.addfile(member, io.BytesIO(b"original"))
+        self.assertEqual(entry["gitTreeSha1"],
+                         probe.verify_archive(entry, self.root / "directories.tgz")["gitTreeSha1"])
+
+        gitlinks = [{"path": "subprojects/dlg", "commit": "72dfcc858c040c54a6a0b88fcb7e70ee186d3167"}]
+        for child in (None, "subprojects/dlg/unlocked"):
+            with tarfile.open(self.root / "gitlink-directories.tgz", "w:gz") as bundle:
+                for name in ["subprojects", "subprojects/dlg"] + ([child] if child else []):
+                    directory = tarfile.TarInfo(name)
+                    directory.type = tarfile.DIRTYPE
+                    bundle.addfile(directory)
+            if child:
+                with self.assertRaisesRegex(ValueError, "Unexpected source-tree directories"):
+                    probe.source_tree_info(self.root / "gitlink-directories.tgz", gitlinks)
+            else:
+                self.assertEqual(0, probe.source_tree_info(self.root / "gitlink-directories.tgz", gitlinks)["sourceFiles"])
+
+    def test_unlocked_duplicate_and_conflicting_directory_members_fail_before_extraction(self):
+        for directory_names, reason in ((["unlocked/path"], "Unexpected source-tree directories"),
+                                         (["source.c"], "Duplicate source-tree member"),
+                                         (["ancestor", "ancestor"], "Duplicate source-tree member")):
+            with self.subTest(directories=directory_names):
+                archive = self.root / "changed-directories.tgz"
+                with tarfile.open(archive, "w:gz") as bundle:
+                    member = tarfile.TarInfo("source.c")
+                    member.size = 4
+                    bundle.addfile(member, io.BytesIO(b"code"))
+                    for name in directory_names:
+                        directory = tarfile.TarInfo(name)
+                        directory.type = tarfile.DIRTYPE
+                        bundle.addfile(directory)
+                with self.assertRaisesRegex(ValueError, reason):
+                    probe.source_tree_info(archive)
+
+    def test_source_identity_rejects_symlink_target_changes(self):
+        def archive(name, target):
+            path = self.root / name
+            with tarfile.open(path, "w:gz") as bundle:
+                for filename in ("first.c", "second.c"):
+                    member = tarfile.TarInfo(filename)
+                    member.size = 4
+                    bundle.addfile(member, io.BytesIO(b"code"))
+                link = tarfile.TarInfo("selected.c")
+                link.type, link.linkname = tarfile.SYMTYPE, target
+                bundle.addfile(link)
+            return path
+        original = archive("original-link.tgz", "first.c")
+        entry = {"name": "dependency.tgz", **probe.source_tree_info(original)}
+        with self.assertRaisesRegex(ValueError, "Source tree differs"):
+            probe.verify_archive(entry, archive("changed-link.tgz", "second.c"))
+
 
 if __name__ == "__main__":
     unittest.main()

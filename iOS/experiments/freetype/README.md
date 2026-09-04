@@ -6,7 +6,7 @@ This standalone macOS command-line program asks whether the **unchanged Android 
 
 ## Run on the existing public Mac runner
 
-Use an arm64 macOS host with Xcode **26.4.1** selected, Python 3.10 or newer, network access, and approximately 2 GB of free workspace space (build output varies). No signing, Apple Developer membership, Homebrew, Rust, or paid service is required. The first download is 69,484,296 bytes compressed. GN and Ninja are hash-pinned downloads, so installed tool versions do not affect the experiment. Xcode's selected Apple clang and SDK versions are recorded. CPU compilation can take several minutes; there is no measured runtime estimate yet.
+Use an arm64 macOS host with Xcode **26.4.1** selected, Python 3.10 or newer, network access, and approximately 2 GB of free workspace space (build output varies). No signing, Apple Developer membership, Homebrew, Rust, or paid service is required. The first download is approximately 69.5 MB compressed; generated Gitiles tar metadata varies slightly. GN and Ninja are hash-pinned downloads, so installed tool versions do not affect the experiment. Xcode's selected Apple clang and SDK versions are recorded. CPU compilation can take several minutes; there is no measured runtime estimate yet.
 
 From the repository root:
 
@@ -16,7 +16,9 @@ bash iOS/experiments/freetype/run_macos.sh --jobs 4
 
 Outputs are placed in a new directory under `iOS/build/freetype-probe/`. Each run has fresh extracted sources/build output, so an earlier successful probe cannot become a new result. Verified download archives are shared in a cache. The script refuses other Xcode versions and non-arm64/non-Mac execution. It does not start a simulator or remote job.
 
-The existing `Public source checks` workflow now also has a **`font_backend_probe`** manual input, defaulting to **false**. Selecting it runs this experiment in a separate standard `macos-26` job, independent of app/package gates. Its `icy-font-backend-probe` artifact contains metrics, PNGs, source lock, status/validation and toolchain/build logs only. Downloaded archives, extracted sources, font files and native executables are excluded. This input has been wired but has not yet been dispatched or executed.
+The existing `Public source checks` workflow has two manual inputs, both defaulting to **false**: **`font_backend_probe`** adds this independent standard `macos-26` job alongside normal checks; **`font_backend_only`** runs just the experiment and skips the desktop, Android and iPhone jobs. Its `icy-font-backend-probe` artifact contains metrics, PNGs, source lock, verified input identities, status/validation and toolchain/build logs only. Downloaded archives, extracted sources, font files and native executables are excluded.
+
+The first dispatch, [run 33865575594](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33865575594), stopped before compilation because Gitiles tar timestamps changed. Fresh dependency downloads now pass exact source-tree verification described below. Native compilation and glyph output still need a successful rerun.
 
 Windows can verify downloads, locked configuration, original font hashes, extraction and the overlay without attempting native execution:
 
@@ -39,7 +41,9 @@ The runner independently decodes the native PNGs and rejects blank required imag
 
 ## Reproducible source boundary
 
-`sources.lock.json` pins the Skia archive and exact FreeType/libpng/zlib commits already selected by that Skia revision's `DEPS`, plus the GN/Ninja versions selected by its fetch scripts. Every downloaded archive has a verified SHA-256 and size. The lock also verifies the original Skia root build file and FreeType options/module headers. The only extracted-source overlay is this program's directory and one additive GN group in the extracted root build file. No font-manager or renderer implementation is patched.
+`sources.lock.json` pins the Skia archive and exact FreeType/libpng/zlib commits already selected by that Skia revision's `DEPS`, plus the GN/Ninja versions selected by its fetch scripts. Skia and the two tool archives have exact byte SHA-256 and size checks. Gitiles regenerates the three dependency tarballs with request-time fractional member timestamps, so their compressed-byte hashes are reference observations, not the verification identity. Before extraction, those archives must instead reproduce **both** the pinned Git commit's complete tree object ID and a SHA-256 canonical manifest of every file path, type, permission, length and file-content SHA-256. The independently read commit metadata URLs are retained in the lock. Tar timestamps/ownership are ignored and never used as source identity. FreeType's `subprojects/dlg` gitlink is an empty, uncompiled placeholder: its exact commit metadata is included in the tree hash; any unexpected files inside it fail verification. All rejected bytes remain in ignored local build output, and diagnostics state their observed SHA-256 and length. `verified-inputs.json` records successfully verified archive bytes and source-tree identities.
+
+The lock also verifies the original Skia root build file and FreeType options/module headers. The only extracted-source overlay is this program's directory and one additive GN group in the extracted root build file. No font-manager or renderer implementation is patched.
 
 `args.gn` enables bundled FreeType/custom-data loading while retaining CoreText. Skia's checked-in `freetype-android` configuration already enables `TT_CONFIG_OPTION_COLOR_LAYERS`, `TT_SUPPORT_COLRV1`, and PNG support. The probe disables HarfBuzz, ICU, Fontations/Rust, WOFF2, SVG, GPU backends, PDF and unrelated codecs to keep its dependency closure small. libpng and zlib remain enabled for the original bitmap font and PNG output. The extracted Skia Fontations Cargo symlink is materialized as an identical contained file for Windows preparation; Fontations is disabled and that file is not compiled.
 
