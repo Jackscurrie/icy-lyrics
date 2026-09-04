@@ -1,6 +1,6 @@
 # Validation status
 
-This file distinguishes code checks from rendered/device acceptance. Native Kotlin tests have now run on GitHub's iPhone simulator; Swift application tests, screenshot acceptance and device packaging remain pending. No IPA has been produced yet.
+This file distinguishes code checks from rendered/device acceptance. Native Kotlin and Swift application tests have passed on GitHub's iPhone simulator. Complete UIKit capture, screenshot acceptance and device packaging remain pending. No IPA has been produced yet.
 
 ## First macOS results
 
@@ -22,6 +22,12 @@ Two pinned platform defaults differ: Android's Compose gradient paint enables di
 
 All 20 strict image comparisons still report differences. The original artifact is [9932285807](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33859647445/artifacts/9932285807), 12,455,110 bytes, SHA-256 `a8c6c78ae90e825f74eaa56e9dadc9a828cd28643369950f8cd6e6f10b813f9c`. Native Compose measurements show the 28sp header at 829/843 pixels for weights 400/700 versus Android's 825/839; iOS baseline 72.805664 versus Android's 72. The matched positioning policy alone does not fix font metrics. Dithering increased the number of differing raster background pixels; in the unobstructed static background their maximum channel difference remains 3/255. This result requires investigation against production UIKit/Metal and is not an appearance pass.
 
+[Run 33862494216](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33862494216), revision `e247609`, passed the same 108 native Kotlin tests and all **23 Swift tests** (14 authorization and 9 imported-TTML cases). The app launched and produced all 13 portrait captures plus one large-text portrait capture. Three UIKit test functions timed out on their first landscape draw acknowledgement. Recorded video confirms the app rotated; the debug host incorrectly compared raw UIKit safe-area insets against Compose 1.11.1's corner-adapted region. The next run uses the same native region and retains diagnostic metadata when readiness fails.
+
+The captures also expose XCTest's default video path reducing an odd 1179-pixel width to 1178 pixels. Those images are not valid matched native-profile references. Both schemes now request still screenshots, and the tests assert exact native dimensions. No image has been resized to repair this discrepancy. Main evidence: [artifact 9933245884](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33862494216/artifacts/9933245884), 136,463,374 bytes, SHA-256 `96c1b5fc338f35a52d8bbfe035912bba93681b9568cb721b88328eba915d8286`.
+
+The opt-in extended lane rejected the correct simulator because it checked its custom display name instead of its iPhone device type. The motion lane captured its initial frames, then rejected an unexpected 16-ms advance caused by iOS `performClick`; it now invokes the same semantic action used by the Android producer. Both strict checks remain enabled. Additional evidence: [artifact 9933246776](https://github.com/Jackscurrie/icy-lyrics/actions/runs/33862494216/artifacts/9933246776), SHA-256 `aca587aa7c7f352f314d00c7b14c64fc8b6032ffe875b46f8958a6a789335dad`. Neither a verification marker nor an IPA was produced.
+
 ## Passed locally
 
 - Shared lyrics JVM verification: 83 tests, including original parser cases and portability/limits/Unicode/integer-boundary cases.
@@ -36,7 +42,7 @@ All 20 strict image comparisons still report differences. The original artifact 
 
 The capture harness uses 20 offline scenes with deterministic track/artwork/lyrics and a fixed frame time. It captures actual original Android production code from the frozen pre-extraction baseline and the extracted version. Capture/comparison results are generated under `tests/results`; a separate checked-in report records completed measurements. No baseline is created by simply treating the new iOS output as correct.
 
-Twenty-three Swift OAuth/import tests are authored but have not executed successfully yet. All eight native managed-import tests and four provider-session cancellation tests passed on macOS in run 33855937655. The native shader-compilation test also passed. Android and iOS bind an import to the track present when the picker opens, so a song change while Files is open cannot attach the result to the newly playing song.
+Twenty-three Swift OAuth/import tests passed in run 33862494216. All eight native managed-import tests and four provider-session cancellation tests passed on macOS in run 33855937655. The native shader-compilation test also passed. Android and iOS bind an import to the track present when the picker opens, so a song change while Files is open cannot attach the result to the newly playing song.
 
 The offscreen iOS raster capture lane uses the complete preserved Android scenario order, original springs, 2,000 ms controlled-clock advances, matching density/font scale/insets and SHA-verified fonts. The first native execution is recorded above. `tests/compare_ios_parity.py` produces exact RGBA differences and rejects incomplete captures or mismatched geometry. Its report remains separate from native UIKit/Metal acceptance; it cannot approve the production renderer by itself.
 

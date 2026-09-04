@@ -1,0 +1,5 @@
+# Copied only into an extracted, pinned Skia checkout by run_probe.py.
+executable("icy_freetype_probe") {
+  sources = [ "font_probe.cpp" ]
+  deps = [ "//:skia" ]
+}

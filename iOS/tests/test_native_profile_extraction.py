@@ -168,6 +168,41 @@ class NativeProfileExtraction(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 validate_native_geometry(self.geometry() | change, (20, 30))
 
+    def test_corner_adaptation_uses_separately_measured_native_region(self):
+        metadata = self.geometry() | {
+            "contentSafeDrawingInsetsPoints": [0.5, 2, 0.5, 2],
+            "safeDrawingInsetsPx": [1, 4, 1, 4],
+            "safeDrawingInsetsSource": "UIKit safeArea with vertical corner adaptation",
+        }
+        result = validate_native_geometry(metadata, (20, 30))
+        self.assertEqual([3, 8, 17, 22], result["safeAreaInteriorRectPx"])
+        self.assertEqual([0.5, 1, 0.5, 1], metadata["contentSafeAreaInsetsPoints"])
+        for change in ({"safeDrawingInsetsSource": "guessed"},
+                       {"safeDrawingInsetsSource": "UIKit safeAreaInsets"},
+                       {"safeDrawingInsetsPx": [1, 2, 1, 2]}):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                validate_native_geometry(metadata | change, (20, 30))
+
+    def test_video_rounded_odd_width_cannot_be_accepted_as_native_geometry(self):
+        metadata = self.geometry() | {
+            "displayScale": 3, "nativeDisplayScale": 3, "composeDensity": 3,
+            "windowBoundsPoints": [0, 0, 393, 852], "contentBoundsInWindowPoints": [0, 0, 393, 852],
+            "contentWidthPx": 1179, "contentHeightPx": 2556,
+            "capturedWindowWidthPx": 1178, "capturedWindowHeightPx": 2556,
+        }
+        with self.assertRaisesRegex(ValueError, "Window bounds"):
+            validate_native_geometry(metadata, (1178, 2556))
+
+    def test_native_inset_conversion_preserves_compose_float32_rounding(self):
+        metadata = self.geometry() | {
+            "contentSafeDrawingInsetsPoints": [0.5, 1.2, 0.5, 1.2],
+            "safeDrawingInsetsSource": "UIKit safeArea with vertical corner adaptation",
+            "safeDrawingInsetsPixelConversion": "Float32 points * Float32 displayScale, roundToInt",
+        }
+        self.assertEqual([3, 6, 17, 24], validate_native_geometry(metadata, (20, 30))["safeAreaInteriorRectPx"])
+        with self.assertRaises(ValueError):
+            validate_native_geometry(metadata | {"safeDrawingInsetsPx": [1, 3, 1, 3]}, (20, 30))
+
     def test_landscape_device_and_interface_names_differ_but_raw_values_match(self):
         for raw in (3, 4):
             metadata = self.geometry() | {"windowBoundsPoints": [0, 0, 15, 10],

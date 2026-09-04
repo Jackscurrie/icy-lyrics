@@ -28,9 +28,11 @@ dependencies. There is no framework fork.
 The test asset loader reads the checked-in bytes from disk and verifies every bundled Android
 font against its original SHA-256 provenance. Production still reads the same bytes from
 `IcyAssets` in the app bundle. The only other platform adapters are an undrawn no-op back handler
-for the offscreen scene and a native `NSDateFormatter` using the production medium-date and
-short-time styles under explicit `en_US` / `America/Los_Angeles`. Its real output is drawn and
-recorded verbatim; Android date punctuation is never substituted.
+for the offscreen scene and the production `IosAndroidDateFormatter` under explicit `en_US` /
+`America/Los_Angeles`. Foundation supplies Gregorian calendar fields; the measured Android
+locale profiles supply punctuation, symbols, and digits. The same adapter is used by the app,
+and its real result is drawn and recorded verbatim. `IosAndroidDateFormatterTest` separately
+compares 144 original Android strings and writes actual/expected output to `native-date-format`.
 
 Outputs are under the ignored `iOS/build/reports/deterministic-ios-captures` directory. Each profile
 contains `{scenario}.png`, `{scenario}.json`, and `manifest.json`. Scenario metadata has top-level

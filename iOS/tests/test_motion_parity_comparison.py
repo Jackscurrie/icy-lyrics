@@ -4,12 +4,13 @@ from pathlib import Path
 import json
 import tempfile
 import unittest
+from zipfile import ZipFile
 
 from PIL import Image
 
 from compare_motion_parity import (
     ROOT, PROFILE, SUITE, SEQUENCES, MODES, OFFSETS, INTERRUPTED_OFFSETS,
-    compare_pixels, compare_suites, digest, load_side, schedule, validate_pair,
+    compare_pixels, compare_suites, digest, load_side, schedule, validate_pair, unpack_reference_archive,
 )
 
 
@@ -179,6 +180,34 @@ class MotionComparisonTest(unittest.TestCase):
         self.assertEqual([], report["frames"])
         self.assertEqual("RIGHT", report["errors"][0]["side"])
 
+    def test_full_report_keeps_all_44_frames_and_one_changed_pixel_is_failure(self):
+        value = self.manifest("RIGHT", "skia-raster")
+        frame = value["frames"][3]
+        with Image.open(BytesIO(self.images[frame["composedMode"]])) as image:
+            pixel = image.getpixel((100, 100))
+            image.putpixel((100, 100), (pixel[0] + 1, *pixel[1:]))
+            output = BytesIO()
+            image.save(output, format="PNG")
+        changed_png = output.getvalue()
+        frame.update(pngBytes=len(changed_png), pngSha256=digest(changed_png))
+        self.write_manifest(self.candidate, "RIGHT", value, images=False)
+        image_path = self.candidate / "right" / (frame["id"] + ".png")
+        image_path.write_bytes(changed_png)
+        output_root = self.directory / "complete-report"
+        report = compare_suites(self.reference, self.candidate, output_root, self.expected_contract)
+        self.assertTrue(report["validEvidence"])
+        self.assertTrue(report["comparisonComplete"])
+        self.assertFalse(report["allFramesIdentical"])
+        self.assertFalse(report["appearanceParityVerified"])
+        self.assertEqual(44, len(report["frames"]))
+        different = [row for row in report["frames"] if row["status"] != "identical"]
+        self.assertEqual([(frame["id"], "RIGHT", 1)],
+                         [(row["id"], row["side"], row["changedPixels"]) for row in different])
+        self.assertEqual(44, len(list(output_root.glob("*/*-rgba-diff.png"))))
+        self.assertEqual(44, len(list(output_root.glob("*/*-maximum-diff.png"))))
+        self.assertEqual(changed_png, image_path.read_bytes())
+        self.assertEqual(report, json.loads((output_root / "comparison.json").read_text()))
+
     def test_one_level_rgba_changes_are_reported_exactly_without_modifying_inputs(self):
         def png(pixel):
             image = Image.new("RGBA", (2, 2), (24, 38, 72, 255))
@@ -207,6 +236,37 @@ class MotionComparisonTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "overlap"):
             compare_suites(self.reference, self.candidate, self.candidate / "report", self.expected_contract)
         self.assertFalse((self.candidate / "report").exists())
+
+
+class MotionReferenceArchiveTest(unittest.TestCase):
+    def setUp(self):
+        (ROOT / "build").mkdir(exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(prefix="motion-archive-test-", dir=ROOT / "build")
+        self.addCleanup(self.temp.cleanup)
+        self.directory = Path(self.temp.name)
+
+    def test_actual_checked_in_reference_has_all_44_valid_original_frames(self):
+        reference = unpack_reference_archive(ROOT / "tests/evidence/android-motion-v1-reference.zip",
+                                             self.directory / "reference")
+        for side in ("left", "right"):
+            manifest = json.loads((reference / side / "manifest.json").read_text())
+            self.assertTrue(manifest["complete"])
+            self.assertEqual(22, len(manifest["frames"]))
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            unpack_reference_archive(ROOT / "tests/evidence/android-motion-v1-reference.zip", reference.parent)
+
+    def test_changed_archive_checksum_and_unsafe_path_are_rejected_before_extraction(self):
+        archive = self.directory / "reference.zip"
+        with ZipFile(archive, "w") as package:
+            package.writestr("../outside.txt", "unexpected")
+        metadata = {"schemaVersion": 1, "suite": SUITE, "archive": archive.name,
+                    "archiveBytes": archive.stat().st_size, "archiveSha256": "0" * 64}
+        for expected in ("checksum", "Unsafe"):
+            archive.with_suffix(".json").write_text(json.dumps(metadata))
+            with self.assertRaisesRegex(ValueError, expected):
+                unpack_reference_archive(archive, self.directory / "reference")
+            self.assertFalse((self.directory / "reference").exists())
+            metadata["archiveSha256"] = digest(archive.read_bytes())
 
 
 if __name__ == "__main__":

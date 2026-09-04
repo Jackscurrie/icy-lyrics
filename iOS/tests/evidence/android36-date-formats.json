@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "archive": "android36-date-formats.zip",
+  "archiveBytes": 76889,
+  "archiveSha256": "b7c4eb28a1dbadd295cf74d382d24438500e5405fdc53b01c51bb1fa88b87bf5",
+  "runId": "20260904T102957Z-08e87132",
+  "localeCount": 881,
+  "sampleCount": 144,
+  "dateApi": "java.text.DateFormat.getDateTimeInstance(MEDIUM, SHORT)",
+  "sdk": 36,
+  "icuVersion": "76.1.0.0",
+  "cldrVersion": "46.0.0.0",
+  "scope": "Original Android java.text API behavior measured on owned emulator; locale data, not a screenshot parity claim.",
+  "rawOutputSha256": {
+    "patterns-and-symbols.json": "74c8faaf5f434a50520113f3d2b82729d02890b4c5df87064c57f662c4e21351",
+    "samples.json": "bd93e409043aecada1ebf143347870b2302017dbe4ec5b7ad60ce0fc3b1162c9",
+    "instrumentation.log": "c11661ba67648c25f8f32d6ab7fab8a057889686e2a3b8c6b94a330abe998bf8"
+  }
+}

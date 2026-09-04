@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "skikoVersion": "0.144.6",
+  "skikoReferenceRevision": "9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+  "skiaRevision": "22f58c9fd43d55bde818821c04b48fda5d7ec939",
+  "skiaTag": "m144-22f58c9fd4",
+  "xcodeVersion": "26.4.1",
+  "archives": [
+    {
+      "name": "skia.tar.gz",
+      "kind": "tar",
+      "sha256": "33e5a5a70de90bce47a80bb3989eda94902d82996408360c67faf43196940813",
+      "bytes": 63771945,
+      "url": "https://codeload.github.com/JetBrains/skia/tar.gz/22f58c9fd43d55bde818821c04b48fda5d7ec939",
+      "revision": "22f58c9fd43d55bde818821c04b48fda5d7ec939",
+      "destination": "skia",
+      "stripPrefix": "skia-22f58c9fd43d55bde818821c04b48fda5d7ec939"
+    },
+    {
+      "name": "freetype.tar.gz",
+      "kind": "tar",
+      "sha256": "11be735a0e8df9c120788f8b75a7269d71f60d2dfd273c7e661d34a14970bea7",
+      "bytes": 2547776,
+      "url": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+archive/1518bc83d26b434031bd12c706ac3c7dab3902fd.tar.gz",
+      "revision": "1518bc83d26b434031bd12c706ac3c7dab3902fd",
+      "repository": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git",
+      "depsPath": "third_party/externals/freetype",
+      "destination": "skia/third_party/externals/freetype"
+    },
+    {
+      "name": "libpng.tar.gz",
+      "kind": "tar",
+      "sha256": "ef62fce83d277cf3b26fd036a1c8a7845c335a4c6dbf9bf5b17a503e45be0646",
+      "bytes": 1603748,
+      "url": "https://skia.googlesource.com/third_party/libpng.git/+archive/49363adcfaf098748d7a4c8c624ad8c45a8c3a86.tar.gz",
+      "revision": "49363adcfaf098748d7a4c8c624ad8c45a8c3a86",
+      "repository": "https://skia.googlesource.com/third_party/libpng.git",
+      "depsPath": "third_party/externals/libpng",
+      "destination": "skia/third_party/externals/libpng"
+    },
+    {
+      "name": "zlib.tar.gz",
+      "kind": "tar",
+      "sha256": "b351094a848fb6f5a7bb629eb3f2a3ab3bd95a07dec5698e7e3d853b01622ce2",
+      "bytes": 587291,
+      "url": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+archive/646b7f569718921d7d4b5b8e22572ff6c76f2596.tar.gz",
+      "revision": "646b7f569718921d7d4b5b8e22572ff6c76f2596",
+      "repository": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
+      "depsPath": "third_party/externals/zlib",
+      "destination": "skia/third_party/externals/zlib"
+    },
+    {
+      "name": "gn-mac-arm64.zip",
+      "kind": "zip",
+      "url": "https://chrome-infra-packages.appspot.com/dl/gn/gn/mac-arm64/+/git_revision:b2afae122eeb6ce09c52d63f67dc53fc517dbdc8",
+      "revision": "b2afae122eeb6ce09c52d63f67dc53fc517dbdc8",
+      "binary": "gn",
+      "sha256": "cbb260f2cf999f7d74da96b3828a061299c6337354dd6db642e778828576025c",
+      "bytes": 828016
+    },
+    {
+      "name": "ninja-mac-arm64.zip",
+      "kind": "zip",
+      "url": "https://chrome-infra-packages.appspot.com/dl/infra/3pp/tools/ninja/mac-arm64/+/version:2@1.12.1.chromium.4",
+      "revision": "2@1.12.1.chromium.4",
+      "binary": "ninja",
+      "sha256": "c5e9b4ffab3b2edefbc41849fc81f116c8d047b258906becc061be9ecaf04afd",
+      "bytes": 145520
+    }
+  ],
+  "sourceChecks": [
+    {
+      "path": "DEPS",
+      "sha256": "1a8aab6211c67eaa63a9d9cd8cce2314be6eb4896f5348d2cc3d7a4a04f53b71"
+    },
+    {
+      "path": "BUILD.gn",
+      "sha256": "0d0effe10e42a006eef898ce6cc14787240c55904a57462aeed5b98d20470c4d"
+    },
+    {
+      "path": "bin/fetch-gn",
+      "sha256": "63dde68f1a40ccdb25c7570e2567fffdf2d9014b2827db96b894d08458cc3d68"
+    },
+    {
+      "path": "bin/fetch-ninja",
+      "sha256": "a9a582f6f3a4481a3aae794982fd8ee5d37e757fcef2355f57f35efa1c24dae1"
+    },
+    {
+      "path": "third_party/freetype2/BUILD.gn",
+      "sha256": "69acb188214f40ce994da58be5f2341ff6455b99a48235e7d275536cd885e6ed"
+    },
+    {
+      "path": "third_party/freetype2/include/freetype-android/freetype/config/ftoption.h",
+      "sha256": "6c9cd365e86e990ddd05d561fd0fd60cbec694364ec8df9ec102716998af26d7"
+    },
+    {
+      "path": "third_party/freetype2/include/freetype-android/freetype/config/ftmodule.h",
+      "sha256": "3011e8e387ba13e784c18b89d4d84674fe65cc8454f6cacf9bba6a29e5e93437"
+    }
+  ],
+  "fonts": [
+    {
+      "file": "Roboto-Regular.ttf",
+      "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50",
+      "bytes": 2371712
+    },
+    {
+      "file": "NotoColorEmoji.ttf",
+      "sha256": "292f799100f358811337bc3c68da31e6b0c422e9ce8db27d6d52b6acbc5633f3",
+      "bytes": 2813064
+    },
+    {
+      "file": "NotoColorEmojiFlags.ttf",
+      "sha256": "bccb829e97ca446771231993cf5bff3449974851201c497be6d6d52e906aae7b",
+      "bytes": 913564
+    }
+  ],
+  "flagGlyphEvidence": {
+    "font": "NotoColorEmojiFlags.ttf",
+    "Canada": {
+      "codepoints": [
+        "U+1F1E8",
+        "U+1F1E6"
+      ],
+      "glyphId": 65
+    },
+    "UnitedStates": {
+      "codepoints": [
+        "U+1F1FA",
+        "U+1F1F8"
+      ],
+      "glyphId": 261
+    },
+    "bitmap": {
+      "format": "CBDT format17 PNG",
+      "ppem": 109,
+      "width": 136,
+      "height": 128,
+      "bearingX": 0,
+      "bearingY": 101,
+      "advance": 136
+    }
+  },
+  "noticeFiles": [
+    "LICENSE",
+    "third_party/externals/freetype/LICENSE.TXT",
+    "third_party/externals/freetype/docs/FTL.TXT",
+    "third_party/externals/libpng/LICENSE",
+    "third_party/externals/zlib/LICENSE"
+  ]
+}

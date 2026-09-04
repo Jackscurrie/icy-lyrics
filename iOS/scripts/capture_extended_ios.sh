@@ -10,12 +10,7 @@ simulator="$1"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode_26.4.1.app/Contents/Developer}"
 version="$(xcodebuild -version)"
 [[ "${version%%$'\n'*}" == 'Xcode 26.4.1' ]] || { echo 'Xcode 26.4.1 is required.' >&2; exit 1; }
-xcrun simctl list devices available -j | python3 -c '
-import json,sys
-matches=[d for runtime,devices in json.load(sys.stdin)["devices"].items() if ".iOS-" in runtime
-         for d in devices if d["udid"].lower()==sys.argv[1].lower() and d["state"]=="Booted" and d["name"].startswith("iPhone")]
-assert len(matches)==1,"Expected one existing booted iPhone simulator"
-' "$simulator"
+xcrun simctl list devices available -j | python3 scripts/validate_booted_iphone.py "$simulator"
 python3 scripts/generate_xcode_project.py --check
 python3 scripts/bootstrap_spotify.py
 mkdir -p build/reports/extended-ios

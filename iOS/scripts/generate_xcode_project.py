@@ -135,7 +135,7 @@ def reference(parent,name):
                   BuildableName=name+(".app" if name=="IcyLyrics" else ".xctest"),BlueprintName=name,ReferencedContainer="container:IcyLyrics.xcodeproj")
 entry=ET.SubElement(entries,"BuildActionEntry",buildForTesting="YES",buildForRunning="YES",buildForProfiling="YES",buildForArchiving="YES",buildForAnalyzing="YES")
 reference(entry,"IcyLyrics")
-test=ET.SubElement(scheme,"TestAction",buildConfiguration="Debug",selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB",selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB",shouldUseLaunchSchemeArgsEnv="YES")
+test=ET.SubElement(scheme,"TestAction",buildConfiguration="Debug",selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB",selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB",shouldUseLaunchSchemeArgsEnv="YES",preferredScreenCaptureFormat="screenshots")
 testables=ET.SubElement(test,"Testables")
 for name in ("IcyLyricsTests","IcyLyricsUITests"):
     reference(ET.SubElement(testables,"TestableReference",skipped="NO"),name)

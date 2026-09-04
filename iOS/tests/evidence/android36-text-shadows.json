@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "archive": "android36-text-shadows.zip",
+  "archiveBytes": 56740,
+  "archiveSha256": "6a085c6c127e4c0dc50183a1bdb81706cecfa6fe8ba87e1d8509aad7ddf154e3",
+  "runId": "20260904T104125Z-15883de8",
+  "samples": 8,
+  "scope": "Stock Android Compose paragraph shadow diagnostic. No app fixture or screenshot reference changed; iOS comparison pending."
+}

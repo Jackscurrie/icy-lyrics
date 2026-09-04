@@ -8,6 +8,7 @@ final class ParityFixtureViewController: UIViewController {
     private let scenario: String
     private let marker = UILabel()
     private var composeController: UIViewController!
+    private var lastDraw: String?
 
     init(scenario: String) {
         self.scenario = scenario
@@ -21,7 +22,10 @@ final class ParityFixtureViewController: UIViewController {
         // either production date formatter or replacing its visible output.
         NSTimeZone.default = TimeZone(identifier: "America/Los_Angeles")!
         composeController = IosParityKt.createIcyParityViewController(scenarioId: scenario) { [weak self] draw in
-            DispatchQueue.main.async { self?.acknowledgeDraw(draw) }
+            DispatchQueue.main.async {
+                self?.lastDraw = draw
+                self?.acknowledgeDraw(draw)
+            }
         }
         addChild(composeController)
         composeController.view.frame = view.bounds
@@ -51,6 +55,13 @@ final class ParityFixtureViewController: UIViewController {
         composeController?.supportedInterfaceOrientations ?? super.supportedInterfaceOrientations
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // UIKit may finish its geometry update after the last Compose draw.
+        // Recheck that draw; never manufacture a new draw acknowledgement.
+        if let lastDraw { acknowledgeDraw(lastDraw) }
+    }
+
     private func acknowledgeDraw(_ draw: String) {
         guard let window = view.window, let scene = window.windowScene,
               let bytes = draw.data(using: .utf8),
@@ -60,11 +71,25 @@ final class ParityFixtureViewController: UIViewController {
               let drawnInsets = metadata["safeDrawingInsetsPx"] as? [Int] else { return }
         let content = composeController.view!
         let scale = scene.screen.scale
-        guard width == Int((content.bounds.width * scale).rounded()),
-              height == Int((content.bounds.height * scale).rounded()), width > 0, height > 0 else { return }
-        let safe = content.safeAreaInsets
-        let nativeInsets = [safe.left, safe.top, safe.right, safe.bottom].map { Int(($0 * scale).rounded()) }
-        guard drawnInsets == nativeInsets else { return }
+        let safe: UIEdgeInsets
+        let safeSource: String
+        if #available(iOS 26.1, *) {
+            // CMP 1.11.1 UIKitWindowInsetsManager uses this same region,
+            // including vertical corner avoidance on iOS 26.1+. Its wrapper
+            // deliberately retains raw safe areas on iPhone running 26.0.
+            safe = content.edgeInsets(for: .safeArea(cornerAdaptation: .vertical))
+            safeSource = "UIKit safeArea with vertical corner adaptation"
+        } else {
+            safe = content.safeAreaInsets
+            safeSource = "UIKit safeAreaInsets"
+        }
+        // Match Compose's CGFloat -> Float dp -> Float pixel -> roundToPx path.
+        let nativeInsets = [safe.left, safe.top, safe.right, safe.bottom].map {
+            Int((Float($0) * Float(scale)).rounded())
+        }
+        let boundsMatch = width == Int((content.bounds.width * scale).rounded()) &&
+            height == Int((content.bounds.height * scale).rounded()) && width > 0 && height > 0
+        let insetsMatch = drawnInsets == nativeInsets
         let frame = content.convert(content.bounds, to: window)
         func rect(_ value: CGRect) -> [Double] {
             [Double(value.minX), Double(value.minY), Double(value.width), Double(value.height)]
@@ -72,14 +97,16 @@ final class ParityFixtureViewController: UIViewController {
         func insets(_ value: UIEdgeInsets) -> [Double] {
             [Double(value.left), Double(value.top), Double(value.right), Double(value.bottom)]
         }
-        let date = DateFormatter()
-        date.dateStyle = .medium
-        date.timeStyle = .short
-        metadata["ready"] = true
+        metadata["ready"] = boundsMatch && insetsMatch
+        metadata["drawBoundsMatchUIKit"] = boundsMatch
+        metadata["drawInsetsMatchUIKit"] = insetsMatch
         metadata["scenario"] = scenario
         metadata["windowBoundsPoints"] = rect(window.bounds)
         metadata["contentBoundsInWindowPoints"] = rect(frame)
         metadata["contentSafeAreaInsetsPoints"] = insets(content.safeAreaInsets)
+        metadata["contentSafeDrawingInsetsPoints"] = insets(safe)
+        metadata["safeDrawingInsetsSource"] = safeSource
+        metadata["safeDrawingInsetsPixelConversion"] = "Float32 points * Float32 displayScale, roundToInt"
         metadata["windowSafeAreaInsetsPoints"] = insets(window.safeAreaInsets)
         metadata["displayScale"] = Double(scale)
         metadata["nativeDisplayScale"] = Double(scene.screen.nativeScale)
@@ -89,7 +116,6 @@ final class ParityFixtureViewController: UIViewController {
         metadata["preferredContentSizeCategory"] = content.traitCollection.preferredContentSizeCategory.rawValue
         metadata["locale"] = Locale.current.identifier
         metadata["timezone"] = NSTimeZone.default.identifier
-        metadata["libraryDateText"] = date.string(from: Date(timeIntervalSince1970: 1_788_436_800))
         metadata["readiness"] = "Compose draw completed with matching UIKit geometry; spring settlement is not asserted"
         metadata["captureSurface"] = "XCTest application window; separate from Android Compose-root capture"
         if let result = try? JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys]),

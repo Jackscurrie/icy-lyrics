@@ -113,8 +113,25 @@ def validate_native_geometry(metadata, image_size):
     if not isinstance(supplied_insets, list) or len(supplied_insets) != 4:
         raise ValueError("safeDrawingInsetsPx must contain four integer insets")
     insets = [integer(item, "safeDrawingInsetsPx") for item in supplied_insets]
-    points = four(metadata.get("contentSafeAreaInsetsPoints"), "contentSafeAreaInsetsPoints")
-    if [pixel(item * scale, "native safe inset") for item in points] != insets:
+    raw_safe_points = four(metadata.get("contentSafeAreaInsetsPoints"), "contentSafeAreaInsetsPoints")
+    points = raw_safe_points
+    if "contentSafeDrawingInsetsPoints" in metadata:
+        source = text(metadata, "safeDrawingInsetsSource")
+        if source not in ("UIKit safeAreaInsets", "UIKit safeArea with vertical corner adaptation"):
+            raise ValueError("Unrecognized native safe-drawing inset source")
+        points = four(metadata["contentSafeDrawingInsetsPoints"], "contentSafeDrawingInsetsPoints")
+        if source == "UIKit safeAreaInsets" and points != raw_safe_points:
+            raise ValueError("Raw safe-area source must match its recorded insets")
+    conversion = metadata.get("safeDrawingInsetsPixelConversion")
+    if conversion is None:
+        expected_insets = [pixel(item * scale, "native safe inset") for item in points]
+    elif conversion == "Float32 points * Float32 displayScale, roundToInt":
+        def float32(value):
+            return struct.unpack("f", struct.pack("f", float(value)))[0]
+        expected_insets = [math.floor(float32(float32(item) * float32(scale)) + 0.5) for item in points]
+    else:
+        raise ValueError("Unrecognized native inset pixel conversion")
+    if expected_insets != insets:
         raise ValueError("Native safe-area insets disagree with drawn Compose insets")
     left, top, right, bottom = insets
     if left + right >= width or top + bottom >= height:

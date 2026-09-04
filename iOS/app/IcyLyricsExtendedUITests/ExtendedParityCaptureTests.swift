@@ -134,15 +134,18 @@ final class ExtendedParityCaptureTests: XCTestCase {
             details["scrollRegions"] = app.scrollViews.allElementsBoundByIndex.filter { $0.exists }.map(describe)
             details["scrollOffsetEquivalence"] = "Requires comparison with the Android extended reference; no offset equality asserted"
             details["appearanceParityVerified"] = false
-            attach(XCTAttachment(screenshot: shot), name: "extended-v1-" + id)
+            attach(XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png"), name: "extended-v1-" + id)
             for (index, window) in windows.enumerated() {
-                attach(XCTAttachment(screenshot: window.screenshot()), name: "extended-v1-\(id)-window-\(index)")
+                attach(XCTAttachment(data: window.screenshot().pngRepresentation, uniformTypeIdentifier: "public.png"), name: "extended-v1-\(id)-window-\(index)")
             }
             attach(XCTAttachment(data: try JSONSerialization.data(withJSONObject: details, options: [.prettyPrinted, .sortedKeys]),
                                  uniformTypeIdentifier: "public.json"), name: "extended-v1-" + id + "-geometry")
         } catch {
             attach(XCTAttachment(string: app.debugDescription), name: "extended-v1-" + id + "-accessibility-failure")
-            if app.state == .runningForeground { attach(XCTAttachment(screenshot: app.screenshot()), name: "extended-v1-" + id + "-failure") }
+            if app.state == .runningForeground {
+                attach(XCTAttachment(data: app.screenshot().pngRepresentation, uniformTypeIdentifier: "public.png"),
+                       name: "extended-v1-" + id + "-failure")
+            }
             throw error
         }
     }

@@ -86,6 +86,9 @@ tasks.withType<KotlinNativeSimulatorTest>().configureEach {
   outputs.dir(deterministicCaptureOutput)
   environment("SIMCTL_CHILD_ICY_DETERMINISTIC_ASSET_ROOT", deterministicCaptureAssets.asFile.absolutePath)
   environment("SIMCTL_CHILD_ICY_DETERMINISTIC_OUTPUT_ROOT", deterministicCaptureOutput.get().asFile.absolutePath)
+  val dateReference = rootProject.file("tests/fixtures/android36-date-samples.json")
+  inputs.file(dateReference)
+  environment("SIMCTL_CHILD_ICY_ANDROID_DATE_REFERENCE", dateReference.absolutePath)
   // Compile the motion suite normally, but leave the original default capture run unchanged.
   inputs.property("icy.captureMotion", captureMotion)
   if (!captureMotion.get()) {

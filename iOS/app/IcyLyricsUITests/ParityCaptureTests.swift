@@ -38,8 +38,19 @@ final class ParityCaptureTests: XCTestCase {
                       let height = metadata["contentHeightPx"] as? Int else { return false }
                 return width > 0 && height > 0 && (width > height) == isLandscape
             }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [rendered], timeout: 30), .completed,
-                           "Compose did not draw the requested orientation: \(scenario)")
+            let drawResult = XCTWaiter.wait(for: [rendered], timeout: 30)
+            if drawResult != .completed {
+                let diagnostic = XCTAttachment(string: "\(marker.value ?? "missing")\n\(app.debugDescription)")
+                diagnostic.name = "\(scenario)-\(orientation.rawValue)-draw-failure"
+                diagnostic.lifetime = .keepAlways
+                add(diagnostic)
+                let failedScreen = XCTAttachment(data: XCUIScreen.main.screenshot().pngRepresentation,
+                                                 uniformTypeIdentifier: "public.png")
+                failedScreen.name = "\(scenario)-\(orientation.rawValue)-draw-failure-screen"
+                failedScreen.lifetime = .keepAlways
+                add(failedScreen)
+            }
+            XCTAssertEqual(drawResult, .completed, "Compose did not draw the requested orientation: \(scenario)")
             // Keep the existing settling interval, now measured after a real
             // matching draw. This is not deterministic spring-clock sampling.
             let settling = expectation(description: "Post-draw settling interval")
@@ -56,6 +67,10 @@ final class ParityCaptureTests: XCTestCase {
             let shot = app.windows.firstMatch.screenshot()
             guard let pixels = shot.image.cgImage else { XCTFail("Screenshot has no pixels"); return }
             XCTAssertEqual(pixels.width > pixels.height, isLandscape)
+            XCTAssertEqual(pixels.width, metadata["contentWidthPx"] as? Int,
+                           "XCTest altered the native screenshot width")
+            XCTAssertEqual(pixels.height, metadata["contentHeightPx"] as? Int,
+                           "XCTest altered the native screenshot height")
             metadata["capturedWindowWidthPx"] = pixels.width
             metadata["capturedWindowHeightPx"] = pixels.height
             metadata["requestedDeviceOrientationRawValue"] = orientation.rawValue
@@ -63,7 +78,7 @@ final class ParityCaptureTests: XCTestCase {
             metadata["requestedLargeText"] = !extraArguments.isEmpty
             metadata["settleDelayAfterDrawSeconds"] = 2
             let name = "\(scenario)-\(orientation.rawValue)\(extraArguments.isEmpty ? "" : "-large-text")"
-            let attachment = XCTAttachment(screenshot: shot)
+            let attachment = XCTAttachment(data: shot.pngRepresentation, uniformTypeIdentifier: "public.png")
             attachment.name = name
             attachment.lifetime = .keepAlways
             add(attachment)

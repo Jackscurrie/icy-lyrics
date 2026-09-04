@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -24,9 +25,13 @@ interface IcyUiPlatform {
   val fontFamily: FontFamily? get() = null
   /** Match the platform's rasterization policy without changing layout/style values. */
   fun textStyle(style: TextStyle): TextStyle = style
+  /** Canvas paragraph paint conversion runs once, after any typography adaptation. */
+  fun styleForLayout(style: TextStyle): TextStyle = textStyle(style)
   /** Screenshot fixtures can freeze frame time without replacing the player UI. */
   val fixedFrameTimeNanos: Long? get() = null
   fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: androidx.compose.ui.text.font.FontWeight?): androidx.compose.ui.text.AnnotatedString = text
+  fun textForLayout(text: AnnotatedString, style: TextStyle): AnnotatedString =
+    fontFallback(text, style.fontWeight)
   fun monotonicTimeMs(): Long
   fun monotonicTimeNanos(): Long
   fun formatDateTime(epochMs: Long): String
@@ -98,8 +103,8 @@ internal class IcyTextMeasurer(private val delegate: TextMeasurer, private val f
     overflow: androidx.compose.ui.text.style.TextOverflow = androidx.compose.ui.text.style.TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
   ): androidx.compose.ui.text.TextLayoutResult = delegate.measure(
-    text = platform.fontFallback(text, style.fontWeight),
-    style = platform.textStyle(if (family != null && (style.fontFamily == null || style.fontFamily == FontFamily.Default)) {
+    text = platform.textForLayout(text, style),
+    style = platform.styleForLayout(if (family != null && (style.fontFamily == null || style.fontFamily == FontFamily.Default)) {
       style.copy(fontFamily = family)
     } else style),
     constraints = constraints,

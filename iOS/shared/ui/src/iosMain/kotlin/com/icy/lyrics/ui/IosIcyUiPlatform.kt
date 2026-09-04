@@ -26,15 +26,10 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
-import platform.Foundation.NSDate
-import platform.Foundation.NSDateFormatter
-import platform.Foundation.NSDateFormatterMediumStyle
-import platform.Foundation.NSDateFormatterShortStyle
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.dataWithContentsOfFile
-import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.QuartzCore.CACurrentMediaTime
 import platform.UIKit.UIAccessibilityIsReduceMotionEnabled
 import platform.UIKit.UIAccessibilityReduceMotionStatusDidChangeNotification
@@ -79,6 +74,9 @@ class IosIcyUiPlatform(
   }
   private val fallbackFonts by lazy { IosAndroidFontFallback(assetLoader) }
   override fun fontFallback(text: androidx.compose.ui.text.AnnotatedString, weight: FontWeight?) = fallbackFonts.apply(text, weight)
+  override fun textForLayout(text: androidx.compose.ui.text.AnnotatedString, style: TextStyle) =
+    fallbackFonts.apply(androidSpanShadowsForLayout(androidInheritedShaderAlpha(text, style)), style.fontWeight)
+  override fun styleForLayout(style: TextStyle): TextStyle = textStyle(androidShadowStyleForLayout(style))
   // Android's current TextMotion.Static clears SUBPIXEL_TEXT_FLAG and enables
   // font hinting. All canonical text uses that default. CMP's Apple default
   // instead enables fractional glyph positions. Match the policy, then verify
@@ -93,10 +91,8 @@ class IosIcyUiPlatform(
   override fun monotonicTimeMs(): Long = fixedFrameTimeNanos?.div(1_000_000)
     ?: (NSProcessInfo.processInfo.systemUptime * 1_000).toLong()
   override fun monotonicTimeNanos(): Long = fixedFrameTimeNanos ?: (CACurrentMediaTime() * 1_000_000_000).toLong()
-  override fun formatDateTime(epochMs: Long): String = NSDateFormatter().apply {
-    dateStyle = NSDateFormatterMediumStyle
-    timeStyle = NSDateFormatterShortStyle
-  }.stringFromDate(NSDate.dateWithTimeIntervalSince1970(epochMs / 1_000.0))
+  private val dateFormatter by lazy { IosAndroidDateFormatter(assetLoader) }
+  override fun formatDateTime(epochMs: Long): String = dateFormatter.format(epochMs)
   override fun copyDiagnostics(text: String) { UIPasteboard.generalPasteboard.string = text }
   override fun legalDocument(document: IcyLegalDocument): String = assetLoader(
     when (document) {

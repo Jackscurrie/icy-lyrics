@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import com.icy.lyrics.ui.IcyParityFixtures
 import com.icy.lyrics.ui.IcyUiPlatform
 import com.icy.lyrics.ui.IosIcyUiPlatform
+import com.icy.lyrics.ui.IosAndroidDateFormatter
 import kotlinx.cinterop.toKString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -17,14 +18,7 @@ import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
-import platform.Foundation.NSDate
-import platform.Foundation.NSDateFormatter
-import platform.Foundation.NSDateFormatterMediumStyle
-import platform.Foundation.NSDateFormatterShortStyle
-import platform.Foundation.NSLocale
 import platform.Foundation.NSTimeZone
-import platform.Foundation.dateWithTimeIntervalSince1970
-import platform.Foundation.localeIdentifier
 import platform.Foundation.timeZoneWithName
 import platform.posix.getenv
 
@@ -34,16 +28,11 @@ internal class DeterministicFixtureAssets {
   val outputRoot = requiredEnvironment("ICY_DETERMINISTIC_OUTPUT_ROOT").toPath(normalize = true)
   val loadedAssetSha256 = linkedMapOf<String, String>()
   val formattedDates = linkedMapOf<String, String>()
-  private val dateFormatter = NSDateFormatter().apply {
-    // Same styles as production, with the reference environment explicitly selected.
-    // NSDateFormatter's punctuation and Unicode spaces remain untouched and visible in the PNG.
-    locale = NSLocale("en_US")
-    timeZone = requireNotNull(NSTimeZone.timeZoneWithName("America/Los_Angeles"))
-    dateStyle = NSDateFormatterMediumStyle
-    timeStyle = NSDateFormatterShortStyle
-  }
-  val locale: String get() = dateFormatter.locale.localeIdentifier
-  val timezone: String get() = dateFormatter.timeZone.name
+  val locale: String = "en_US"
+  val timezone: String = "America/Los_Angeles"
+  private val dateFormatter = IosAndroidDateFormatter(::read, { locale }, {
+    requireNotNull(NSTimeZone.timeZoneWithName(timezone))
+  })
 
   fun read(relativePath: String): ByteArray {
     require(relativePath.isNotEmpty() && !relativePath.startsWith('/') && '\\' !in relativePath)
@@ -74,9 +63,8 @@ internal class DeterministicFixtureAssets {
       // An offscreen scene has no UIKit navigation controller. This has no drawn representation.
       @Composable override fun BackHandler(enabled: Boolean, onBack: () -> Unit) = Unit
 
-      override fun formatDateTime(epochMs: Long): String = dateFormatter.stringFromDate(
-        NSDate.dateWithTimeIntervalSince1970(epochMs / 1_000.0),
-      ).also { formattedDates[epochMs.toString()] = it }
+      override fun formatDateTime(epochMs: Long): String = dateFormatter.format(epochMs)
+        .also { formattedDates[epochMs.toString()] = it }
     }
   }
 

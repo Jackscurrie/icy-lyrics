@@ -1,0 +1,870 @@
+{
+  "schemaVersion": 1,
+  "sourceArchiveSha256": "b7c4eb28a1dbadd295cf74d382d24438500e5405fdc53b01c51bb1fa88b87bf5",
+  "samples": [
+    {
+      "locale": "en-US",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "Sep 3, 2026 5:00 AM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "Jan 4, 2026 12:00 AM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "Jan 4, 2026 12:00 PM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "Mar 8, 2026 3:00 PM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "Sep 3, 2026 12:00 PM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "Jan 4, 2026 8:00 AM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "Jan 4, 2026 8:00 PM"
+    },
+    {
+      "locale": "en-US",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "Mar 8, 2026 10:00 PM"
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "Sep 3, 2026 5:00 a.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "Jan 4, 2026 12:00 a.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "Jan 4, 2026 12:00 p.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "Mar 8, 2026 3:00 p.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "Sep 3, 2026 12:00 p.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "Jan 4, 2026 8:00 a.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "Jan 4, 2026 8:00 p.m."
+    },
+    {
+      "locale": "en-CA",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "Mar 8, 2026 10:00 p.m."
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 Sept 2026 05:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 Jan 2026 00:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 Jan 2026 12:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 Mar 2026 15:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 Sept 2026 12:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 Jan 2026 08:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 Jan 2026 20:00"
+    },
+    {
+      "locale": "en-GB",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 Mar 2026 22:00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 sept. 2026 05 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 janv. 2026 00 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 janv. 2026 12 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 mars 2026 15 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 sept. 2026 12 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 janv. 2026 08 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 janv. 2026 20 h 00"
+    },
+    {
+      "locale": "fr-CA",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 mars 2026 22 h 00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 sept. 2026 05:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 janv. 2026 00:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 janv. 2026 12:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 mars 2026 15:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 sept. 2026 12:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 janv. 2026 08:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 janv. 2026 20:00"
+    },
+    {
+      "locale": "fr-FR",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 mars 2026 22:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "03.09.2026 05:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "04.01.2026 00:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "04.01.2026 12:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "08.03.2026 15:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "03.09.2026 12:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "04.01.2026 08:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "04.01.2026 20:00"
+    },
+    {
+      "locale": "de-DE",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "08.03.2026 22:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 sept 2026 5:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 ene 2026 0:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 ene 2026 12:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 mar 2026 15:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 sept 2026 12:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 ene 2026 8:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 ene 2026 20:00"
+    },
+    {
+      "locale": "es-ES",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 mar 2026 22:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 de set. de 2026 05:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 de jan. de 2026 00:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 de jan. de 2026 12:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 de mar. de 2026 15:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 de set. de 2026 12:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 de jan. de 2026 08:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 de jan. de 2026 20:00"
+    },
+    {
+      "locale": "pt-BR",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 de mar. de 2026 22:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 сент. 2026 г. 05:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 янв. 2026 г. 00:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 янв. 2026 г. 12:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 мар. 2026 г. 15:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 сент. 2026 г. 12:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 янв. 2026 г. 08:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 янв. 2026 г. 20:00"
+    },
+    {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 мар. 2026 г. 22:00"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "٠٣‏/٠٩‏/٢٠٢٦ ٥:٠٠ ص"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "٠٤‏/٠١‏/٢٠٢٦ ١٢:٠٠ ص"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "٠٤‏/٠١‏/٢٠٢٦ ١٢:٠٠ م"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "٠٨‏/٠٣‏/٢٠٢٦ ٣:٠٠ م"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "٠٣‏/٠٩‏/٢٠٢٦ ١٢:٠٠ م"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "٠٤‏/٠١‏/٢٠٢٦ ٨:٠٠ ص"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "٠٤‏/٠١‏/٢٠٢٦ ٨:٠٠ م"
+    },
+    {
+      "locale": "ar-EG",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "٠٨‏/٠٣‏/٢٠٢٦ ١٠:٠٠ م"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "۳ سپتامبر ۲۰۲۶ ۵:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "۴ ژانویه ۲۰۲۶ ۰:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "۴ ژانویه ۲۰۲۶ ۱۲:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "۸ مارس ۲۰۲۶ ۱۵:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "۳ سپتامبر ۲۰۲۶ ۱۲:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "۴ ژانویه ۲۰۲۶ ۸:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "۴ ژانویه ۲۰۲۶ ۲۰:۰۰"
+    },
+    {
+      "locale": "fa-IR",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "۸ مارس ۲۰۲۶ ۲۲:۰۰"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 सित॰ 2026 5:00 am"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 जन॰ 2026 12:00 am"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 जन॰ 2026 12:00 pm"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 मार्च 2026 3:00 pm"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 सित॰ 2026 12:00 pm"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 जन॰ 2026 8:00 am"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 जन॰ 2026 8:00 pm"
+    },
+    {
+      "locale": "hi-IN",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 मार्च 2026 10:00 pm"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "৩ সেপ, ২০২৬ ৫:০০ AM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "৪ জানু, ২০২৬ ১২:০০ AM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "৪ জানু, ২০২৬ ১২:০০ PM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "৮ মার্চ, ২০২৬ ৩:০০ PM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "৩ সেপ, ২০২৬ ১২:০০ PM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "৪ জানু, ২০২৬ ৮:০০ AM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "৪ জানু, ২০২৬ ৮:০০ PM"
+    },
+    {
+      "locale": "bn-BD",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "৮ মার্চ, ২০২৬ ১০:০০ PM"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "3 ก.ย. 2026 05:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "4 ม.ค. 2026 00:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "4 ม.ค. 2026 12:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "8 มี.ค. 2026 15:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "3 ก.ย. 2026 12:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "4 ม.ค. 2026 08:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "4 ม.ค. 2026 20:00"
+    },
+    {
+      "locale": "th-TH",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "8 มี.ค. 2026 22:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "2026/09/03 5:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "2026/01/04 0:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "2026/01/04 12:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "2026/03/08 15:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "2026/09/03 12:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "2026/01/04 8:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "2026/01/04 20:00"
+    },
+    {
+      "locale": "ja-JP",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "2026/03/08 22:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "2026年9月3日 05:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "2026年1月4日 00:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "2026年1月4日 12:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "2026年3月8日 15:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "2026年9月3日 12:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "2026年1月4日 08:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "2026年1月4日 20:00"
+    },
+    {
+      "locale": "zh-CN",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "2026年3月8日 22:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "2026年9月3日 上午5:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "2026年1月4日 上午12:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "2026年1月4日 下午12:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "2026年3月8日 下午3:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "2026年9月3日 下午12:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "2026年1月4日 上午8:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "2026年1月4日 下午8:00"
+    },
+    {
+      "locale": "zh-TW",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "2026年3月8日 下午10:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1788436800000,
+      "combined": "2026. 9. 3. 오전 5:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767513600000,
+      "combined": "2026. 1. 4. 오전 12:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1767556800000,
+      "combined": "2026. 1. 4. 오후 12:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "America/Los_Angeles",
+      "epochMs": 1773007200000,
+      "combined": "2026. 3. 8. 오후 3:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "UTC",
+      "epochMs": 1788436800000,
+      "combined": "2026. 9. 3. 오후 12:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "UTC",
+      "epochMs": 1767513600000,
+      "combined": "2026. 1. 4. 오전 8:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "UTC",
+      "epochMs": 1767556800000,
+      "combined": "2026. 1. 4. 오후 8:00"
+    },
+    {
+      "locale": "ko-KR",
+      "timezone": "UTC",
+      "epochMs": 1773007200000,
+      "combined": "2026. 3. 8. 오후 10:00"
+    }
+  ]
+}

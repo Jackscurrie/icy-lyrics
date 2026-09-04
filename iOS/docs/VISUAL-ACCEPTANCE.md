@@ -14,8 +14,9 @@ results and evidence links; this document does not repeat its run history.
 |---|---|---|
 | Original versus extracted Android | **20/20 exact**, zero changed RGBA pixels across 51,840,000 pixels | Extraction preserved those original scenes at their measured Android profiles. It does not establish iPhone parity. |
 | Extended original Android references | **11/11 captured**; all 57 original production hashes preserved | Additional expanded/settings/dialog references. Matching iOS capture/comparison remains pending. See [EXTENDED-PARITY.md](../tests/EXTENDED-PARITY.md) for raw full-display scope and scroll limits. |
+| Original Android mixed/lyrics motion | **44/44 captured; 44/44 repeated PNGs byte-identical** | Both media sides, both directions and interrupted reversal in one retained composition per side. Matching iOS motion execution/comparison remains pending; see [MOTION-PARITY.md](../tests/MOTION-PARITY.md). |
 | iOS offscreen raster at Android profiles | **20/20 captured and compared; all 20 differ** | Complete raster evidence for investigation, not appearance acceptance. Updated font/paint adapters and all 108 native Kotlin tests passed, but these stills remain unequal. |
-| Production UIKit/Metal | **Pending**; 29 captures planned | The same 20 fixtures with both landscape rotations and two large-text variants. These are additional viewports, not additional app states. |
+| Production UIKit/Metal | **Partial**; portrait execution passed, landscape capture remains incomplete | The same 20 fixtures with both landscape rotations and two large-text variants. Full matched production comparison remains pending; these are additional viewports, not additional app states. |
 | Physical iPhone | **Pending** | Production appearance, gestures, safe areas, orientation changes and performance remain unverified. |
 
 The original 20 cover initial onboarding/empty player, portrait/long-title/error,
@@ -83,6 +84,13 @@ independently initialized stills.
 
 The fixed-frame Kawarp path forces a completed artwork blend. It can verify
 settled shader phases, but cannot establish real artwork crossfades.
+The separate opt-in `mixed-lyrics-motion-v1` lane now has 44 repeated original
+Android reference frames and a compiled iOS capture suite. Its strict comparator
+requires matching actual clocks and full RGBA pixels. iOS motion capture and
+comparison remain incomplete: the first run stopped after each initial frame
+when a touch helper advanced the clock unexpectedly. The direct semantic-action
+correction awaits a native rerun. This row is still open, including production-renderer
+continuity review. Kawarp and playback progression are outside this sequence.
 
 ## Extended fixture evidence
 
@@ -104,8 +112,9 @@ not merely requested item indices. No matrix row closes on Android-only evidence
 | Legal | `legal-lower`, `legal-agpl`, `legal-agpl-scrolled`, `legal-third-party`, `legal-third-party-scrolled` |
 
 These first additions cover only part of the remaining matrix. Account-state
-variants, actual Kawarp, scrub previews and motion sequences still need their
-own evidence.
+variants, actual Kawarp and scrub previews still need their own evidence.
+The separate motion reference does not close any row without matching iOS
+capture/comparison and continuity review.
 
 ## Evidence rules and completion
 

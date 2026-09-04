@@ -9,6 +9,11 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import generate_xcode_project as project
 
 class XcodeProjectValidation(unittest.TestCase):
+    def test_native_pixel_captures_use_stills_instead_of_video_frames(self):
+        for output in (project.scheme_output, project.extended_scheme_output):
+            action = ET.fromstring(output).find("./TestAction")
+            self.assertEqual("screenshots", action.attrib["preferredScreenCaptureFormat"])
+
     def test_source_ids_use_the_same_posix_paths_on_windows_and_macos(self):
         references={value["path"]:key for key,value in project.objects.items()
                     if value["isa"]=="PBXFileReference" and value.get("lastKnownFileType")=="sourcecode.swift"}

@@ -121,6 +121,8 @@ dependencies {
   implementation("androidx.compose.ui:ui-graphics")
   implementation("androidx.compose.ui:ui-tooling-preview")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+  // Common UI source includes the iOS date-profile parser; this version is already used by core:platform.
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
   debugImplementation("androidx.compose.ui:ui-tooling")
   debugImplementation("androidx.compose.ui:ui-test-manifest")

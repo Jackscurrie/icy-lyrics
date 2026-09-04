@@ -118,7 +118,6 @@ class IosAndroidFontTest {
                 put("family", variant.familyName)
                 put("fontStyleWeight", variant.fontStyle.weight)
                 put("sizePx", font.size)
-                put("unshapedTextAdvancePx", font.measureTextWidth("Play something in Spotify"))
                 put("unshapedGlyphAdvanceSumPx", font.getWidths(font.getStringGlyphs("Play something in Spotify")).sum())
                 put("isLinearMetrics", font.isLinearMetrics)
                 put("isSubpixel", font.isSubpixel)

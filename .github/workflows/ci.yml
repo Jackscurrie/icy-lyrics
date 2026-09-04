@@ -11,6 +11,11 @@ on:
         type: boolean
         required: false
         default: false
+      font_backend_probe:
+        description: 'Run standalone pinned FreeType/CoreText font rendering experiment'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -149,3 +154,40 @@ jobs:
             ~/.gradle/wrapper
             ~/.konan
           key: ${{ steps.ios_cache.outputs.cache-primary-key }}
+
+  ios-font-backend-probe:
+    name: Optional standalone font backend experiment
+    # Independent diagnostic job on a standard public-repository runner only.
+    # This never supplies an app verification marker or a delivery artifact.
+    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && inputs.font_backend_probe
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+      ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Test font probe integrity and result gates
+        run: python3 -m unittest discover -s iOS/experiments/freetype -p 'test_*.py' -v
+      - name: Build and execute the isolated font probe
+        run: bash iOS/experiments/freetype/run_macos.sh --jobs 4 --work-dir "$GITHUB_WORKSPACE/iOS/build/freetype-probe/ci"
+      - name: Upload font probe evidence only
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-font-backend-probe
+          path: |
+            iOS/build/freetype-probe/ci/run.json
+            iOS/build/freetype-probe/ci/sources.lock.json
+            iOS/build/freetype-probe/ci/validation.json
+            iOS/build/freetype-probe/ci/android-context-comparison.json
+            iOS/build/freetype-probe/ci/android36-font-metrics.json
+            iOS/build/freetype-probe/ci/captures/*.json
+            iOS/build/freetype-probe/ci/captures/*.png
+            iOS/build/freetype-probe/ci/*.log
+          if-no-files-found: warn

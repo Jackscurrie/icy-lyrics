@@ -1,10 +1,11 @@
 """Strict, separate comparison of complete preserved-Android/iOS motion evidence."""
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from io import BytesIO
 import argparse
 import hashlib
 import json
 import math
+from zipfile import ZipFile
 
 from PIL import Image, ImageChops, ImageStat
 
@@ -209,6 +210,42 @@ def validate_pair(reference, candidate):
     for before, after in zip(reference["frames"], candidate["frames"]):
         for key in FRAME_FIELDS:
             require(before.get(key) == after.get(key), f"{before['id']}: actual {key} mismatch; no clock adjustment is allowed")
+
+
+def unpack_reference_archive(archive, output):
+    """Unpack the checked-in, checksum-pinned original evidence without replacing files."""
+    archive, output = Path(archive).resolve(), Path(output).resolve()
+    require(output.is_relative_to(ROOT / "build"), "Extract reference evidence only under iOS/build")
+    require(not output.exists(), "Reference extraction output already exists")
+    metadata = read_json(archive.with_suffix(".json"))
+    require(metadata.get("schemaVersion") == 1 and metadata.get("suite") == SUITE
+            and metadata.get("archive") == archive.name, "Wrong reference archive metadata")
+    data = archive.read_bytes()
+    require(len(data) == metadata.get("archiveBytes") and digest(data) == metadata.get("archiveSha256"),
+            "Reference archive checksum/length mismatch")
+    with ZipFile(BytesIO(data)) as package:
+        entries = package.infolist()
+        require(0 < len(entries) <= 200 and sum(item.file_size for item in entries) <= 64_000_000,
+                "Unexpected reference archive size")
+        names = set()
+        for item in entries:
+            path = PurePosixPath(item.filename)
+            require(not path.is_absolute() and bool(path.parts) and
+                    all(part not in ("", ".", "..") for part in item.filename.split("/")) and
+                    "\\" not in item.filename and ":" not in item.filename and
+                    not item.is_dir() and ((item.external_attr >> 16) & 0o170000) in (0, 0o100000),
+                    "Unsafe reference archive entry")
+            require(item.filename.casefold() not in names, "Duplicate reference archive entry")
+            names.add(item.filename.casefold())
+        output.mkdir(parents=True)
+        for item in entries:
+            target = output.joinpath(*PurePosixPath(item.filename).parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("xb") as destination:
+                destination.write(package.read(item))
+    for side in ("LEFT", "RIGHT"):
+        load_side(output / "baseline", side, "Android Compose root / PixelCopy", contract())
+    return output / "baseline"
 
 
 def pixels(png, size):

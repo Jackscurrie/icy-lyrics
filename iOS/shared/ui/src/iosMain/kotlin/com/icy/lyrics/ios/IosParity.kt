@@ -1,6 +1,7 @@
 package com.icy.lyrics.ios
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,10 +17,13 @@ import com.icy.lyrics.ui.IcyParityFixtures
 import com.icy.lyrics.ui.IosIcyUiPlatform
 import com.icy.lyrics.ui.LocalIcyUiPlatform
 import platform.UIKit.UIViewController
+import kotlinx.serialization.json.JsonPrimitive
 
 /** Offline fixture entry point. The Swift Release shell never exposes fixture launch arguments. */
 fun createIcyParityViewController(scenarioId: String, onFrameDrawn: (String) -> Unit): UIViewController = ComposeUIViewController {
-  CompositionLocalProvider(LocalIcyUiPlatform provides IosIcyUiPlatform("fixture", IcyParityFixtures.FRAME_TIME_NANOS)) {
+  val platform = remember { IosIcyUiPlatform("fixture", IcyParityFixtures.FRAME_TIME_NANOS) }
+  val libraryDate = remember(platform) { JsonPrimitive(platform.formatDateTime(1_788_436_800_000)).toString() }
+  CompositionLocalProvider(LocalIcyUiPlatform provides platform) {
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val insets = WindowInsets.safeDrawing
@@ -35,7 +39,7 @@ fun createIcyParityViewController(scenarioId: String, onFrameDrawn: (String) -> 
       // The native debug host publishes this only after this draw returns and
       // its UIKit geometry matches these actual Compose pixels. This is a draw
       // acknowledgement, not a claim that display-clock springs have settled.
-      onFrameDrawn("""{"contentWidthPx":${size.width.toInt()},"contentHeightPx":${size.height.toInt()},"composeDensity":${density.density},"fontScale":${density.fontScale},"safeDrawingInsetsPx":[${insets.getLeft(density, direction)},${insets.getTop(density)},${insets.getRight(density, direction)},${insets.getBottom(density)}],"spToPx":{$fontSamples}}""")
+      onFrameDrawn("""{"contentWidthPx":${size.width.toInt()},"contentHeightPx":${size.height.toInt()},"composeDensity":${density.density},"fontScale":${density.fontScale},"safeDrawingInsetsPx":[${insets.getLeft(density, direction)},${insets.getTop(density)},${insets.getRight(density, direction)},${insets.getBottom(density)}],"spToPx":{$fontSamples},"libraryDateText":$libraryDate}""")
     }) {
       IcyParityFixtureScreen(scenarioId)
     }

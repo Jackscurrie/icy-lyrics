@@ -15,9 +15,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import com.icy.lyrics.ui.BackgroundStyle
 import com.icy.lyrics.ui.IcyMixedLyricsMotionPlan
 import com.icy.lyrics.ui.IcyMotionFixtureScreen
@@ -194,7 +195,10 @@ class DeterministicIosMotionCaptureTest {
       captureFrame(sequence, "before", target, actionClock, null, null)
       val description = if (target == LandscapeMode.LYRICS) "Next fullscreen mode" else "Previous fullscreen mode"
       actions += MotionActionRecord(sequence, source.name, target.name, actionClock, description, interrupts)
-      onNodeWithContentDescription(description).assertIsEnabled().performClick()
+      // iOS performClick synthesizes a touch and advances one frame. Use the
+      // same production OnClick action as the preserved Android motion lane.
+      onNodeWithContentDescription(description).assertIsEnabled()
+        .performSemanticsAction(SemanticsActions.OnClick) { assertTrue(it(), "The production control rejected its action") }
       assertEquals(actionClock, mainClock.currentTime, "Semantic click advanced the controlled clock")
       assertEquals(target, state.landscapeMode, "The production edge control did not update mode")
       repeat(plan.PRIME_FRAMES) { mainClock.advanceTimeByFrame() }
@@ -263,6 +267,6 @@ class DeterministicIosMotionCaptureTest {
   val fixedFrameTimeNanos: Long? = null,
   val backgroundStyle: String = "STATIC_BLURRED",
   val reducedMotion: Boolean = false,
-  val androidReferenceStatus: String = "pending new same-sequence preserved-Android motion captures",
+  val androidReferenceStatus: String = "44 preserved-Android reference frames captured; exact same-sequence iOS comparison pending",
   val appearanceParityVerified: Boolean = false,
 )
