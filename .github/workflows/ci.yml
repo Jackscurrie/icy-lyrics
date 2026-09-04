@@ -27,13 +27,19 @@ on:
         required: false
         default: false
 
+      skiko_freetype_only:
+        description: 'Run only the isolated full Skiko FreeType package and native consumer experiment'
+        type: boolean
+        required: false
+        default: false
+
 permissions:
   contents: read
 
 jobs:
   extension:
     name: Desktop extension
-    if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
+    if: (github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true) && (github.event_name != 'workflow_dispatch' || inputs.skiko_freetype_only != true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -48,7 +54,7 @@ jobs:
 
   android-play:
     name: Android Play distribution
-    if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
+    if: (github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true) && (github.event_name != 'workflow_dispatch' || inputs.skiko_freetype_only != true)
     runs-on: ubuntu-latest
     env:
       ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
@@ -71,7 +77,7 @@ jobs:
   ios-sideload:
     name: iPhone simulator and resignable IPA
     # Standard public-repository runners only: never opt into billed private/larger runners.
-    if: github.event.repository.private == false && (github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true)
+    if: (github.event.repository.private == false && (github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true)) && (github.event_name != 'workflow_dispatch' || inputs.skiko_freetype_only != true)
     runs-on: macos-26
     timeout-minutes: 90
     env:
@@ -187,7 +193,7 @@ jobs:
     name: Optional standalone font backend experiment
     # Independent diagnostic job on a standard public-repository runner only.
     # This never supplies an app verification marker or a delivery artifact.
-    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && (inputs.font_backend_probe || inputs.font_backend_only)
+    if: (github.event.repository.private == false && github.event_name == 'workflow_dispatch' && (inputs.font_backend_probe || inputs.font_backend_only)) && (github.event_name != 'workflow_dispatch' || inputs.skiko_freetype_only != true)
     runs-on: macos-26
     timeout-minutes: 45
     env:
@@ -220,3 +226,188 @@ jobs:
             iOS/build/freetype-probe/ci/captures/*.png
             iOS/build/freetype-probe/ci/*.log
           if-no-files-found: warn
+
+  skiko-freetype-native:
+    name: Experimental Skia FreeType ${{ matrix.target }} arm64
+    # Explicit manual request on standard public runners; no app build is involved.
+    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && inputs.skiko_freetype_only == true
+    runs-on: macos-26
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ios, iosSim]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Check the isolated native archive validator
+        run: python3 -m unittest discover -s iOS/experiments/skiko-freetype -p 'test_*.py' -v
+      - name: Prepare independently verified source and tools
+        run: python3 iOS/experiments/skiko-freetype/build_package.py --stage prepare --work-dir iOS/build/skiko-freetype/native
+      - name: Build and inspect the selected native target
+        id: native_build
+        run: python3 iOS/experiments/skiko-freetype/build_package.py --stage skia --target "$TARGET" --jobs 4 --work-dir iOS/build/skiko-freetype/native
+      - name: Upload native source and build evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-skiko-freetype-native-${{ matrix.target }}-evidence
+          retention-days: 7
+          path: |
+            iOS/build/skiko-freetype/native/runs/*.json
+            iOS/build/skiko-freetype/native/prepared.json
+            iOS/build/skiko-freetype/native/patches.json
+            iOS/build/skiko-freetype/native/sources.lock.json
+            iOS/build/skiko-freetype/native/verified-inputs.json
+            iOS/build/skiko-freetype/native/source-files.json
+            iOS/build/skiko-freetype/native/toolchain.json
+            iOS/build/skiko-freetype/native/*.log
+            iOS/build/skiko-freetype/native/reports/${{ matrix.target }}/*.json
+            iOS/build/skiko-freetype/native/reports/${{ matrix.target }}/*.log
+          if-no-files-found: warn
+      - name: Transfer only the validated native package and checksum
+        if: '!cancelled() && steps.native_build.outcome == ''success'''
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-skiko-freetype-native-${{ matrix.target }}
+          retention-days: 7
+          # The native ZIP includes its complete notices and reviewed source provenance.
+          path: |
+            iOS/build/skiko-freetype/native/products/skia-${{ matrix.target }}-arm64-0.144.6-icy-freetype.1.zip
+            iOS/build/skiko-freetype/native/products/skia-${{ matrix.target }}-arm64-0.144.6-icy-freetype.1.json
+          if-no-files-found: error
+
+  skiko-freetype-package:
+    name: Experimental local Skiko package and native consumer
+    needs: skiko-freetype-native
+    if: github.event.repository.private == false && github.event_name == 'workflow_dispatch' && inputs.skiko_freetype_only == true && needs.skiko-freetype-native.result == 'success'
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Download the device archive from this run
+        uses: actions/download-artifact@v8
+        with:
+          name: icy-skiko-freetype-native-ios
+          path: iOS/build/skiko-freetype/transfers/ios
+          digest-mismatch: error
+      - name: Download the simulator archive from this run
+        uses: actions/download-artifact@v8
+        with:
+          name: icy-skiko-freetype-native-iosSim
+          path: iOS/build/skiko-freetype/transfers/iosSim
+          digest-mismatch: error
+      - name: Verify both transferred archives before import
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          source = Path('iOS/experiments/skiko-freetype/sources.lock.json')
+          lock = json.loads(source.read_text())
+          lock_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+          for target in ('ios', 'iosSim'):
+              directory = Path('iOS/build/skiko-freetype/transfers') / target
+              base = 'skia-' + target + '-arm64-' + lock['version']
+              expected = {base + '.zip', base + '.json'}
+              if {entry.name for entry in directory.iterdir()} != expected:
+                  raise ValueError('Unexpected native transfer files: ' + target)
+              archive, record_path = directory / (base + '.zip'), directory / (base + '.json')
+              if any(path.is_symlink() or not path.is_file() for path in (archive, record_path)):
+                  raise ValueError('Native transfer must contain regular files')
+              record = json.loads(record_path.read_text())
+              data = archive.read_bytes()
+              if (record.get('target') != target or record.get('lockSha256') != lock_hash
+                      or type(record.get('bytes')) is not int or record['bytes'] != len(data)
+                      or record.get('sha256') != hashlib.sha256(data).hexdigest()):
+                  raise ValueError('Native transfer identity/checksum mismatch: ' + target)
+          PY
+      - name: Prepare the same sources independently for managed packaging
+        run: python3 iOS/experiments/skiko-freetype/build_package.py --stage prepare --work-dir iOS/build/skiko-freetype/package
+      - name: Import both verified native targets and publish only to local BuildRepo
+        id: skiko_package
+        shell: bash
+        run: |
+          python3 iOS/experiments/skiko-freetype/build_package.py --stage package --work-dir iOS/build/skiko-freetype/package \
+            --import-skia "$GITHUB_WORKSPACE/iOS/build/skiko-freetype/transfers/ios/skia-ios-arm64-0.144.6-icy-freetype.1.zip" \
+            --import-skia "$GITHUB_WORKSPACE/iOS/build/skiko-freetype/transfers/iosSim/skia-iosSim-arm64-0.144.6-icy-freetype.1.zip"
+      - name: Run the four actual native consumer tests on a fresh iPhone simulator
+        id: skiko_consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          simulator=''
+          cleanup() {
+            if [[ -n "$simulator" ]]; then
+              xcrun simctl shutdown "$simulator" >/dev/null 2>&1 || true
+              xcrun simctl delete "$simulator" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+          runtime="$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; items=[r for r in json.load(sys.stdin)["runtimes"] if r.get("isAvailable") and r["identifier"].startswith("com.apple.CoreSimulator.SimRuntime.iOS-")]; items.sort(key=lambda r:tuple(map(int,r["version"].split(".")))); assert items,"No iOS simulator runtime"; print(items[-1]["identifier"])')"
+          device_type="$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; items=[d for d in json.load(sys.stdin)["devicetypes"] if d["name"]=="iPhone 16"]; assert len(items)==1,"iPhone16 device type missing"; print(items[0]["identifier"])')"
+          simulator="$(xcrun simctl create 'iPhone IcySkikoFreeTypeVerification' "$device_type" "$runtime")"
+          printf '%s\n' "$simulator" > iOS/build/skiko-freetype/package/reports/consumer-simulator.txt
+          xcrun simctl boot "$simulator"
+          xcrun simctl bootstatus "$simulator" -b
+          python3 iOS/experiments/skiko-freetype/build_package.py --stage consumer --work-dir iOS/build/skiko-freetype/package --simulator "$simulator"
+      - name: Upload managed package and consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-skiko-freetype-package-evidence
+          retention-days: 7
+          path: |
+            iOS/build/skiko-freetype/package/runs/*.json
+            iOS/build/skiko-freetype/package/prepared.json
+            iOS/build/skiko-freetype/package/patches.json
+            iOS/build/skiko-freetype/package/sources.lock.json
+            iOS/build/skiko-freetype/package/verified-inputs.json
+            iOS/build/skiko-freetype/package/source-files.json
+            iOS/build/skiko-freetype/package/toolchain.json
+            iOS/build/skiko-freetype/package/*.log
+            iOS/build/skiko-freetype/package/reports/*.json
+            iOS/build/skiko-freetype/package/reports/*.log
+            iOS/build/skiko-freetype/package/reports/consumer-simulator.txt
+            iOS/build/skiko-freetype/package/reports/ios/*.json
+            iOS/build/skiko-freetype/package/reports/ios/*.log
+            iOS/build/skiko-freetype/package/reports/iosSim/*.json
+            iOS/build/skiko-freetype/package/reports/iosSim/*.log
+            iOS/build/skiko-freetype/package/reports/consumer-output/*.json
+            iOS/build/skiko-freetype/package/reports/consumer-output/*.png
+            iOS/build/skiko-freetype/package/reports/consumer-output/*.rgba
+            iOS/build/skiko-freetype/package/consumer/build/test-results/iosSimulatorArm64Test/*.xml
+            iOS/build/skiko-freetype/package/consumer/build/reports/tests/iosSimulatorArm64Test/
+          if-no-files-found: warn
+      - name: Upload the validated experimental Maven package
+        if: '!cancelled() && steps.skiko_package.outcome == ''success'' && steps.skiko_consumer.outcome == ''success'''
+        uses: actions/upload-artifact@v7
+        with:
+          name: icy-skiko-freetype-local-maven
+          retention-days: 7
+          path: |
+            iOS/build/skiko-freetype/package/products/skiko-0.144.6-icy-freetype.1-local-maven.zip
+            iOS/build/skiko-freetype/package/products/skiko-0.144.6-icy-freetype.1-local-maven.json
+          if-no-files-found: error

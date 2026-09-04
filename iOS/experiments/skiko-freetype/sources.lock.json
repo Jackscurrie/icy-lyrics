@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "version": "0.144.6-icy-freetype.1",
+  "skikoRevision": "9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+  "skiaRevision": "22f58c9fd43d55bde818821c04b48fda5d7ec939",
+  "xcodeVersion": "26.4.1",
+  "producerKotlin": "2.2.20",
+  "producerGradle": "8.14.3",
+  "targets": {
+    "ios": {
+      "directory": "Release-ios-arm64",
+      "nativeTarget": "ios_arm64",
+      "platform": 2
+    },
+    "iosSim": {
+      "directory": "Release-iosSim-arm64",
+      "nativeTarget": "ios_simulator_arm64",
+      "platform": 7
+    }
+  },
+  "archives": [
+    {
+      "name": "skia.tar.gz",
+      "kind": "tar",
+      "sha256": "33e5a5a70de90bce47a80bb3989eda94902d82996408360c67faf43196940813",
+      "bytes": 63771945,
+      "url": "https://codeload.github.com/JetBrains/skia/tar.gz/22f58c9fd43d55bde818821c04b48fda5d7ec939",
+      "revision": "22f58c9fd43d55bde818821c04b48fda5d7ec939",
+      "destination": "skia",
+      "stripPrefix": "skia-22f58c9fd43d55bde818821c04b48fda5d7ec939"
+    },
+    {
+      "name": "skiko.tar.gz",
+      "kind": "tar",
+      "url": "https://codeload.github.com/JetBrains/skiko/tar.gz/9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+      "revision": "9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+      "destination": "skiko",
+      "stripPrefix": "skiko-9a5b398bb2044fff7e7a84fbfd6f4b803e4427c0",
+      "sha256": "53361af6e70f92b6d2eba2a09619921c67b8861eda5ab12394455c7c70b86fd6",
+      "bytes": 15627272
+    },
+    {
+      "name": "freetype.tar.gz",
+      "kind": "tar",
+      "sha256": "11be735a0e8df9c120788f8b75a7269d71f60d2dfd273c7e661d34a14970bea7",
+      "bytes": 2547776,
+      "url": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+archive/1518bc83d26b434031bd12c706ac3c7dab3902fd.tar.gz",
+      "revision": "1518bc83d26b434031bd12c706ac3c7dab3902fd",
+      "repository": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git",
+      "depsPath": "third_party/externals/freetype",
+      "destination": "skia/third_party/externals/freetype",
+      "gitlinks": [
+        {
+          "path": "subprojects/dlg",
+          "commit": "72dfcc858c040c54a6a0b88fcb7e70ee186d3167",
+          "scope": "Unpopulated and not compiled by the pinned Skia GN target"
+        }
+      ],
+      "sourceTreeSha256": "e5ea428538b2483ace40ce70620d2247eeed008dbf28f57b63019285e2bbd40a",
+      "gitTreeSha1": "4fb26924f51b46158df14bab89d148ab97b02e17",
+      "sourceFiles": 741,
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/1518bc83d26b434031bd12c706ac3c7dab3902fd?format=JSON",
+      "archiveHashRole": "Reference observation only: Gitiles tar timestamps vary; verify sourceTreeSha256 and gitTreeSha1 instead"
+    },
+    {
+      "name": "libpng.tar.gz",
+      "kind": "tar",
+      "sha256": "ef62fce83d277cf3b26fd036a1c8a7845c335a4c6dbf9bf5b17a503e45be0646",
+      "bytes": 1603748,
+      "url": "https://skia.googlesource.com/third_party/libpng.git/+archive/49363adcfaf098748d7a4c8c624ad8c45a8c3a86.tar.gz",
+      "revision": "49363adcfaf098748d7a4c8c624ad8c45a8c3a86",
+      "repository": "https://skia.googlesource.com/third_party/libpng.git",
+      "depsPath": "third_party/externals/libpng",
+      "destination": "skia/third_party/externals/libpng",
+      "sourceTreeSha256": "35dc8ea9c5f9f35114a0016d30dad944a18eb76b1c957b404e37d313bd049147",
+      "gitTreeSha1": "b9771f2b9ea6ea5fde4677c06d5dc2bf41ba4980",
+      "sourceFiles": 600,
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://skia.googlesource.com/third_party/libpng.git/+/49363adcfaf098748d7a4c8c624ad8c45a8c3a86?format=JSON",
+      "archiveHashRole": "Reference observation only: Gitiles tar timestamps vary; verify sourceTreeSha256 and gitTreeSha1 instead"
+    },
+    {
+      "name": "zlib.tar.gz",
+      "kind": "tar",
+      "sha256": "b351094a848fb6f5a7bb629eb3f2a3ab3bd95a07dec5698e7e3d853b01622ce2",
+      "bytes": 587291,
+      "url": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+archive/646b7f569718921d7d4b5b8e22572ff6c76f2596.tar.gz",
+      "revision": "646b7f569718921d7d4b5b8e22572ff6c76f2596",
+      "repository": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
+      "depsPath": "third_party/externals/zlib",
+      "destination": "skia/third_party/externals/zlib",
+      "sourceTreeSha256": "5c9c3d539bde499e9194e0635f5d174a1c4c88bdfcaebfe30482a1b18399eec8",
+      "gitTreeSha1": "15d5d748ce2060ea03b9e9b60d9d0ee512274520",
+      "sourceFiles": 150,
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/646b7f569718921d7d4b5b8e22572ff6c76f2596?format=JSON",
+      "archiveHashRole": "Reference observation only: Gitiles tar timestamps vary; verify sourceTreeSha256 and gitTreeSha1 instead"
+    },
+    {
+      "name": "gn-mac-arm64.zip",
+      "kind": "zip",
+      "url": "https://chrome-infra-packages.appspot.com/dl/gn/gn/mac-arm64/+/git_revision:b2afae122eeb6ce09c52d63f67dc53fc517dbdc8",
+      "revision": "b2afae122eeb6ce09c52d63f67dc53fc517dbdc8",
+      "binary": "gn",
+      "sha256": "cbb260f2cf999f7d74da96b3828a061299c6337354dd6db642e778828576025c",
+      "bytes": 828016
+    },
+    {
+      "name": "ninja-mac-arm64.zip",
+      "kind": "zip",
+      "url": "https://chrome-infra-packages.appspot.com/dl/infra/3pp/tools/ninja/mac-arm64/+/version:2@1.12.1.chromium.4",
+      "revision": "2@1.12.1.chromium.4",
+      "binary": "ninja",
+      "sha256": "c5e9b4ffab3b2edefbc41849fc81f116c8d047b258906becc061be9ecaf04afd",
+      "bytes": 145520
+    },
+    {
+      "name": "dng_sdk.tar.gz",
+      "kind": "tar",
+      "url": "https://android.googlesource.com/platform/external/dng_sdk.git/+archive/dbe0a676450d9b8c71bf00688bb306409b779e90.tar.gz",
+      "repository": "https://android.googlesource.com/platform/external/dng_sdk.git",
+      "revision": "dbe0a676450d9b8c71bf00688bb306409b779e90",
+      "depsPath": "third_party/externals/dng_sdk",
+      "destination": "skia/third_party/externals/dng_sdk",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://android.googlesource.com/platform/external/dng_sdk.git/+/dbe0a676450d9b8c71bf00688bb306409b779e90?format=JSON",
+      "sha256": "f70aca2da8cffbf09fd11c0511d596bf5a0f7f0933143314cb6079270f2a0a51",
+      "bytes": 441530,
+      "sourceTreeSha256": "d6a068bbe7914aea1c449bc605025dbd2ca822d02be89a918e1f927caee54a17",
+      "gitTreeSha1": "201d30dd8bcb17cf06fc3c47603ebeed4fa37807",
+      "sourceFiles": 160
+    },
+    {
+      "name": "expat.tar.gz",
+      "kind": "tar",
+      "url": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git/+archive/8e49998f003d693213b538ef765814c7d21abada.tar.gz",
+      "repository": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git",
+      "revision": "8e49998f003d693213b538ef765814c7d21abada",
+      "depsPath": "third_party/externals/expat",
+      "destination": "skia/third_party/externals/expat",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git/+/8e49998f003d693213b538ef765814c7d21abada?format=JSON",
+      "sha256": "681ef4c1b5a13066362a4df2faa3ad68201bc3da73f768d94d60360002e7aec8",
+      "bytes": 8421010,
+      "sourceTreeSha256": "f208d3b98dec0c1b9d482410c4dcc4b476c1298879414a0af036f5725fcc2cdb",
+      "gitTreeSha1": "51469682e52c0fd9edb4895bf1ad6d8fd29c207e",
+      "sourceFiles": 209
+    },
+    {
+      "name": "harfbuzz.tar.gz",
+      "kind": "tar",
+      "url": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git/+archive/08b52ae2e44931eef163dbad71697f911fadc323.tar.gz",
+      "repository": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git",
+      "revision": "08b52ae2e44931eef163dbad71697f911fadc323",
+      "depsPath": "third_party/externals/harfbuzz",
+      "destination": "skia/third_party/externals/harfbuzz",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git/+/08b52ae2e44931eef163dbad71697f911fadc323?format=JSON",
+      "sha256": "7b66197d101d136449b4aed805be117d76af7dc05ab75cbc9aa6d3d4a249070e",
+      "bytes": 35236993,
+      "sourceTreeSha256": "1dc43b9dcf42e744a984dfecac2f0b177be52eeebc2b4353ecde6fa2789d192c",
+      "gitTreeSha1": "543ed75795348a53627f526aa7ee369a83aad89e",
+      "sourceFiles": 3426
+    },
+    {
+      "name": "icu.tar.gz",
+      "kind": "tar",
+      "url": "https://chromium.googlesource.com/chromium/deps/icu.git/+archive/364118a1d9da24bb5b770ac3d762ac144d6da5a4.tar.gz",
+      "repository": "https://chromium.googlesource.com/chromium/deps/icu.git",
+      "revision": "364118a1d9da24bb5b770ac3d762ac144d6da5a4",
+      "depsPath": "third_party/externals/icu",
+      "destination": "skia/third_party/externals/icu",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/chromium/deps/icu.git/+/364118a1d9da24bb5b770ac3d762ac144d6da5a4?format=JSON",
+      "sha256": "c856fdd6530c4b7b60b129085898338e2df74a30feda9164f2b8cd40bbdc8c2e",
+      "bytes": 51750603,
+      "sourceTreeSha256": "338eb9b93c6755b63eddbb161a9477ba2f148bd42d5d4e588076960e6cf849b4",
+      "gitTreeSha1": "268d3140262b461fdec9c1fd71f570234f9a740b",
+      "sourceFiles": 7018
+    },
+    {
+      "name": "libjpeg-turbo.tar.gz",
+      "kind": "tar",
+      "url": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+archive/e14cbfaa85529d47f9f55b0f104a579c1061f9ad.tar.gz",
+      "repository": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git",
+      "revision": "e14cbfaa85529d47f9f55b0f104a579c1061f9ad",
+      "depsPath": "third_party/externals/libjpeg-turbo",
+      "destination": "skia/third_party/externals/libjpeg-turbo",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad?format=JSON",
+      "sha256": "b9cd54109e334145d9663ab2f6846a1827e2b539aa51d605c030439a44de6424",
+      "bytes": 2623847,
+      "sourceTreeSha256": "da08a14e1277c95b6ebb8c0e07b325068a01a8424f198e83d88e20734e6fe98c",
+      "gitTreeSha1": "6b2c91d1eb3a0e6354a940339a667414952c7eaa",
+      "sourceFiles": 307
+    },
+    {
+      "name": "libwebp.tar.gz",
+      "kind": "tar",
+      "url": "https://chromium.googlesource.com/webm/libwebp.git/+archive/845d5476a866141ba35ac133f856fa62f0b7445f.tar.gz",
+      "repository": "https://chromium.googlesource.com/webm/libwebp.git",
+      "revision": "845d5476a866141ba35ac133f856fa62f0b7445f",
+      "depsPath": "third_party/externals/libwebp",
+      "destination": "skia/third_party/externals/libwebp",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f?format=JSON",
+      "sha256": "20c1a550cacf248d2e865ff2c9101cffe98dd3fd29a0fe5d59e07bc03d9dae60",
+      "bytes": 3813228,
+      "sourceTreeSha256": "a01582605463e0d0b737856662f66291f0770012e161e1814200745d9c82f2fe",
+      "gitTreeSha1": "fe5f48f90e42bdce3aba8143e23822f191b93917",
+      "sourceFiles": 334
+    },
+    {
+      "name": "piex.tar.gz",
+      "kind": "tar",
+      "url": "https://android.googlesource.com/platform/external/piex.git/+archive/bb217acdca1cc0c16b704669dd6f91a1b509c406.tar.gz",
+      "repository": "https://android.googlesource.com/platform/external/piex.git",
+      "revision": "bb217acdca1cc0c16b704669dd6f91a1b509c406",
+      "depsPath": "third_party/externals/piex",
+      "destination": "skia/third_party/externals/piex",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://android.googlesource.com/platform/external/piex.git/+/bb217acdca1cc0c16b704669dd6f91a1b509c406?format=JSON",
+      "sha256": "f8ba44372a9ec7c03b0c5ce73056f3e16929972e0f86f5466d90f7d50ae1dbca",
+      "bytes": 38360,
+      "sourceTreeSha256": "e73f7775e89994896ec23c2d4062421a07eab36efdf82fa9e77225762caccccf",
+      "gitTreeSha1": "ad1dbaac28851868cadbbdde7bceda97bc771a32",
+      "sourceFiles": 21
+    },
+    {
+      "name": "wuffs.tar.gz",
+      "kind": "tar",
+      "url": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git/+archive/e3f919ccfe3ef542cfc983a82146070258fb57f8.tar.gz",
+      "repository": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git",
+      "revision": "e3f919ccfe3ef542cfc983a82146070258fb57f8",
+      "depsPath": "third_party/externals/wuffs",
+      "destination": "skia/third_party/externals/wuffs",
+      "verification": "git-tree-and-canonical-file-sha256",
+      "commitMetadataUrl": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git/+/e3f919ccfe3ef542cfc983a82146070258fb57f8?format=JSON",
+      "sha256": "6e497aa4c9b6eaf80822267b3bfeb40c4167474f798aba9008616cc575404fb7",
+      "bytes": 327719,
+      "sourceTreeSha256": "f92f3fc56e4aaf8b9ecc82c1f7c58a5de873e12b3abc63b507c0e103ac2f9939",
+      "gitTreeSha1": "4ed0549dc65a512c370b80db658a1093facf732e",
+      "sourceFiles": 11
+    }
+  ],
+  "fonts": [
+    {
+      "file": "Roboto-Regular.ttf",
+      "sha256": "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50",
+      "bytes": 2371712
+    },
+    {
+      "file": "NotoColorEmoji.ttf",
+      "sha256": "292f799100f358811337bc3c68da31e6b0c422e9ce8db27d6d52b6acbc5633f3",
+      "bytes": 2813064
+    },
+    {
+      "file": "NotoColorEmojiFlags.ttf",
+      "sha256": "bccb829e97ca446771231993cf5bff3449974851201c497be6d6d52e906aae7b",
+      "bytes": 913564
+    }
+  ],
+  "sharedIntegrityHelperSha256": "81812befa4e667a766b1acbc21a1e66052b02523eda02b957d3fd521d7da75d2",
+  "producerGradleDistribution": {
+    "url": "https://services.gradle.org/distributions/gradle-8.14.3-all.zip",
+    "sha256": "ed1a8d686605fd7c23bdf62c7fc7add1c5b23b2bbc3721e661934ef4a4911d7c",
+    "checksumSource": "https://services.gradle.org/distributions/gradle-8.14.3-all.zip.sha256"
+  },
+  "consumerKotlin": "2.4.10",
+  "consumerGradle": "9.4.1",
+  "consumerWrapperFiles": {
+    "gradlew": "3238afb2aed5cb16eb7d6718077e7138059108f007b54179e9cc157c5a6e0e89",
+    "gradlew.bat": "1d297e00bd21de3ace22b4d7f2de1f9dfa858883d66bbf7c1ccbecccec8f4f3b",
+    "gradle/wrapper/gradle-wrapper.jar": "76805e32c009c0cf0dd5d206bddc9fb22ea42e84db904b764f3047de095493f3",
+    "gradle/wrapper/gradle-wrapper.properties": "13287ffad6cf3064056ddad80d95b855132348930b2dc6c91490588c55b3ac7d"
+  },
+  "consumerWrapperTextNormalization": {
+    "gradle/wrapper/gradle-wrapper.properties": "lf"
+  }
+}
