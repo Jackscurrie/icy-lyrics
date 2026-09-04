@@ -34,7 +34,7 @@ Run `npm test` for the API, TTML persistence/migration, retry, request-generatio
 
 ## Easy Install
 
-Visit www.jackscurrie.com/icy-lyrics for a all-in-one install script for Windows, Linux, and macOS
+Visit jackscurrie.com/icy-lyrics for a all-in-one install script for Windows, Linux, and macOS
 
 ## Manual Install
 
