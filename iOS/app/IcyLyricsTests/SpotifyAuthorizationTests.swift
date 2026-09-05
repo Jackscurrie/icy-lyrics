@@ -15,6 +15,70 @@ final class SpotifyAuthorizationTests: XCTestCase {
         XCTAssertFalse(SpotifyAuthorization.constantTimeEqual("same", "same-longer"))
     }
 
+    func testSceneCallbackAcceptsAuthorityRootSlashAndCompletesPKCE() async throws {
+        let store = MemoryCredentials()
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let exchangeStarted = expectation(description: "code exchange")
+        let authorizationFinished = expectation(description: "authorization finished")
+        network.onRequest = { if $0 == 1 { exchangeStarted.fulfill() } }
+        let auth = makeAuth(store, network, browsers)
+        var result: Result<SpotifyCredentialPurpose, Error>?
+        auth.begin(.playback) { value in result = value; authorizationFinished.fulfill() }
+
+        let rootWithSlash = URL(string: "com.icy.lyrics.ios://spotify-callback/")!
+        XCTAssertTrue(auth.handleSceneCallback(browsers.callbackURL(rootWithSlash)))
+        await fulfillment(of: [exchangeStarted], timeout: 2)
+        network.respond(0, token: "playback-token", scope: "app-remote-control")
+        await fulfillment(of: [authorizationFinished], timeout: 2)
+
+        XCTAssertEqual(try result?.get(), .playback)
+        XCTAssertEqual(store.values[.playback]?.accessToken, "playback-token")
+    }
+
+    func testSceneCallbackDoesNotGiveAnAppRemoteImplicitResponseToPKCE() throws {
+        let store = MemoryCredentials()
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let auth = makeAuth(store, network, browsers)
+        var results = [Result<SpotifyCredentialPurpose, Error>]()
+        auth.begin(.playback) { results.append($0) }
+
+        let sdkCallback = URL(string:
+            "com.icy.lyrics.ios://spotify-callback#access_token=sdk-token&token_type=Bearer&expires_in=3600")!
+        XCTAssertFalse(auth.handleSceneCallback(sdkCallback))
+        XCTAssertTrue(auth.isAuthorizing)
+        XCTAssertTrue(results.isEmpty)
+        XCTAssertTrue(network.requests.isEmpty)
+
+        auth.cancel()
+        XCTAssertEqual(results.count, 1)
+        XCTAssertThrowsError(try results[0].get())
+    }
+
+    func testBrowserCallbackStillRejectsWrongStateAndNonRootRedirects() throws {
+        let store = MemoryCredentials()
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let auth = makeAuth(store, network, browsers)
+        var results = [Result<SpotifyCredentialPurpose, Error>]()
+        auth.begin(.lyrics) { results.append($0) }
+
+        let wrongPath = browsers.callbackURL(URL(string: "com.icy.lyrics.ios://spotify-callback/other")!)
+        XCTAssertFalse(auth.handleSceneCallback(wrongPath))
+        XCTAssertTrue(auth.isAuthorizing)
+
+        var wrongState = URLComponents(url: callback, resolvingAgainstBaseURL: false)!
+        wrongState.queryItems = [URLQueryItem(name: "code", value: "code"), URLQueryItem(name: "state", value: "wrong")]
+        auth.handle(wrongState.url!)
+        XCTAssertFalse(auth.isAuthorizing)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertThrowsError(try results[0].get()) { error in
+            XCTAssertEqual(error.localizedDescription, "Spotify returned an invalid authorization callback.")
+        }
+        XCTAssertTrue(network.requests.isEmpty)
+    }
+
     func testLyricsNeverReceivesAControlCapableStoredToken() async throws {
         let store = MemoryCredentials()
         store.values[.lyrics] = credentials(scopes: ["user-read-currently-playing", "app-remote-control"])

@@ -206,10 +206,25 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
         } catch { completion(.failure(error)) }
     }
 
+    /// Scene delivery can contain callbacks owned by another Spotify SDK flow.
+    /// Only consume a scene URL when it carries this pending PKCE request's
+    /// unguessable state. The ASWebAuthenticationSession completion still uses
+    /// `handle` below so malformed browser callbacks fail closed.
+    @discardableResult
+    func handleSceneCallback(_ url: URL) -> Bool {
+        guard let request = pending, authorizationGeneration == request.generation,
+              Self.matchesRedirectLocation(url, callbackURL), url.fragment == nil,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return false }
+        let states = components.queryItems?.filter { $0.name == "state" } ?? []
+        guard states.count == 1, let state = states[0].value,
+              Self.constantTimeEqual(state, request.state) else { return false }
+        handle(url)
+        return true
+    }
+
     func handle(_ url: URL) {
         guard let request = pending, authorizationGeneration == request.generation else { return }
-        guard url.scheme == callbackURL.scheme, url.host == callbackURL.host, url.path == callbackURL.path,
-              url.port == callbackURL.port, url.user == nil, url.password == nil, url.fragment == nil,
+        guard Self.matchesRedirectLocation(url, callbackURL), url.fragment == nil,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             finish(.failure(SpotifyAuthError.invalidCallback), generation: request.generation); return
         }
@@ -430,5 +445,30 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
         let left = Array(a.utf8), right = Array(b.utf8)
         guard left.count == right.count else { return false }
         return zip(left, right).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
+    }
+    /// Foundation and callback transports can represent an authority-only URI
+    /// as either an empty path or `/`. They identify the same root callback;
+    /// every non-root path, authority component and port remains exact.
+    static func matchesRedirectLocation(_ actual: URL, _ expected: URL) -> Bool {
+        guard let actualScheme = actual.scheme, let expectedScheme = expected.scheme,
+              actualScheme.caseInsensitiveCompare(expectedScheme) == .orderedSame,
+              sameHost(actual.host, expected.host),
+              actual.port == expected.port,
+              actual.user == nil, actual.password == nil,
+              expected.user == nil, expected.password == nil else { return false }
+        let actualPath = actual.path.isEmpty ? "/" : actual.path
+        let expectedPath = expected.path.isEmpty ? "/" : expected.path
+        return actualPath == expectedPath
+    }
+
+    private static func sameHost(_ actual: String?, _ expected: String?) -> Bool {
+        switch (actual, expected) {
+        case let (actual?, expected?):
+            return actual.caseInsensitiveCompare(expected) == .orderedSame
+        case (nil, nil):
+            return true
+        default:
+            return false
+        }
     }
 }

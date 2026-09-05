@@ -120,7 +120,13 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         retainedController?.playbackDisconnected(message: nil)
         UIApplication.shared.isIdleTimerDisabled = false
     }
-    func open(_ url: URL) { if !closed { authorization.handle(url) } }
+    func open(_ url: URL) {
+        guard !closed else { return }
+        // This host obtains the persisted App Remote token through its own PKCE
+        // browser. Spotify SDK authorizeAndPlayURI callbacks use a different
+        // access-token/error shape and must not invalidate that pending request.
+        authorization.handleSceneCallback(url)
+    }
 
     func close() {
         guard !closed else { return }
