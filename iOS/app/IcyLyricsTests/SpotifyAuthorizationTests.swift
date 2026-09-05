@@ -29,7 +29,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
         let rootWithSlash = URL(string: "com.icy.lyrics.ios://spotify-callback/")!
         XCTAssertTrue(auth.handleSceneCallback(browsers.callbackURL(rootWithSlash)))
         await fulfillment(of: [exchangeStarted], timeout: 2)
-        network.respond(0, token: "playback-token", scope: "app-remote-control")
+        network.respond(0, token: "playback-token", scope: "app-remote-control user-read-currently-playing")
         await fulfillment(of: [authorizationFinished], timeout: 2)
 
         XCTAssertEqual(try result?.get(), .playback)
@@ -91,7 +91,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
 
     func testLyricsDisconnectPreservesPlaybackAuthorization() async throws {
         let store = MemoryCredentials()
-        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600), scopes: ["app-remote-control"])
+        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600), scopes: ["app-remote-control", "user-read-currently-playing"])
         store.values[.lyrics] = credentials()
         let network = TokenProbe()
         let auth = makeAuth(store, network)
@@ -118,7 +118,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
 
     func testPlaybackOnlyStoredAuthorizationRemainsAvailableWithoutNetworkOrBrowser() throws {
         let store = MemoryCredentials()
-        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        store.values[.playback] = credentials(scopes: ["app-remote-control", "user-read-currently-playing"])
         let network = TokenProbe()
         let browsers = BrowserProbe()
         let auth = makeAuth(store, network, browsers)
@@ -128,9 +128,30 @@ final class SpotifyAuthorizationTests: XCTestCase {
         XCTAssertTrue(browsers.urls.isEmpty)
     }
 
+    func testPlaybackCredentialMissingNowPlayingScopeRequiresFreshAuthorization() async throws {
+        let store = MemoryCredentials()
+        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600),
+                                              scopes: ["app-remote-control"])
+        let network = TokenProbe()
+        let browsers = BrowserProbe()
+        let auth = makeAuth(store, network, browsers)
+
+        XCTAssertFalse(try auth.hasStoredAuthorization(.playback))
+        let token = try await auth.token(.playback)
+        XCTAssertNil(token)
+        XCTAssertNil(store.values[.playback])
+        XCTAssertTrue(network.requests.isEmpty)
+
+        auth.begin(.playback) { _ in }
+        let requestedScopes = Set(URLComponents(url: browsers.urls[0], resolvingAgainstBaseURL: false)!
+            .queryItems!.first { $0.name == "scope" }!.value!.split(separator: " ").map(String.init))
+        XCTAssertEqual(requestedScopes, ["app-remote-control", "user-read-currently-playing"])
+        auth.cancel()
+    }
+
     func testFullDisconnectCancelsBrowserAndRejectsLateCallbackForBothStoredPurposes() async throws {
         let store = MemoryCredentials()
-        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        store.values[.playback] = credentials(scopes: ["app-remote-control", "user-read-currently-playing"])
         store.values[.lyrics] = credentials()
         let network = TokenProbe()
         let browsers = BrowserProbe()
@@ -152,7 +173,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
 
     func testFullDisconnectCancelsBothRefreshesAndTheirLateResultsCannotRestoreEitherPurpose() async throws {
         let store = MemoryCredentials()
-        store.values[.playback] = credentials(scopes: ["app-remote-control"])
+        store.values[.playback] = credentials(scopes: ["app-remote-control", "user-read-currently-playing"])
         store.values[.lyrics] = credentials()
         let network = TokenProbe()
         let playbackStarted = expectation(description: "playback refresh")
@@ -164,7 +185,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
         let lyrics = Task { try await auth.token(.lyrics) }
         await fulfillment(of: [lyricsStarted], timeout: 2)
         try auth.disconnect()
-        network.respond(0, token: "late-playback", scope: "app-remote-control")
+        network.respond(0, token: "late-playback", scope: "app-remote-control user-read-currently-playing")
         network.respond(1, token: "late-lyrics", scope: "user-read-currently-playing")
         for task in [playback, lyrics] {
             do { _ = try await task.value; XCTFail("Revoked refresh returned a token") }
@@ -177,7 +198,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
 
     func testFullDisconnectAttemptsBothDeletionsAndFailedPurposeCannotSupplyTokenBeforeRetry() async throws {
         let store = MemoryCredentials()
-        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600), scopes: ["app-remote-control"])
+        store.values[.playback] = credentials(expiresAt: Date().addingTimeInterval(3600), scopes: ["app-remote-control", "user-read-currently-playing"])
         store.values[.lyrics] = credentials()
         store.clearFailures = [.playback]
         let network = TokenProbe()
@@ -309,7 +330,7 @@ final class SpotifyAuthorizationTests: XCTestCase {
         auth.handle(browsers.callbackURL(callback))
         await fulfillment(of: [newStarted], timeout: 2)
         XCTAssertEqual(network.requests.count, 2)
-        network.respond(0, token: "stale-playback", scope: "app-remote-control")
+        network.respond(0, token: "stale-playback", scope: "app-remote-control user-read-currently-playing")
         network.respond(1, token: "new-lyrics", scope: "user-read-currently-playing")
         await fulfillment(of: [newFinished], timeout: 2)
         await yieldToMainActor()

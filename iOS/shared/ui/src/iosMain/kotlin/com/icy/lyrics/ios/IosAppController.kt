@@ -139,6 +139,13 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
       capturedAtElapsedMs = uiPlatform.monotonicTimeMs(), availableActions = 0) }
     if (message != null) controller.showMessage(message)
   }
+  fun clearPlayback() {
+    providerSession.disconnect()
+    playbackConnection.value = PlaybackConnection.DISCONNECTED
+    snapshot.value = null
+    // Account authorization remains available while Spotify has no active item.
+    controller.refreshPermissions(true, false)
+  }
   fun playbackConnecting() { playbackConnection.value = PlaybackConnection.CONNECTING }
   fun authorizationChanged(inProgress: Boolean, connected: Boolean, message: String?) {
     controller.setAuthorization(inProgress, connected, message)

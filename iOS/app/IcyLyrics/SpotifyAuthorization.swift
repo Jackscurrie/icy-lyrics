@@ -6,7 +6,9 @@ import UIKit
 enum SpotifyCredentialPurpose: String, Sendable {
     case playback, lyrics
     var scopes: Set<String> {
-        self == .playback ? ["app-remote-control"] : ["user-read-currently-playing"]
+        self == .playback
+            ? ["app-remote-control", "user-read-currently-playing"]
+            : ["user-read-currently-playing"]
     }
 }
 
@@ -147,7 +149,8 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
     /// Stored authorization keeps the existing Disconnect action reachable even
     /// when an expired token needs refresh or the account is temporarily offline.
     func hasStoredAuthorization(_ purpose: SpotifyCredentialPurpose) throws -> Bool {
-        try keychain.read(purpose) != nil
+        guard let credentials = try keychain.read(purpose) else { return false }
+        return credentials.scopes == purpose.scopes
     }
 
     init(clientID: String, callbackURL: URL,
@@ -276,7 +279,15 @@ final class SpotifyAuthorization: NSObject, ASWebAuthenticationPresentationConte
     func token(_ purpose: SpotifyCredentialPurpose, rejected: String? = nil) async throws -> String? {
         try Task.checkCancellation()
         guard !revokedPurposes.contains(purpose) else { return nil }
-        guard let existing = try keychain.read(purpose), existing.scopes == purpose.scopes else { return nil }
+        guard let existing = try keychain.read(purpose) else { return nil }
+        guard existing.scopes == purpose.scopes else {
+            // Scope changes require a fresh consent grant. Remove the obsolete
+            // record so the app cannot remain in an authorized-looking state
+            // while no usable playback token can ever be returned.
+            invalidateRefresh(purpose)
+            try keychain.clear(purpose)
+            return nil
+        }
         // Join forced refreshes even while the previously rejected token's expiry
         // is valid. Cancelling one waiter does not cancel the shared refresh.
         if let flight = refreshTasks[purpose] {

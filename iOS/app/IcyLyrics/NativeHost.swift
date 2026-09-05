@@ -6,11 +6,15 @@ import IcyShared
 /// UIKit owns OS presentations only. Compose owns every application screen.
 @MainActor
 final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemoteDelegate {
+    private enum PlaybackSource { case appRemote, webAPI }
+
     // Spotify 5.0.1 declares both weak delegate properties non-null. A retained
     // sink detaches the host without assigning nil or weakening the SDK contract.
     private static let detachedRemoteDelegate = DetachedAppRemoteDelegate()
     private weak var window: UIWindow?
     private let authorization: SpotifyAuthorization
+    private let nowPlayingClient = SpotifyNowPlayingClient()
+    private let artworkClient = SpotifyArtworkClient()
     private var hasCreatedAppRemote = false
     private lazy var remoteConfiguration = SPTConfiguration(clientID: authorization.clientID,
                                                             redirectURL: authorization.callbackURL)
@@ -28,6 +32,14 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     private var stateRequestID = UUID()
     private var connectionTask: Task<Void, Never>?
     private var refreshTimer: Timer?
+    private var playbackMonitorTask: Task<Void, Never>?
+    private var playbackMonitorGeneration = UUID()
+    private var lastAppRemoteSampleUptime: TimeInterval?
+    private var playbackSource: PlaybackSource?
+    private var webArtworkTask: Task<Void, Never>?
+    private var webArtworkGeneration = UUID()
+    private var reportedAppRemoteError: String?
+    private var reportedWebAPIError: String?
     private var playerState: SPTAppRemotePlayerState?
     private var playerObserver: PlayerStateObserver?
     private var artworkURI: String?
@@ -100,6 +112,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     }
     func deactivate() {
         active = false
+        stopPlaybackMonitor()
         connectionGeneration = UUID()
         needsFreshTransport = true
         connectionTask?.cancel()
@@ -156,6 +169,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
                       self.connectionGeneration == generation else { return }
                 self.publishAuthorizationStatus()
                 guard let token else { return }
+                self.startPlaybackMonitor()
                 if !self.needsFreshTransport, self.hasCreatedAppRemote, self.appRemote.isConnected,
                    self.appRemote.connectionParameters.accessToken == token {
                     self.installPlayerObserver(generation: generation)
@@ -190,12 +204,16 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
 
     func connectSpotify(forLyrics: Bool) {
         guard !closed else { return }
+        if !forLyrics {
+            accountGeneration = UUID()
+            stopPlaybackMonitor()
+        }
         authorizationStatusGeneration = UUID()
         authorizationStatusTask?.cancel()
         authorizationStatusTask = nil
         let generation = UUID()
         authorizationFlowGeneration = generation
-        controller.authorizationChanged(inProgress: true, connected: playbackAuthorized || lyricsConnected, message: nil)
+        controller.authorizationChanged(inProgress: true, connected: playbackAuthorized, message: nil)
         authorization.begin(forLyrics ? .lyrics : .playback) { [weak self] result in
             guard let self, !self.closed, self.authorizationFlowGeneration == generation else { return }
             switch result {
@@ -220,8 +238,11 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         // A failed read must not hide a previously available Disconnect control.
         if let value = try? authorization.hasStoredAuthorization(.playback) { playbackAuthorized = value }
         if let value = try? authorization.hasStoredAuthorization(.lyrics) { lyricsConnected = value }
+        // The shared connected/readiness flag controls playback onboarding. A
+        // separate lyrics grant must never hide Connect when playback needs a
+        // fresh consent grant.
         controller.authorizationChanged(inProgress: authorization.isAuthorizing,
-            connected: playbackAuthorized || lyricsConnected, message: message)
+            connected: playbackAuthorized, message: message)
     }
     /// Invoked only by explicit provider/consent controls, never foregrounding.
     func ensureLyricsAuthorization() {
@@ -257,6 +278,7 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     func disconnectSpotify() {
         guard !closed else { return }
         accountGeneration = UUID()
+        stopPlaybackMonitor()
         authorizationFlowGeneration = UUID()
         authorizationStatusGeneration = UUID()
         authorizationStatusTask?.cancel()
@@ -298,14 +320,185 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         }
     }
 
+    /// App Remote remains the preferred low-latency source. This independent
+    /// monitor fills the same shared snapshot when a sideloaded bundle cannot
+    /// establish Spotify's local App Remote channel.
+    private func startPlaybackMonitor() {
+        guard active, !closed, !reconnectSuppressed, playbackMonitorTask == nil else { return }
+        let generation = UUID()
+        let account = accountGeneration
+        playbackMonitorGeneration = generation
+        playbackMonitorTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer {
+                if self.playbackMonitorGeneration == generation {
+                    self.playbackMonitorTask = nil
+                }
+            }
+            while self.isPlaybackMonitorCurrent(generation, account: account) {
+                guard let delay = await self.pollCurrentlyPlaying(generation: generation, account: account)
+                else { return }
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(max(1, delay) * 1_000_000_000))
+                } catch {
+                    return
+                }
+            }
+        }
+    }
+
+    private func stopPlaybackMonitor() {
+        playbackMonitorGeneration = UUID()
+        playbackMonitorTask?.cancel()
+        playbackMonitorTask = nil
+        webArtworkGeneration = UUID()
+        webArtworkTask?.cancel()
+        webArtworkTask = nil
+        lastAppRemoteSampleUptime = nil
+        playbackSource = nil
+        reportedAppRemoteError = nil
+        reportedWebAPIError = nil
+    }
+
+    private func isPlaybackMonitorCurrent(_ generation: UUID, account: UUID) -> Bool {
+        !Task.isCancelled && active && !closed && !reconnectSuppressed
+            && playbackMonitorGeneration == generation && accountGeneration == account
+    }
+
+    private func pollCurrentlyPlaying(generation: UUID, account: UUID) async -> TimeInterval? {
+        let revision = playerUpdateRevision
+        do {
+            guard let accessToken = try await authorization.token(.playback) else {
+                guard isPlaybackMonitorCurrent(generation, account: account) else { return nil }
+                publishAuthorizationStatus(message: "Reconnect Spotify to allow current-song access.")
+                return nil
+            }
+
+            let item: SpotifyNowPlayingItem?
+            do {
+                item = try await nowPlayingClient.fetch(accessToken: accessToken)
+            } catch SpotifyNowPlayingError.unauthorized {
+                guard isPlaybackMonitorCurrent(generation, account: account) else { return nil }
+                guard let refreshed = try await authorization.token(.playback, rejected: accessToken) else {
+                    publishAuthorizationStatus(message: "Reconnect Spotify to allow current-song access.")
+                    return nil
+                }
+                do {
+                    item = try await nowPlayingClient.fetch(accessToken: refreshed)
+                } catch SpotifyNowPlayingError.unauthorized {
+                    // One forced refresh is enough for a single poll. A second
+                    // rejection means this grant cannot be used safely again.
+                    try? authorization.disconnect(.playback)
+                    publishAuthorizationStatus(message: "Reconnect Spotify to allow current-song access.")
+                    return nil
+                }
+            }
+
+            guard isPlaybackMonitorCurrent(generation, account: account) else { return nil }
+            guard playerUpdateRevision == revision else { return 2 }
+            if let sampled = lastAppRemoteSampleUptime,
+               ProcessInfo.processInfo.systemUptime - sampled < 12 {
+                reportedWebAPIError = nil
+                return 5
+            }
+            guard let item else {
+                playbackSource = nil
+                artworkURI = nil
+                webArtworkGeneration = UUID()
+                webArtworkTask?.cancel()
+                webArtworkTask = nil
+                controller.clearPlayback()
+                reportedWebAPIError = nil
+                return 5
+            }
+
+            playerUpdateRevision &+= 1
+            playbackSource = .webAPI
+            controller.updatePlayback(uri: item.uri, title: item.title, artist: item.artist, album: item.album,
+                durationMs: item.durationMs, positionMs: item.positionMs,
+                speed: item.isPlaying ? 1 : 0, playing: item.isPlaying, actions: 0)
+            fetchWebArtwork(for: item, generation: generation, account: account)
+            reportedWebAPIError = nil
+            return 5
+        } catch is CancellationError {
+            return nil
+        } catch SpotifyNowPlayingError.rateLimited(let retryAfterSeconds) {
+            guard isPlaybackMonitorCurrent(generation, account: account) else { return nil }
+            return TimeInterval(min(max(retryAfterSeconds ?? 15, 5), 300))
+        } catch {
+            guard isPlaybackMonitorCurrent(generation, account: account) else { return nil }
+            if (try? authorization.hasStoredAuthorization(.playback)) != true {
+                publishAuthorizationStatus(message: "Reconnect Spotify to allow current-song access.")
+                return nil
+            }
+            reportPlaybackIssue("Spotify current-song lookup failed", error: error, source: .webAPI)
+            return 15
+        }
+    }
+
+    private func fetchWebArtwork(for item: SpotifyNowPlayingItem, generation: UUID, account: UUID) {
+        guard let url = item.artworkURL, artworkURI != item.uri else { return }
+        webArtworkGeneration = UUID()
+        webArtworkTask?.cancel()
+        let artworkGeneration = webArtworkGeneration
+        let uri = item.uri
+        artworkURI = uri
+        webArtworkTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer {
+                if self.webArtworkGeneration == artworkGeneration {
+                    self.webArtworkTask = nil
+                }
+            }
+            do {
+                let encoded = try await self.artworkClient.fetch(url)
+                guard self.isPlaybackMonitorCurrent(generation, account: account),
+                      self.webArtworkGeneration == artworkGeneration,
+                      self.artworkURI == uri,
+                      let data = UIImage(data: encoded)?.pngData() else { return }
+                self.controller.updateArtwork(data: data, forUri: uri)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard self.isPlaybackMonitorCurrent(generation, account: account),
+                      self.webArtworkGeneration == artworkGeneration else { return }
+                // The track and lyrics remain usable when optional artwork fails.
+                self.artworkURI = nil
+            }
+        }
+    }
+
+    private func reportPlaybackIssue(_ context: String, error: Error?, source: PlaybackSource) {
+        let detail: String
+        if let error {
+            let value = error as NSError
+            detail = "\(context) (\(value.domain) \(value.code))."
+        } else {
+            detail = "\(context)."
+        }
+        switch source {
+        case .appRemote:
+            guard reportedAppRemoteError != detail else { return }
+            reportedAppRemoteError = detail
+        case .webAPI:
+            guard reportedWebAPIError != detail else { return }
+            reportedWebAPIError = detail
+        }
+        controller.showError(message: detail)
+    }
+
     func appRemoteDidEstablishConnection(_ appRemote: SPTAppRemote) {
         guard hasCreatedAppRemote, appRemote === self.appRemote else { appRemote.disconnect(); return }
         guard active, !closed, !reconnectSuppressed else { appRemote.disconnect(); return }
         let generation = connectionGeneration
+        startPlaybackMonitor()
         installPlayerObserver(generation: generation)
         appRemote.playerAPI?.subscribe(toPlayerState: { [weak self] _, error in
             guard let self, !self.closed, self.active, self.connectionGeneration == generation else { return }
-            if error != nil { self.controller.showError(message: "Spotify playback updates could not be subscribed. Tap reconnect and try again.") }
+            if let error {
+                self.reportPlaybackIssue("Spotify App Remote could not subscribe to playback updates",
+                                         error: error, source: .appRemote)
+            }
         })
         requestFreshState()
         refreshTimer?.invalidate()
@@ -316,7 +509,12 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
     func appRemote(_ appRemote: SPTAppRemote, didFailConnectionAttemptWithError error: Error?) {
         guard !closed, !reconnectSuppressed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
         needsFreshTransport = true
-        if active { controller.playbackDisconnected(message: "Open Spotify and start a song, then return to Icy Lyrics to reconnect.") }
+        lastAppRemoteSampleUptime = nil
+        if active {
+            if playbackSource != .webAPI { controller.playbackDisconnected(message: nil) }
+            reportPlaybackIssue("Spotify App Remote could not connect; current-song detection will keep trying",
+                                error: error, source: .appRemote)
+        }
     }
     func appRemote(_ appRemote: SPTAppRemote, didDisconnectWithError error: Error?) {
         guard !closed, !reconnectSuppressed, hasCreatedAppRemote, appRemote === self.appRemote else { return }
@@ -326,8 +524,15 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         refreshTimer = nil
         playerState = nil
         playerObserver = nil
-        artworkURI = nil
-        if active { controller.playbackDisconnected(message: "Spotify disconnected. Open Spotify, then return to Icy Lyrics.") }
+        lastAppRemoteSampleUptime = nil
+        if active {
+            if playbackSource != .webAPI {
+                artworkURI = nil
+                controller.playbackDisconnected(message: nil)
+            }
+            reportPlaybackIssue("Spotify App Remote disconnected; current-song detection will keep trying",
+                                error: error, source: .appRemote)
+        }
     }
     private func requestFreshState() {
         guard active, !closed, hasCreatedAppRemote, appRemote.isConnected else { return }
@@ -337,9 +542,14 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         stateRequestID = requestID
         appRemote.playerAPI?.getPlayerState { [weak self] result, error in
             guard let self, !self.closed, self.active, self.connectionGeneration == generation,
-                  self.playerUpdateRevision == revision, self.stateRequestID == requestID,
-                  let state = result as? SPTAppRemotePlayerState else { return }
-            self.receivePlayerState(state, generation: generation, isSubscription: false)
+                  self.playerUpdateRevision == revision, self.stateRequestID == requestID else { return }
+            if let error {
+                self.reportPlaybackIssue("Spotify App Remote could not read playback state",
+                                         error: error, source: .appRemote)
+                return
+            }
+            guard let state = result as? SPTAppRemotePlayerState else { return }
+            self.receivePlayerState(state, generation: generation)
         }
     }
     private func installPlayerObserver(generation: UUID) {
@@ -347,11 +557,14 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
         playerObserver = observer
         appRemote.playerAPI?.delegate = observer
     }
-    fileprivate func receivePlayerState(_ playerState: SPTAppRemotePlayerState, generation: UUID, isSubscription: Bool = true) {
+    fileprivate func receivePlayerState(_ playerState: SPTAppRemotePlayerState, generation: UUID) {
         guard active, !closed, connectionGeneration == generation, appRemote.isConnected else { return }
-        // A polling response must not rewind a newer push update or track change.
-        if isSubscription { playerUpdateRevision &+= 1 }
+        // Any accepted App Remote sample invalidates an older Web API response.
+        playerUpdateRevision &+= 1
         self.playerState = playerState
+        lastAppRemoteSampleUptime = ProcessInfo.processInfo.systemUptime
+        playbackSource = .appRemote
+        reportedAppRemoteError = nil
         let track = playerState.track
         var actions: Int64 = 2 | 4 | 512 // Android's neutral pause/play/toggle capability bits.
         if playerState.playbackRestrictions.canSkipPrevious { actions |= 16 }
@@ -361,6 +574,9 @@ final class NativeHost: NSObject, IosHost, UIDocumentPickerDelegate, SPTAppRemot
             durationMs: Int64(clamping: track.duration), positionMs: Int64(playerState.playbackPosition),
             speed: playerState.playbackSpeed, playing: !playerState.isPaused, actions: actions)
         if artworkURI != track.uri {
+            webArtworkGeneration = UUID()
+            webArtworkTask?.cancel()
+            webArtworkTask = nil
             artworkURI = track.uri
             let uri = track.uri
             let generation = connectionGeneration

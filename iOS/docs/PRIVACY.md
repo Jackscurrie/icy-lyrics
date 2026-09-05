@@ -1,6 +1,6 @@
 # Icy Lyrics for iPhone privacy notice — draft
 
-**Review required. Prepared September 4, 2026; no effective date assigned.**
+**Review required. Prepared September 5, 2026; no effective date assigned.**
 This describes the implemented iPhone port for review. It is not a published
 website policy, an accepted agreement, or evidence of Spotify approval. The
 current in-app privacy link opens an Android-only policy. Before wider
@@ -19,7 +19,7 @@ you share to operate their own services under their own terms and policies.
 
 | Feature | Information and purpose | Recipient |
 | --- | --- | --- |
-| Spotify connection and playback | Spotify authorization, current track URI, title, artists, album, duration, artwork, position, pause state and available controls allow the app to display and synchronize lyrics. Play, pause, skip and seek actions control Spotify's installed app. Audio playback stays in Spotify; Icy Lyrics does not record or upload audio. | Spotify's authorization service and installed Spotify app through App Remote. |
+| Spotify connection and playback | Spotify authorization, current track URI, title, artists, album, duration, artwork, position, pause state and available controls allow the app to display and synchronize lyrics. App Remote supplies live state and controls when its local channel connects; a serial current-playback request supplies metadata and progress when that channel is unavailable. Audio playback stays in Spotify; Icy Lyrics does not record or upload audio. | Spotify's authorization service, installed Spotify app through App Remote, and `api.spotify.com`. |
 | Optional catalog matching | If a track lacks a usable catalog identity, an authorized lookup can read the currently playing track and search by title/artist. A confident match is remembered locally. A complete `spotify:local:` identity stays the local import key. | `api.spotify.com`, using the separate lyrics authorization. |
 | LRCLIB lyrics | When enabled, lyric lookup sends title, artist, available album and, for exact matching, duration. LRCLIB is enabled by default. No Spotify token is included. | `lrclib.net/api/`. |
 | Experimental Spicy Lyrics | Disabled by default. Requires both enabling the provider and separate token-sharing consent. Requests send the Spotify catalog track ID, requested source, compatibility version and the short-lived **lyrics** access token. A token is a credential, not anonymous data. Playback credentials and refresh tokens are not sent to this provider. | `api.spicylyrics.org/query`. Apple-backed and Spotify-backed fallback requests also go through this service; the app does not directly authorize Apple Music. |
@@ -43,8 +43,9 @@ provider; it does not retroactively erase requests already received by it.
 
 Sign-in uses the iOS system authentication browser and Spotify's authorization
 page with PKCE. Icy Lyrics does not ask for or retain your Spotify password.
-Playback requests `app-remote-control`; separate lyrics authorization requests
-`user-read-currently-playing`. The two credential purposes remain separate.
+Playback requests `app-remote-control` and `user-read-currently-playing`;
+separate lyrics authorization requests only `user-read-currently-playing`. The
+two credential purposes remain separate.
 
 Access tokens, available refresh tokens, expiry and scopes are stored in
 device-only, non-synchronizing Apple Keychain records accessible while the
@@ -118,10 +119,10 @@ Use Settings to disable LRCLIB or the experimental provider, withdraw
 experimental token sharing, change local-lyrics use, or turn off keep-awake.
 Use Library to remove saved lyric entries and Diagnostics to clear reports.
 
-The iPhone **Disconnect Spotify** action now cancels authorization/reconnection
-and provider work, closes App Remote, clears current playback/artwork/lyrics,
-and removes both playback and lyrics Keychain credentials. It remains available
-when either credential purpose exists. If Keychain deletion fails, the app
+The iPhone **Disconnect Spotify** action cancels authorization/reconnection and
+provider work, closes App Remote, clears current playback/artwork/lyrics, and
+removes both playback and lyrics Keychain credentials. It is available while
+playback access is connected. If Keychain deletion fails, the app
 reports the error, blocks further token use in that process, and retains the
 disconnect control for retry. Physical-device verification is pending.
 

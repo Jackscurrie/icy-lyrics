@@ -50,6 +50,8 @@ of a build whose report says public binary release is not cleared.
 5. Follow iPhone prompts to trust your developer profile and, on supported versions, enable Developer Mode in **Settings → Privacy & Security → Developer Mode**. Restart/confirm if iOS requests it.
 6. Open Icy Lyrics and connect Spotify. Approve the system sign-in, open Spotify and start a song, then return to Icy Lyrics. Reconnection may require this app switch again later.
 
+After updating from a build that requested only App Remote access, tap **Connect Spotify** once and approve the added current-playback permission. The replacement playback grant lets the app detect the song through Spotify's Web API when App Remote cannot connect to a sideloaded bundle.
+
 ## Seven-day refresh and updates
 
 With a free Apple account, the signing validity is seven days. Sideloadly's automatic refresh needs its daemon running and the paired phone reachable by USB or configured Wi-Fi. Refresh before expiry, or sideload again with the same Apple ID and bundle ID. Free signing also limits the number of active sideloaded applications; see the current [Sideloadly FAQ](https://sideloadly.io/faq).
