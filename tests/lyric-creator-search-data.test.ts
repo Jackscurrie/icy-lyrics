@@ -11,6 +11,9 @@ vi.mock("../src/components/Global/Platform.ts", () => ({
   default: { GetSpotifyAccessToken: vi.fn() },
 }));
 vi.mock("../src/utils/API/Query.ts", () => ({ Query: vi.fn() }));
+vi.mock("../src/utils/API/IcyLyricsDatabase.ts", () => ({
+  lookupIcyLyricsDatabase: vi.fn(),
+}));
 vi.mock("../src/utils/stores.ts", () => ({
   $currentLyricsData: { get: vi.fn(() => null) },
   $useLocalTtmlLyrics: { get: vi.fn(() => false) },
@@ -23,6 +26,9 @@ vi.mock("../src/utils/Lyrics/manager/index.ts", () => ({
 }));
 vi.mock("../src/utils/Lyrics/payload.ts", () => ({ decodeLyricsPayload: vi.fn() }));
 vi.mock("../src/utils/Lyrics/ProcessLyrics.ts", () => ({ ProcessLyrics: vi.fn() }));
+vi.mock("../src/utils/Lyrics/IcyLyricsDatabase.ts", () => ({
+  lyricsFromIcyDatabaseLookup: vi.fn(),
+}));
 vi.mock("../src/utils/Lyrics/schema.ts", () => ({
   isLyricsObject: vi.fn(() => false),
   normalizeLyricsSchema: vi.fn((value) => value),

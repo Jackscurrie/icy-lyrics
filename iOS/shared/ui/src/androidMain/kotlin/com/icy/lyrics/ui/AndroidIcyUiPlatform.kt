@@ -23,8 +23,7 @@ import java.util.Date
 
 class AndroidIcyUiPlatform(private val context: Context) : IcyUiPlatform {
   override val versionName: String get() = BuildConfig.VERSION_NAME
-  override val onboardingInstructions =
-    "Android opens a system settings page. Enable Icy Lyrics, then come back here."
+  override val onboardingCopy = androidIcyOnboardingCopy
   override val emptyPlayerInstructions =
     "The player appears as soon as Spotify publishes its media session."
   override val aboutDescription =

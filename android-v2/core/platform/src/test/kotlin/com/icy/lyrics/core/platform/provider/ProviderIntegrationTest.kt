@@ -61,6 +61,7 @@ class ProviderIntegrationTest {
   @Test
   fun lrclibExactSyncedHitHasVerifiedProvenance() = runTest {
     server.enqueue(MockResponse().setResponseCode(200).setBody(lrclibEntry(synced = "[00:01.00]Hello")))
+    repeat(4) { server.enqueue(MockResponse().setResponseCode(200).setBody("[]")) }
     val provider = lrclib()
 
     val result = provider.fetch(LyricsRequest(TRACK))
@@ -78,7 +79,11 @@ class ProviderIntegrationTest {
   @Test
   fun lrclibExact404FallsBackToConfidentSearch() = runTest {
     server.enqueue(MockResponse().setResponseCode(404))
-    server.enqueue(MockResponse().setResponseCode(200).setBody("[${lrclibEntry(synced = "[00:01.00]Hello")}]"))
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        "[${lrclibEntry(synced = "[00:01.00]Hello", lyricsFile = WORD_TTML)}]",
+      ),
+    )
     val provider = lrclib()
 
     val result = provider.fetch(LyricsRequest(TRACK))
@@ -91,20 +96,20 @@ class ProviderIntegrationTest {
   @Test
   fun lrclibSearchRejectsAnOtherwiseExactVersionWithWrongDuration() = runTest {
     server.enqueue(MockResponse().setResponseCode(404))
-    server.enqueue(
-      MockResponse().setResponseCode(200).setBody(
-        "[${lrclibEntry(synced = "[00:01.00]Wrong version").replace("\"duration\": 180.0", "\"duration\": 240.0")}]",
-      ),
-    )
+    val wrongVersion =
+      "[${lrclibEntry(synced = "[00:01.00]Wrong version").replace("\"duration\": 180.0", "\"duration\": 240.0")}]"
+    repeat(4) {
+      server.enqueue(MockResponse().setResponseCode(200).setBody(wrongVersion))
+    }
 
     val result = lrclib().fetch(LyricsRequest(TRACK))
 
     assertTrue(result is ProviderResult.NotFound)
-    assertEquals(2, server.requestCount)
+    assertEquals(5, server.requestCount)
   }
 
   @Test
-  fun lrclibExactInstrumentalDoesNotSearchForAnotherVersion() = runTest {
+  fun lrclibExactInstrumentalSearchesForAnotherSyncedVersion() = runTest {
     server.enqueue(
       MockResponse().setResponseCode(200).setBody(
         lrclibEntry(synced = "[00:01.00]Hello").replace(
@@ -113,42 +118,59 @@ class ProviderIntegrationTest {
         ),
       ),
     )
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        "[${lrclibEntry(synced = "[00:01.00]Recovered synced version")}]",
+      ),
+    )
+    repeat(3) { server.enqueue(MockResponse().setResponseCode(200).setBody("[]")) }
 
     val result = lrclib().fetch(LyricsRequest(TRACK))
 
-    assertTrue(result is ProviderResult.NotFound)
-    assertEquals(1, server.requestCount)
+    assertTrue(result is ProviderResult.Found)
+    assertEquals(LyricsSyncKind.LINE, (result as ProviderResult.Found).document.syncKind)
+    assertEquals(5, server.requestCount)
   }
 
   @Test
-  fun lrclibMalformedExactJsonIsAParseFailureAndIsNotNegativeCached() = runTest {
+  fun lrclibMalformedExactJsonContinuesToHealthySearch() = runTest {
     server.enqueue(MockResponse().setResponseCode(200).setBody("{"))
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        "[${lrclibEntry(synced = "[00:01.00]Recovered", lyricsFile = WORD_TTML)}]",
+      ),
+    )
 
     val result = lrclib().fetch(LyricsRequest(TRACK))
 
-    assertTrue(result is ProviderResult.Failure)
-    assertEquals(ProviderFailureCategory.PARSE, (result as ProviderResult.Failure).category)
-    assertEquals(1, server.requestCount)
-    assertEquals(null, cacheDao.get(LyricsProviderId.LRCLIB.name, TRACK.exactStorageKey))
+    assertTrue(result is ProviderResult.Found)
+    assertEquals(LyricsSyncKind.SYLLABLE, (result as ProviderResult.Found).document.syncKind)
+    assertEquals(2, server.requestCount)
   }
 
   @Test
   fun lrclibMalformedSearchJsonIsAParseFailure() = runTest {
     server.enqueue(MockResponse().setResponseCode(404))
-    server.enqueue(MockResponse().setResponseCode(200).setBody("["))
+    repeat(4) {
+      server.enqueue(MockResponse().setResponseCode(200).setBody("["))
+    }
 
     val result = lrclib().fetch(LyricsRequest(TRACK))
 
     assertTrue(result is ProviderResult.Failure)
     assertEquals(ProviderFailureCategory.PARSE, (result as ProviderResult.Failure).category)
-    assertEquals(2, server.requestCount)
+    assertEquals(5, server.requestCount)
   }
 
   @Test
   fun lrclibHonorsRetryAfterOnce() = runTest {
     val waits = mutableListOf<Long>()
     server.enqueue(MockResponse().setResponseCode(429).addHeader("Retry-After", "2"))
-    server.enqueue(MockResponse().setResponseCode(200).setBody(lrclibEntry(synced = "[00:01.00]Hello")))
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        lrclibEntry(synced = "[00:01.00]Hello", lyricsFile = WORD_TTML),
+      ),
+    )
     val provider = lrclib(wait = { waits += it })
 
     val result = provider.fetch(LyricsRequest(TRACK))
@@ -174,7 +196,13 @@ class ProviderIntegrationTest {
       LyricsMetadata(TRACK.uri, LyricsSource.LRCLIB, "LRCLIB"),
       listOf(StaticLyricLine("Cached")),
     )
-    cache.put(LyricsProviderId.LRCLIB, TRACK, document, ttlMs = 100L)
+    cache.put(
+      LyricsProviderId.LRCLIB,
+      TRACK,
+      document,
+      ttlMs = 100L,
+      rawFormat = "lrclib-search-v2:plain",
+    )
     now += 101L
     val provider = lrclib(online = { false })
 
@@ -206,12 +234,23 @@ class ProviderIntegrationTest {
     assertEquals("empty", request.getHeader("Sec-Fetch-Dest"))
     assertEquals("cors", request.getHeader("Sec-Fetch-Mode"))
     assertEquals("cross-site", request.getHeader("Sec-Fetch-Site"))
+    assertEquals(
+      "\"Not-A.Brand\";v=\"24\", \"Chromium\";v=\"146\"",
+      request.getHeader("Sec-Ch-Ua"),
+    )
+    assertEquals("?0", request.getHeader("Sec-Ch-Ua-Mobile"))
+    assertEquals("\"Windows\"", request.getHeader("Sec-Ch-Ua-Platform"))
     assertEquals("6.3.12", request.getHeader("SpicyLyrics-Version"))
     assertEquals(
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
-        "Spotify/1.2.63 Chrome/132.0.6834.210 Electron/34.3.1 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+        "Chrome/146.0.7680.179 Spotify/1.2.98.301 Safari/537.36",
       request.getHeader("User-Agent"),
     )
+    val chromeMajor = Regex("Chrome/(\\d+)").find(request.getHeader("User-Agent").orEmpty())
+      ?.groupValues?.get(1)
+    val chromiumMajor = Regex("Chromium\";v=\"(\\d+)")
+      .find(request.getHeader("Sec-Ch-Ua").orEmpty())?.groupValues?.get(1)
+    assertEquals(chromeMajor, chromiumMajor)
     assertEquals("2", request.getHeader("X-mode"))
     assertEquals("Bearer test-token", request.getHeader("SpicyLyrics-WebAuth"))
     assertNull(request.getHeader("Authorization"))
@@ -479,45 +518,88 @@ class ProviderIntegrationTest {
   }
 
   @Test
-  fun spicyPrimaryAcceptsSourceLessLyricsLikeNormalDesktopPlayback() = runTest {
+  fun spicyPrimaryRejectsSourceLessJsonInsteadOfBlessingItsProvenance() = runTest {
     server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelopeWithoutSource()))
     val provider = spicy(LyricsProviderId.SPICY)
 
     val result = provider.fetch(LyricsRequest(TRACK))
 
-    assertTrue(result is ProviderResult.Found)
-    result as ProviderResult.Found
-    assertEquals(LyricsSource.SPICY, result.document.metadata.source)
-    assertEquals(LyricsProviderId.SPICY, result.validatedForProvider)
+    assertTrue(result is ProviderResult.NotFound)
+    assertNull(cache.get(LyricsProviderId.SPICY, TRACK, allowExpired = true))
   }
 
   @Test
-  fun spicyPrimaryReusesCurrentContractAutomaticResultWithLrclibProvenance() = runTest {
+  fun spicyPrimaryRetainsDesktopRawTtmlSourceRule() = runTest {
+    val encodedTtml = Json.encodeToString(WORD_TTML)
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        """{"queries":[{"operationId":"0","result":{"data":$encodedTtml,"httpStatus":200,"format":"ttml"}}]}""",
+      ),
+    )
+
+    val result = spicy(LyricsProviderId.SPICY).fetch(LyricsRequest(TRACK))
+
+    assertTrue(result is ProviderResult.Found)
+    assertEquals(LyricsSource.SPICY, (result as ProviderResult.Found).document.metadata.source)
+    assertEquals(LyricsSyncKind.SYLLABLE, result.document.syncKind)
+  }
+
+  @Test
+  fun spicyDowngradeKeepsVerifiedExpiredWordTiming() = runTest {
+    cache.put(
+      LyricsProviderId.SPICY,
+      TRACK,
+      syllable(LyricsSource.SPICY),
+      ttlMs = 1L,
+      rawFormat = "spicy-desktop-v2:json",
+      sourceVerified = true,
+    )
+    now += 2L
+    server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("aml")))
+
+    val result = spicy(LyricsProviderId.SPICY).fetch(LyricsRequest(TRACK))
+
+    assertTrue(result is ProviderResult.Found)
+    result as ProviderResult.Found
+    assertTrue(result.fromCache)
+    assertEquals(LyricsSource.SPICY, result.document.metadata.source)
+    assertEquals(LyricsSyncKind.SYLLABLE, result.document.syncKind)
+    assertTrue(result.message.orEmpty().contains("aml"))
+  }
+
+  @Test
+  fun spicyPrimaryRejectsAutomaticLrclibResultWithoutCachingOrRelabelingIt() = runTest {
     server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("lrc")))
     val provider = spicy(LyricsProviderId.SPICY)
 
     val network = provider.fetch(LyricsRequest(TRACK))
-    val cached = provider.fetch(LyricsRequest(TRACK))
 
-    assertTrue(network is ProviderResult.Found)
-    assertEquals(LyricsSource.LRCLIB, (network as ProviderResult.Found).document.metadata.source)
-    assertEquals(LyricsProviderId.SPICY, network.validatedForProvider)
-    assertTrue(cached is ProviderResult.Found)
-    cached as ProviderResult.Found
-    assertTrue(cached.fromCache)
-    assertEquals(LyricsSource.LRCLIB, cached.document.metadata.source)
-    assertEquals(LyricsProviderId.SPICY, cached.validatedForProvider)
+    assertTrue(network is ProviderResult.NotFound)
+    assertTrue((network as ProviderResult.NotFound).message.orEmpty().contains("lrc"))
+    assertNull(cache.get(LyricsProviderId.SPICY, TRACK, allowExpired = true))
     assertEquals(1, server.requestCount)
   }
 
   @Test
-  fun spicyPrimaryRefreshesLegacyStaticCacheThenKeepsPackedWordTimingAndProvenance() = runTest {
+  fun spicyPrimaryRejectsAutomaticAppleFallbackFromPkceCredential() = runTest {
+    server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("aml")))
+
+    val result = spicy(LyricsProviderId.SPICY).fetch(LyricsRequest(TRACK))
+
+    assertTrue(result is ProviderResult.NotFound)
+    assertTrue((result as ProviderResult.NotFound).message.orEmpty().contains("aml"))
+    assertNull(cache.get(LyricsProviderId.SPICY, TRACK, allowExpired = true))
+    assertEquals(1, server.requestCount)
+  }
+
+  @Test
+  fun spicyPrimaryRefreshesLegacyAutomaticCacheThenKeepsPackedSpicyWordTiming() = runTest {
     cache.put(
       LyricsProviderId.SPICY,
       TRACK,
       static(LyricsSource.LRCLIB),
       rawPayload = """{"Type":"Static","source":"lrc"}""",
-      rawFormat = "json",
+      rawFormat = "spicy-auto-v1:json",
       sourceVerified = true,
     )
     server.enqueue(MockResponse().setResponseCode(200).setBody(spicyPackedSyllableEnvelope()))
@@ -529,7 +611,7 @@ class ProviderIntegrationTest {
     assertTrue(refreshed is ProviderResult.Found)
     refreshed as ProviderResult.Found
     assertFalse(refreshed.fromCache)
-    assertEquals(LyricsSource.APPLE_MUSIC, refreshed.document.metadata.source)
+    assertEquals(LyricsSource.SPICY, refreshed.document.metadata.source)
     assertTrue(refreshed.document is SyllableLyrics)
     val refreshedTokens = (refreshed.document as SyllableLyrics).lines.single().lead.tokens
     assertEquals(listOf("Hel", "lo", "world"), refreshedTokens.map(LyricToken::text))
@@ -540,7 +622,7 @@ class ProviderIntegrationTest {
     cached as ProviderResult.Found
     assertTrue(cached.fromCache)
     assertEquals("json", cached.rawFormat)
-    assertEquals(LyricsSource.APPLE_MUSIC, cached.document.metadata.source)
+    assertEquals(LyricsSource.SPICY, cached.document.metadata.source)
     assertTrue(cached.document is SyllableLyrics)
     assertEquals(refreshedTokens, (cached.document as SyllableLyrics).lines.single().lead.tokens)
     assertEquals(1, server.requestCount)
@@ -575,7 +657,7 @@ class ProviderIntegrationTest {
     result as ProviderResult.Failure
     assertEquals(ProviderFailureCategory.HTTP, result.category)
     assertEquals(503, result.httpStatus)
-    assertNull(result.retryAfterMs)
+    assertEquals(86_400_000L, result.retryAfterMs)
     assertEquals(1, server.requestCount)
   }
 
@@ -592,6 +674,48 @@ class ProviderIntegrationTest {
     assertEquals(1, server.requestCount)
 
     now += 5_001L
+    server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("spt")))
+    assertTrue(sibling.fetch(LyricsRequest(TRACK)) is ProviderResult.Found)
+    assertEquals(2, server.requestCount)
+  }
+
+  @Test
+  fun spicyInnerServerStatusDoesNotSuppressDesktopFallbackQuery() = runTest {
+    val circuit = SpicyHostCircuitBreaker()
+    server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("spl", status = 500)))
+    server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("spt")))
+    val primary = spicy(LyricsProviderId.SPICY, hostCircuitBreaker = circuit)
+    val spotify = spicy(LyricsProviderId.SPOTIFY, hostCircuitBreaker = circuit)
+
+    assertTrue(primary.fetch(LyricsRequest(TRACK)) is ProviderResult.Failure)
+    assertTrue(spotify.fetch(LyricsRequest(TRACK)) is ProviderResult.Found)
+    assertEquals(2, server.requestCount)
+  }
+
+  @Test
+  fun spicyInnerRateLimitBlocksSiblingSourcesForFullRetryAfter() = runTest {
+    var circuitNow = 1_000L
+    val circuit = SpicyHostCircuitBreaker(clock = { circuitNow }, coolDownMs = 5_000L)
+    server.enqueue(
+      MockResponse()
+        .setResponseCode(200)
+        .addHeader("Retry-After", "86400")
+        .setBody(spicyEnvelope("spl", status = 429)),
+    )
+    val primary = spicy(LyricsProviderId.SPICY, hostCircuitBreaker = circuit)
+    val sibling = spicy(LyricsProviderId.SPOTIFY, hostCircuitBreaker = circuit)
+
+    val limited = primary.fetch(LyricsRequest(TRACK))
+    assertTrue(limited is ProviderResult.Failure)
+    assertEquals(86_400_000L, (limited as ProviderResult.Failure).retryAfterMs)
+    assertTrue(sibling.fetch(LyricsRequest(TRACK)) is ProviderResult.Unavailable)
+    assertEquals(1, server.requestCount)
+
+    circuitNow += 86_399_999L
+    assertTrue(sibling.fetch(LyricsRequest(TRACK)) is ProviderResult.Unavailable)
+    assertEquals(1, server.requestCount)
+
+    circuitNow += 2L
     server.enqueue(MockResponse().setResponseCode(200).setBody(spicyEnvelope("spt")))
     assertTrue(sibling.fetch(LyricsRequest(TRACK)) is ProviderResult.Found)
     assertEquals(2, server.requestCount)
@@ -695,7 +819,7 @@ class ProviderIntegrationTest {
     assertTrue(resolution is LyricsResolution.Found)
     resolution as LyricsResolution.Found
     assertEquals(LyricsProviderId.SPICY, resolution.provider)
-    assertEquals(LyricsSource.APPLE_MUSIC, resolution.document.metadata.source)
+    assertEquals(LyricsSource.SPICY, resolution.document.metadata.source)
     assertTrue(resolution.document is SyllableLyrics)
     val line = (resolution.document as SyllableLyrics).lines.single()
     assertEquals("Hello world", line.lead.text)
@@ -752,8 +876,12 @@ class ProviderIntegrationTest {
   fun betterSyncKeepsLocalAbsoluteAndDefaultOrderIsLocked() = runTest {
     val calls = mutableListOf<LyricsProviderId>()
     val local = fakeProvider(LyricsProviderId.LOCAL_TTML, static(LyricsSource.LOCAL_TTML), calls)
-    val spicy = fakeProvider(LyricsProviderId.SPICY, syllable(LyricsSource.SPICY), calls)
-    val orchestrator = LyricsOrchestrator(listOf(spicy, local))
+    val icy = fakeProvider(
+      LyricsProviderId.ICY_DATABASE,
+      syllable(LyricsSource.ICY_DATABASE),
+      calls,
+    )
+    val orchestrator = LyricsOrchestrator(listOf(icy, local))
 
     val result = orchestrator.resolve(
       LyricsRequest(TRACK),
@@ -766,10 +894,9 @@ class ProviderIntegrationTest {
     assertEquals(
       listOf(
         LyricsProviderId.LOCAL_TTML,
-        LyricsProviderId.SPICY,
+        LyricsProviderId.ICY_DATABASE,
         LyricsProviderId.LRCLIB,
         LyricsProviderId.APPLE_MUSIC,
-        LyricsProviderId.SPOTIFY,
       ),
       LyricsResolutionPolicy.DEFAULT_PROVIDER_ORDER,
     )
@@ -849,7 +976,7 @@ class ProviderIntegrationTest {
     ),
   )
 
-  private fun lrclibEntry(synced: String) = """
+  private fun lrclibEntry(synced: String, lyricsFile: String? = null) = """
     {
       "id": 1,
       "trackName": "Test Song",
@@ -859,7 +986,7 @@ class ProviderIntegrationTest {
       "instrumental": false,
       "plainLyrics": "Hello",
       "syncedLyrics": ${Json.encodeToString(synced)},
-      "lyricsfile": null
+      "lyricsfile": ${Json.encodeToString(lyricsFile)}
     }
   """.trimIndent()
 
@@ -919,7 +1046,7 @@ class ProviderIntegrationTest {
         "operationId": "0",
         "result": {
           "data": [
-            ["StartTime","EndTime","Text","IsPartOfWord",false,"Type",1.25,2.8,"Syllables",1.55,2.2,1.7,2.4,"Syllable","source","aml","Content","Vocal","Lead","Hel",true,"lo","world","Background","back"],
+            ["StartTime","EndTime","Text","IsPartOfWord",false,"Type",1.25,2.8,"Syllables",1.55,2.2,1.7,2.4,"Syllable","source","spl","Content","Vocal","Lead","Hel",true,"lo","world","Background","back"],
             [-1,3,5,14,16,13,15,-5,-1,3,5,18,23,17,-1,3,0,1,8,6,7,-3,3,4,2,0,1,3,19,6,9,20,21,9,10,4,22,10,7,4,-5,-1,3,0,1,8,11,12,-5,-1,4,2,0,1,3,24,11,12,4]
           ],
           "httpStatus": 200,
@@ -930,6 +1057,8 @@ class ProviderIntegrationTest {
   """.trimIndent()
 
   private companion object {
+    const val WORD_TTML =
+      "<tt timing=\"Word\"><body><p begin=\"1\" end=\"2\"><span begin=\"1\" end=\"2\">Hello</span></p></body></tt>"
     val TRACK = TrackIdentity(
       uri = "spotify:track:1234567890123456789012",
       title = "Test Song",

@@ -40,8 +40,8 @@ android {
     applicationId = "com.icy.lyrics"
     minSdk = 33
     targetSdk = 36
-    versionCode = 3
-    versionName = "1.0.0-alpha01"
+    versionCode = 4
+    versionName = "1.1.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     buildConfigField(
@@ -49,7 +49,6 @@ android {
       "SPOTIFY_CLIENT_ID",
       "\"${providers.gradleProperty("spotifyClientId").orNull ?: localProperties.getProperty("spotifyClientId", "")}\"",
     )
-    buildConfigField("String", "SPICY_LYRICS_VERSION", "\"6.3.12\"")
   }
 
   val uploadSigningConfig = if (signingPropertiesFile.exists()) {
@@ -98,6 +97,17 @@ android {
     "META-INF/AL2.0",
     "META-INF/LGPL2.1",
   )
+
+  if (privateFeatureProject != null) {
+    val privateSourceSets =
+      sourceSets as org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.AndroidSourceSet>
+    privateSourceSets.getByName("personal").kotlin.srcDir(
+      privateFeatureProject.layout.projectDirectory.dir("app-personal-src"),
+    )
+    privateSourceSets.maybeCreate("testPersonal").kotlin.srcDir(
+      privateFeatureProject.layout.projectDirectory.dir("app-personal-test-src"),
+    )
+  }
 }
 
 dependencies {

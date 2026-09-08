@@ -8,17 +8,17 @@ HIGHLIGHTS
 • Adjustable global lyric timing from -5000 ms to +5000 ms.
 • Optional remembered timing offsets for individual Bluetooth audio devices.
 • Import TTML files and keep them in a durable on-device local lyrics library.
-• Multiple lyric sources with clear source labels, including local TTML, LRCLIB, and optional Spicy Lyrics-powered lookup.
+• Four individually controlled lyric sources in a clear order: saved local TTML, the Icy Lyrics Database, LRCLIB, then an optional Apple Music-backed fallback.
 • Portrait, split-screen, and landscape layouts designed for phones and larger displays.
 • Privacy-safe diagnostics with copy, share, and clear controls.
 
 REQUIREMENTS
 Icy Lyrics requires Android 13 or later and the Spotify Android app for now-playing detection and transport controls. On first use, Android asks you to grant notification-listener access so Icy Lyrics can read Spotify’s media session. Nearby-device permission is optional and is used only to identify the active Bluetooth output for per-device timing.
 
-A Spotify account connection is optional. Local TTML and LRCLIB work without it. Spicy Lyrics support is experimental, disabled by default, and requires a separately connected Spotify session. Icy Lyrics asks for explicit consent before sharing a short-lived Spotify access token with Spicy Lyrics for lyric requests.
+A Spotify account connection is optional. Local TTML, the Icy Lyrics Database, and LRCLIB work without it. A connection is used only if you enable the Apple Music-backed fallback, or if Spotify's notification omits the exact track ID needed for lookup. The Apple Music fallback is provided through Spicy Lyrics; Icy Lyrics explains this and asks for consent before sharing a short-lived Spotify access token for that lyric request.
 
 PRIVACY
-Imported TTML is stored locally on your device. Spotify credentials use Android Keystore-backed encryption. Diagnostics redact credentials and track identifiers, keep at most 200 events, and expire after seven days. Icy Lyrics does not treat Spotify as a direct lyrics endpoint. See the privacy policy for full details.
+Imported TTML is stored locally on your device. When enabled, the Icy Lyrics Database receives only the exact Spotify track URI and does not receive your Spotify access token. It is contacted when a song is loaded or you explicitly reload it, then the result is cached on your device to avoid repeated requests. Spotify credentials use Android Keystore-backed encryption. Diagnostics redact credentials and track identifiers, keep at most 200 events, and expire after seven days. Icy Lyrics does not treat Spotify as a direct lyrics endpoint. See the privacy policy for full details.
 
 Lyrics availability, accuracy, and timing depend on the selected third-party or local source. Some tracks may have no synchronized lyrics.
 

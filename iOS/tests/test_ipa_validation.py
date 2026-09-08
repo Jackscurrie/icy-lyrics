@@ -8,7 +8,43 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
-from package_ipa import committed_asset_hashes, corresponding_source, macho, source_instructions, spotify_configuration, validate_committed_source, validate_dependencies, validate_minimum_os
+from package_ipa import application_version, committed_asset_hashes, corresponding_source, macho, source_instructions, spotify_configuration, validate_committed_source, validate_dependencies, validate_minimum_os
+
+class ApplicationVersionValidation(unittest.TestCase):
+    def info(self):
+        return {
+            "CFBundleShortVersionString": "1.1.0",
+            "CFBundleVersion": "4",
+            "IcyDisplayVersion": "1.1.0",
+        }
+
+    def test_intended_release_values_are_normalized_for_the_build_report(self):
+        self.assertEqual({
+            "marketingVersion": "1.1.0",
+            "buildVersion": "4",
+            "displayVersion": "1.1.0",
+        }, application_version(self.info()))
+
+    def test_missing_empty_and_non_string_values_are_rejected(self):
+        for key in self.info():
+            for value in (None, "", 4):
+                with self.subTest(key=key, value=value), self.assertRaisesRegex(ValueError, "Missing or invalid"):
+                    info = self.info()
+                    info[key] = value
+                    application_version(info)
+
+    def test_stale_mismatched_and_unexpanded_values_are_rejected(self):
+        for key, value in (
+            ("CFBundleShortVersionString", "1.0.0"),
+            ("CFBundleVersion", "3"),
+            ("IcyDisplayVersion", "1.0.0-alpha01"),
+            ("CFBundleShortVersionString", "$(MARKETING_VERSION)"),
+            ("CFBundleVersion", "$(CURRENT_PROJECT_VERSION)"),
+        ):
+            with self.subTest(key=key, value=value), self.assertRaisesRegex(ValueError, "Expected Icy Lyrics 1.1.0 build 4"):
+                info = self.info()
+                info[key] = value
+                application_version(info)
 
 class SpotifyConfigurationValidation(unittest.TestCase):
     def info(self,client="a"*32):

@@ -69,8 +69,11 @@ class IcyLyricsViewModel(application: Application) : AndroidViewModel(applicatio
   fun setRevealEnabled(value: Boolean) { controller.setRevealEnabled(value) }
   fun setSourceStrategy(value: SourceStrategy) { controller.setSourceStrategy(value) }
   fun setDebugEnabled(value: Boolean) { controller.setDebugEnabled(value) }
-  fun setSpicyEnabled(value: Boolean) { controller.setSpicyEnabled(value) }
-  fun setSpicyTokenSharingConsent(value: Boolean) { controller.setSpicyTokenSharingConsent(value) }
+  fun setIcyDatabaseEnabled(value: Boolean) { controller.setIcyDatabaseEnabled(value) }
+  fun setAppleMusicEnabled(value: Boolean) { controller.setAppleMusicEnabled(value) }
+  fun setAppleMusicTokenSharingConsent(value: Boolean) {
+    controller.setAppleMusicTokenSharingConsent(value)
+  }
   fun setLrclibEnabled(value: Boolean) { controller.setLrclibEnabled(value) }
   fun deleteSavedLyrics(trackUri: String) { controller.deleteSavedLyrics(trackUri) }
   fun showArtworkControls() { controller.showArtworkControls() }

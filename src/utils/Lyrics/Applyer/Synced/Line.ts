@@ -24,6 +24,7 @@ import { initLyricsVirtualizer } from "../../LyricsVirtualizer.ts";
 import { ApplyLyricsCredits } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
 import { ApplyLyricsProvider } from "../Credits/ApplyProvider.ts";
+import type { LyricsSource } from "../../schema.ts";
 
 // Define the data structure for lyrics
 interface LyricsLineData {
@@ -39,7 +40,7 @@ interface LyricsData {
   Content: LyricsLineData[];
   StartTime: number;
   SongWriters?: string[];
-  source?: "spt" | "spl" | "aml";
+  source?: LyricsSource;
   classes?: string;
   styles?: Record<string, string>;
 }

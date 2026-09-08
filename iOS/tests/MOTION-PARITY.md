@@ -4,8 +4,9 @@
 `IcyLyricsApp` in one retained composition per media side. It adds no default
 capture runtime, does not change the original 20 scenarios and does not claim
 Android parity. The new sources compile as native main/test KLIBs. All **44
-preserved-Android reference frames are captured**, and a second actual run
-produced the same 44 PNG files byte for byte. The first iOS motion run captured
+preserved-Android reference frames are captured**. The Android 1.1.0 recapture
+produced the same 44 PNG files byte for byte while refreshing the source
+identity for the provider callback changes. The first iOS motion run captured
 the initial frame on each side, then correctly failed because the touch-based
 click helper advanced the clock by 16 ms. The direct semantic-action correction
 awaits a simulator rerun; complete iOS motion capture/comparison remains pending.
@@ -134,11 +135,12 @@ review. Track remaining coverage in [VISUAL-ACCEPTANCE.md](../docs/VISUAL-ACCEPT
 
 ## Preserved Android reference and strict comparison
 
-The [reference archive](evidence/android-motion-v1-reference.zip) is 23,256,905
+The [reference archive](evidence/android-motion-v1-reference.zip) is 23,249,293
 bytes, SHA-256
-`e5e9022384c8cbaf2ea7708fa66d37851716ee1fd6a1def948ac843b81398bf3`.
+`6740d8968a68b25df87fa4ae1d88a02f7a1197d4be21f1675a78b4ac95d0c2e4`.
 It contains `baseline/{left,right}` PNG/JSON evidence and provenance, including
-the first-run manifests and verification that all 44 repeated PNGs match.
+verification that all 44 Android 1.1.0 PNGs remain byte-identical to the prior
+reference.
 Its metadata is [android-motion-v1-reference.json](evidence/android-motion-v1-reference.json).
 
 Both actual Android tests settled at 2,016 ms. Their action clocks were

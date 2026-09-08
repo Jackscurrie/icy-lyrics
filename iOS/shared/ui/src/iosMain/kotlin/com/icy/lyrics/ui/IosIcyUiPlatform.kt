@@ -51,8 +51,20 @@ class IosIcyUiPlatform(
   override val fixedFrameTimeNanos: Long? = null,
   private val assetLoader: (String) -> ByteArray = ::readIcyAsset,
 ) : IcyUiPlatform {
-  override val onboardingInstructions =
-    "Connect Spotify, allow access in the system sign-in window, then come back here."
+  override val onboardingCopy = IcyOnboardingCopy(
+    title = "Connect Spotify",
+    description =
+      "Icy Lyrics reads Spotify's current playback to show the song, playback time, artwork, and synced lyrics. It does not record audio or ask for your Spotify password.",
+    stepsHeading = "In the Spotify sign-in window:",
+    steps = listOf(
+      "1. Sign in to the Spotify account you use for playback.",
+      "2. Review the requested playback access.",
+      "3. Tap “Agree” to return to Icy Lyrics.",
+      "4. Start playing a song in Spotify, then return here.",
+    ),
+    actionLabel = "Connect Spotify",
+    footer = "Spotify may briefly switch to its app while Icy Lyrics connects to current playback.",
+  )
   override val emptyPlayerInstructions =
     "The player appears as soon as Spotify shares its current playback."
   override val aboutDescription =

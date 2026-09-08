@@ -155,6 +155,7 @@ object LrcParser {
 
   private fun sourceLabel(source: LyricsSource): String = when (source) {
     LyricsSource.LOCAL_TTML -> "Local TTML"
+    LyricsSource.ICY_DATABASE -> "Icy Lyrics Database"
     LyricsSource.SPICY -> "Spicy Lyrics"
     LyricsSource.SPOTIFY -> "Spotify"
     LyricsSource.APPLE_MUSIC -> "Apple Music"

@@ -33,6 +33,10 @@ data class AppSettings(
   val globalTimingOffsetMs: Int = 0,
   val rememberBluetoothTiming: Boolean = true,
   val sourceSelectionMode: SourceSelectionMode = SourceSelectionMode.STRICT_PRIORITY,
+  val icyDatabaseEnabled: Boolean = true,
+  // These legacy-named fields now exclusively control the Apple Music
+  // compatibility fallback. Keeping their serialized names migrates existing
+  // consent without silently asking users to approve token sharing again.
   val spicyEnabled: Boolean = false,
   val spicyTokenSharingConsent: Boolean = false,
   val lrclibEnabled: Boolean = true,

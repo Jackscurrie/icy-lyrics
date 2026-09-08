@@ -26,8 +26,10 @@ class SettingsRepository(private val backend: SettingsBackend) {
   suspend fun setKeepScreenAwake(value: Boolean) = update { it.copy(keepScreenAwake = value) }
   suspend fun setDebugEnabled(value: Boolean) = update { it.copy(debugEnabled = value) }
   suspend fun setRememberBluetoothTiming(value: Boolean) = update { it.copy(rememberBluetoothTiming = value) }
-  suspend fun setSpicyEnabled(value: Boolean) = update { it.copy(spicyEnabled = value) }
-  suspend fun setSpicyTokenSharingConsent(value: Boolean) = update { it.copy(spicyTokenSharingConsent = value) }
+  suspend fun setIcyDatabaseEnabled(value: Boolean) = update { it.copy(icyDatabaseEnabled = value) }
+  suspend fun setAppleMusicEnabled(value: Boolean) = update { it.copy(spicyEnabled = value) }
+  suspend fun setAppleMusicTokenSharingConsent(value: Boolean) =
+    update { it.copy(spicyTokenSharingConsent = value) }
   suspend fun setLrclibEnabled(value: Boolean) = update { it.copy(lrclibEnabled = value) }
 
   suspend fun setGlobalTimingOffsetMs(value: Int) = update {

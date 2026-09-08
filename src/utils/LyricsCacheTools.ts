@@ -21,7 +21,7 @@ export const RemoveCurrentLyrics_AllCaches = async (ui: boolean = false) => {
     if (PageView.IsOpened) {
       const uri = SpotifyPlayer.GetUri();
       if (uri && uri !== undefined) {
-        fetchLyrics(uri).then(ApplyLyrics);
+        fetchLyrics(uri, { intent: "refresh" }).then(ApplyLyrics);
       }
     }
   } catch (error) {
@@ -37,7 +37,7 @@ export const RemoveLyricsCache = async (ui: boolean = false) => {
     if (PageView.IsOpened) {
       const uri = SpotifyPlayer.GetUri();
       if (uri && uri !== undefined) {
-        fetchLyrics(uri).then(ApplyLyrics);
+        fetchLyrics(uri, { intent: "refresh" }).then(ApplyLyrics);
       }
     }
   } catch (error) {

@@ -34,11 +34,16 @@ beforeAll(() => {
 describe("raw TTML compatibility fallback", () => {
   it("uses the API parser only when the local parser rejects a TTML dialect", async () => {
     const { decodeLyricsPayload } = await import("../src/utils/Lyrics/payload.ts");
-    const lyrics = await decodeLyricsPayload(UNSUPPORTED_LOCAL_DIALECT);
+    const controller = new AbortController();
+    const lyrics = await decodeLyricsPayload(UNSUPPORTED_LOCAL_DIALECT, {
+      signal: controller.signal,
+    });
 
-    expect(query).toHaveBeenCalledWith([
-      { operation: "parseTTML", variables: { ttml: UNSUPPORTED_LOCAL_DIALECT } },
-    ]);
+    expect(query).toHaveBeenCalledWith(
+      [{ operation: "parseTTML", variables: { ttml: UNSUPPORTED_LOCAL_DIALECT } }],
+      {},
+      { signal: controller.signal }
+    );
     expect(lyrics).toMatchObject({
       Type: "Static",
       source: "spl",

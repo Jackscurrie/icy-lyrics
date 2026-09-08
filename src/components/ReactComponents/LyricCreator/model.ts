@@ -1,4 +1,4 @@
-export type CreatorSource = "spt" | "aml" | "spl" | "ldb" | "ttml" | "draft";
+export type CreatorSource = "spt" | "aml" | "spl" | "icy" | "ldb" | "ttml" | "draft";
 
 export interface CreatorSourceProvenance {
   code: CreatorSource;
@@ -55,6 +55,7 @@ export const CREATOR_SOURCE_LABELS: Partial<Record<CreatorSource, string>> = {
   spt: "Spotify",
   aml: "Apple Music",
   spl: "Lyrics database",
+  icy: "Icy Lyrics Database",
   ldb: "Local TTML",
   ttml: "Local TTML",
   draft: "Draft",
@@ -252,7 +253,7 @@ export function creatorProjectFromLyrics(
 ): CreatorProject {
   const uri = typeof lyrics?.uri === "string" ? lyrics.uri : "";
   const project = createEmptyProject(uri);
-  const sourceCode: CreatorSource = ["spt", "aml", "spl", "ldb"].includes(lyrics?.source)
+  const sourceCode: CreatorSource = ["spt", "aml", "spl", "icy", "ldb"].includes(lyrics?.source)
     ? lyrics.source
     : "draft";
   project.source = {

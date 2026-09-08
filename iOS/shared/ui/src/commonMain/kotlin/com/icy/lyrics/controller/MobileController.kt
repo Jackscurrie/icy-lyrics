@@ -65,12 +65,24 @@ class MobileController(
   private var lyricsJob: Job? = null
   private var overlayJob: Job? = null
   private var wasLandscape = false
+  private var resolutionSettings: LyricsResolutionSettings? = null
   private val settingsMutex = Mutex()
 
   init {
     scope.launch { playback.snapshots.collect { snapshot -> mutableState.update { it.copy(nowPlaying = snapshot) } } }
     scope.launch { playback.snapshots.map { it?.identity }.distinctUntilChanged().collect { load(it) } }
-    scope.launch { backend.settings.collect { settings -> mutableState.update { it.copy(settings = settings.toUi(it.settings)) } } }
+    scope.launch {
+      backend.settings.collect { settings ->
+        val nextResolutionSettings = settings.toResolutionSettings()
+        val shouldReload = resolutionSettings?.let { it != nextResolutionSettings } == true
+        resolutionSettings = nextResolutionSettings
+        mutableState.update { it.copy(settings = settings.toUi(it.settings)) }
+        // Multiple presentation controllers can observe the same settings. A cache-allowed reload
+        // lets every surface drop a disabled source while the provider mutex/cache still coalesces
+        // any newly enabled Icy Database lookup.
+        if (shouldReload) load(mutableState.value.nowPlaying?.identity)
+      }
+    }
     scope.launch { backend.deviceTiming.collect { timing -> mutableState.update { current -> current.copy(settings = current.settings.copy(
       activeBluetoothDeviceId = timing.key, activeBluetoothDeviceName = timing.name, activeBluetoothTimingOffsetMs = timing.offsetMs,
     )) } } }
@@ -111,13 +123,14 @@ class MobileController(
   fun setBackgroundStyle(value: BackgroundStyle) = edit { copy(backgroundStyle = if (value == BackgroundStyle.ANIMATED) StoredBackground.ANIMATED else StoredBackground.STATIC_BLURRED) }
   fun setBackgroundEnabled(value: Boolean) = edit { copy(backgroundEnabled = value) }
   fun setKeepScreenAwake(value: Boolean) = edit { copy(keepScreenAwake = value) }
-  fun setUseLocalTtml(value: Boolean) = edit(true) { copy(useLocalTtml = value) }
+  fun setUseLocalTtml(value: Boolean) = edit { copy(useLocalTtml = value) }
   fun setRevealEnabled(value: Boolean) = edit { copy(revealEnabled = value) }
-  fun setSourceStrategy(value: SourceStrategy) = edit(true) { copy(sourceSelectionMode = if (value == SourceStrategy.STRICT_PRIORITY) SourceSelectionMode.STRICT_PRIORITY else SourceSelectionMode.BETTER_SYNC) }
+  fun setSourceStrategy(value: SourceStrategy) = edit { copy(sourceSelectionMode = if (value == SourceStrategy.STRICT_PRIORITY) SourceSelectionMode.STRICT_PRIORITY else SourceSelectionMode.BETTER_SYNC) }
   fun setDebugEnabled(value: Boolean) = edit { copy(debugEnabled = value) }
-  fun setSpicyEnabled(value: Boolean) = edit(true) { copy(spicyEnabled = value) }
-  fun setSpicyTokenSharingConsent(value: Boolean) = edit(true) { copy(spicyTokenSharingConsent = value) }
-  fun setLrclibEnabled(value: Boolean) = edit(true) { copy(lrclibEnabled = value) }
+  fun setIcyDatabaseEnabled(value: Boolean) = edit { copy(icyDatabaseEnabled = value) }
+  fun setAppleMusicEnabled(value: Boolean) = edit { copy(spicyEnabled = value) }
+  fun setAppleMusicTokenSharingConsent(value: Boolean) = edit { copy(spicyTokenSharingConsent = value) }
+  fun setLrclibEnabled(value: Boolean) = edit { copy(lrclibEnabled = value) }
 
   fun prepareImport(): TrackIdentity? = state.value.nowPlaying?.identity.also {
     if (it == null) showMessage("Play the matching song before importing its TTML file.")
@@ -143,9 +156,8 @@ class MobileController(
   fun showMessage(message: String) = mutableState.update { it.copy(transientMessage = message.safe()) }
   fun clearTransientMessage() = mutableState.update { it.copy(transientMessage = null) }
 
-  private fun edit(reload: Boolean = false, transform: StoredSettings.() -> StoredSettings) = launchAction {
+  private fun edit(transform: StoredSettings.() -> StoredSettings) = launchAction {
     settingsMutex.withLock { backend.updateSettings(backend.currentSettings().transform()) }
-    if (reload) reloadLyrics()
   }
   private fun launchAction(action: suspend () -> Unit): Job = scope.launch {
     try { action() } catch (cancelled: CancellationException) { throw cancelled }
@@ -169,7 +181,10 @@ class MobileController(
           if (currentGeneration != generation) return@launch
           val found = result as? LyricsResolution.Found
           val selected = found?.let { result.attempts.lastOrNull { attempt -> attempt.provider == found.provider } }
-          val error = result.attempts.lastOrNull { it.outcome == ProviderAttemptOutcome.FAILED || it.outcome == ProviderAttemptOutcome.SOURCE_MISMATCH }?.message?.safe()
+          val error = result.attempts.lastOrNull {
+            it.outcome == ProviderAttemptOutcome.FAILED ||
+              it.outcome == ProviderAttemptOutcome.SOURCE_MISMATCH
+          }?.message?.safe()
           mutableState.update { it.copy(diagnostics = it.diagnostics.copy(
             selectedSource = found?.document?.metadata?.source ?: fallback?.metadata?.source,
             selectedSyncKind = found?.document?.syncKind ?: fallback?.syncKind,
@@ -209,6 +224,24 @@ class MobileController(
   }
 }
 
+private data class LyricsResolutionSettings(
+  val useLocalTtml: Boolean,
+  val sourceSelectionMode: SourceSelectionMode,
+  val icyDatabaseEnabled: Boolean,
+  val lrclibEnabled: Boolean,
+  val appleMusicEnabled: Boolean,
+  val appleMusicTokenSharingConsent: Boolean,
+)
+
+private fun StoredSettings.toResolutionSettings() = LyricsResolutionSettings(
+  useLocalTtml = useLocalTtml,
+  sourceSelectionMode = sourceSelectionMode,
+  icyDatabaseEnabled = icyDatabaseEnabled,
+  lrclibEnabled = lrclibEnabled,
+  appleMusicEnabled = spicyEnabled,
+  appleMusicTokenSharingConsent = spicyTokenSharingConsent,
+)
+
 private fun StoredSettings.toUi(previous: AppSettings) = previous.copy(
   useLocalTtml = useLocalTtml, globalTimingOffsetMs = globalTimingOffsetMs,
   rememberBluetoothOffsets = rememberBluetoothTiming,
@@ -216,7 +249,11 @@ private fun StoredSettings.toUi(previous: AppSettings) = previous.copy(
   backgroundStyle = if (backgroundStyle == StoredBackground.ANIMATED) BackgroundStyle.ANIMATED else BackgroundStyle.STATIC_BLURRED,
   backgroundEnabled = backgroundEnabled, keepScreenAwake = keepScreenAwake, revealEnabled = revealEnabled,
   sourceStrategy = if (sourceSelectionMode == SourceSelectionMode.STRICT_PRIORITY) SourceStrategy.STRICT_PRIORITY else SourceStrategy.PREFER_BETTER_SYNC,
-  debugEnabled = debugEnabled, spicyEnabled = spicyEnabled, spicyTokenSharingConsent = spicyTokenSharingConsent, lrclibEnabled = lrclibEnabled,
+  debugEnabled = debugEnabled,
+  icyDatabaseEnabled = icyDatabaseEnabled,
+  appleMusicEnabled = spicyEnabled,
+  appleMusicTokenSharingConsent = spicyTokenSharingConsent,
+  lrclibEnabled = lrclibEnabled,
 )
 private fun Int.timingStep() = (coerceIn(-5_000, 5_000) / 10.0).roundToInt() * 10
 private fun String.safe() = SecretRedactor.redact(this).take(1_000)

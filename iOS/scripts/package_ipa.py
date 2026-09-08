@@ -21,6 +21,11 @@ from source_fingerprint import fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Bump these with Info.plist and the Android release metadata. Keeping the
+# intended release here makes packaging reject a stale or accidental version.
+EXPECTED_MARKETING_VERSION = "1.1.0"
+EXPECTED_BUILD_VERSION = "4"
+
 def validate_committed_source(repo):
     """A simulator/device match is insufficient if neither matches the published commit."""
     status=subprocess.check_output(["git","status","--porcelain=v1","-z","--untracked-files=all","--",
@@ -240,8 +245,30 @@ def spotify_configuration(info, expected_client_id=None):
     return {"configured":bool(client), "clientIdSha256":hashlib.sha256(client.encode("ascii")).hexdigest() if client else None,
             "redirectUri":redirect,"callbackScheme":scheme}
 
+def application_version(info):
+    """Validate and normalize the three version values exposed by the app."""
+    values = {
+        "marketingVersion": info.get("CFBundleShortVersionString"),
+        "buildVersion": info.get("CFBundleVersion"),
+        "displayVersion": info.get("IcyDisplayVersion"),
+    }
+    if any(not isinstance(value, str) or not value for value in values.values()):
+        raise ValueError("Missing or invalid packaged application version metadata")
+    expected = {
+        "marketingVersion": EXPECTED_MARKETING_VERSION,
+        "buildVersion": EXPECTED_BUILD_VERSION,
+        "displayVersion": EXPECTED_MARKETING_VERSION,
+    }
+    if values != expected:
+        raise ValueError(
+            f"Expected Icy Lyrics {EXPECTED_MARKETING_VERSION} build {EXPECTED_BUILD_VERSION}; "
+            f"packaged application version metadata was {values}"
+        )
+    return values
+
 def validate_app(app, *, resource_hashes=None):
     info=plistlib.loads((app/"Info.plist").read_bytes())
+    app_version=application_version(info)
     spotify_configuration(info)
     assert info["CFBundlePackageType"]=="APPL", "Not an application"
     assert info["UIDeviceFamily"]==[1], "Expected iPhone-only device family"
@@ -280,7 +307,7 @@ def validate_app(app, *, resource_hashes=None):
     validate_dependencies(binaries,executable)
     forbidden={".p12",".pfx",".jks",".keystore",".mobileprovision",".key",".pem"}
     assert not any(path.suffix.lower() in forbidden for path in app.rglob("*")),"Private signing material in app"
-    return info,binaries
+    return info,binaries,app_version
 
 def main():
     app=Path(sys.argv[1]).resolve()
@@ -291,7 +318,7 @@ def main():
     source=corresponding_source(sha)
     assert verification["result"]=="passed" and verification["commit"]==sha,"Missing matching simulator verification"
     assert verification["sourceFingerprint"]==fingerprint(),"Sources changed after simulator verification"
-    info,binaries=validate_app(app)
+    info,binaries,app_version=validate_app(app)
     spotify=spotify_configuration(info,os.environ.get("SPOTIFY_CLIENT_ID"))
     delivery=ROOT/"build/delivery"
     delivery.mkdir(parents=True,exist_ok=True)
@@ -313,7 +340,8 @@ def main():
             "correspondingSource":source,"spotify":spotify,
             "verificationScope":"simulator-tested sources; device binary separately inspected, not executed",
             "createdUtc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"sha256":digest,"bytes":ipa.stat().st_size,
-            "bundleIdentifier":info["CFBundleIdentifier"],"minimumOS":info["MinimumOSVersion"],"binaries":binaries,
+            "bundleIdentifier":info["CFBundleIdentifier"],"minimumOS":info["MinimumOSVersion"],
+            "appVersion":app_version,"binaries":binaries,
             "visualParity":"pending cross-platform comparison and review", "publicBinaryRelease":"not cleared",
             "simulator":verification,"signing":"Main application unsigned; embedded SDK may retain upstream signature. Sideloadly must resign all components."}
     (delivery/"build-report.json").write_text(json.dumps(report,indent=2)+"\n")

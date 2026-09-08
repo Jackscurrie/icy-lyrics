@@ -10,6 +10,10 @@ object TrackIdentityExtractor {
   private val spotifyTrack = Regex("""^spotify:track:([A-Za-z0-9]{22})$""")
   private val spotifyUrl = Regex("""open\.spotify\.com/track/([A-Za-z0-9]{22})""")
   private val bareSpotifyId = Regex("""^[A-Za-z0-9]{22}$""")
+  private val spotifyQualityBadge = Regex(
+    """\s*[•·]\s*Lossless\s*$""",
+    RegexOption.IGNORE_CASE,
+  )
 
   fun from(snapshot: NowPlayingSnapshot): TrackIdentity {
     val candidates = buildList {
@@ -32,7 +36,11 @@ object TrackIdentityExtractor {
     val metadataIdentity = TrackIdentity(
       uri = "metadata:pending",
       title = snapshot.title.orEmpty(),
-      artists = snapshot.artist?.takeIf(String::isNotBlank)?.let(::listOf).orEmpty(),
+      artists = snapshot.artist
+        ?.takeIf(String::isNotBlank)
+        ?.let(::withoutSpotifyQualityBadge)
+        ?.let(::listOf)
+        .orEmpty(),
       album = snapshot.album.orEmpty(),
       durationMs = snapshot.durationMs,
     )
@@ -44,6 +52,11 @@ object TrackIdentityExtractor {
   private fun extractExplicitSpotifyId(value: String): String? =
     spotifyTrack.matchEntire(value)?.groupValues?.getOrNull(1)
       ?: spotifyUrl.find(value)?.groupValues?.getOrNull(1)
+
+  private fun withoutSpotifyQualityBadge(value: String): String {
+    val original = value.trim()
+    return spotifyQualityBadge.replace(original, "").trim().ifBlank { original }
+  }
 }
 
 data class NowPlayingSnapshot(

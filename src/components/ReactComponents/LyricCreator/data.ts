@@ -1,8 +1,10 @@
 import Platform from "../../Global/Platform.ts";
+import { lookupIcyLyricsDatabase } from "../../../utils/API/IcyLyricsDatabase.ts";
 import { Query } from "../../../utils/API/Query.ts";
 import { $currentLyricsData, $useLocalTtmlLyrics } from "../../../utils/stores.ts";
 import { LyricsStore } from "../../../utils/Lyrics/fetchLyrics.ts";
 import { LocalLyricsManager } from "../../../utils/Lyrics/manager/index.ts";
+import { lyricsFromIcyDatabaseLookup } from "../../../utils/Lyrics/IcyLyricsDatabase.ts";
 import { decodeLyricsPayload } from "../../../utils/Lyrics/payload.ts";
 import { ProcessLyrics } from "../../../utils/Lyrics/ProcessLyrics.ts";
 import { isLyricsObject, normalizeLyricsSchema } from "../../../utils/Lyrics/schema.ts";
@@ -27,7 +29,7 @@ export interface CreatorLyricsLoadResult {
  * A runtime-only preference used by Lyric Creator. It is deliberately separate
  * from the normal Icy Lyrics settings and fetching pipeline.
  */
-export type CreatorLyricsSourcePreference = "auto" | "ldb" | "spt" | "aml" | "spl";
+export type CreatorLyricsSourcePreference = "auto" | "ldb" | "icy" | "spt" | "aml" | "spl";
 
 export const CREATOR_LYRICS_SOURCE_OPTIONS: ReadonlyArray<{
   value: CreatorLyricsSourcePreference;
@@ -35,6 +37,7 @@ export const CREATOR_LYRICS_SOURCE_OPTIONS: ReadonlyArray<{
 }> = [
   { value: "auto", label: "Auto (best available)" },
   { value: "ldb", label: "Saved local TTML" },
+  { value: "icy", label: "Icy Lyrics Database" },
   { value: "spt", label: "Spotify" },
   { value: "aml", label: "Apple Music" },
   { value: "spl", label: "Lyrics database" },
@@ -60,14 +63,16 @@ export function buildCreatorLyricsQueryVariables(
 ): {
   id: string;
   auth: "SpicyLyrics-WebAuth";
-  source?: Exclude<CreatorLyricsSourcePreference, "auto" | "ldb">;
+  source?: Exclude<CreatorLyricsSourcePreference, "auto" | "ldb" | "icy">;
 } {
   const variables: {
     id: string;
     auth: "SpicyLyrics-WebAuth";
-    source?: Exclude<CreatorLyricsSourcePreference, "auto" | "ldb">;
+    source?: Exclude<CreatorLyricsSourcePreference, "auto" | "ldb" | "icy">;
   } = { id: trackId, auth: "SpicyLyrics-WebAuth" };
-  if (preference !== "auto" && preference !== "ldb") variables.source = preference;
+  if (preference !== "auto" && preference !== "ldb" && preference !== "icy") {
+    variables.source = preference;
+  }
   return variables;
 }
 
@@ -418,11 +423,14 @@ function sourceFromLyrics(
   lyrics: Record<string, any>,
   fallback: CreatorSourceProvenance
 ): CreatorSourceProvenance {
-  const code = ["spt", "aml", "spl", "ldb"].includes(lyrics.source) ? lyrics.source : fallback.code;
+  const code = ["spt", "aml", "spl", "icy", "ldb"].includes(lyrics.source)
+    ? lyrics.source
+    : fallback.code;
   const labels: Record<string, string> = {
     spt: "Spotify",
     aml: "Apple Music",
     spl: "Lyrics database",
+    icy: "Icy Lyrics Database",
     ldb: "Local TTML",
   };
   return {
@@ -508,13 +516,31 @@ export async function loadLyricsForCreator(
     }
   }
 
+  if (preference === "auto" || preference === "icy") {
+    const icyLookup = await lookupIcyLyricsDatabase(uri, { signal });
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    const icyLyrics = await lyricsFromIcyDatabaseLookup(icyLookup, uri, { signal });
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    if (icyLyrics) {
+      return {
+        lyrics: icyLyrics,
+        source: sourceFromLyrics(icyLyrics, {
+          code: "icy",
+          label: "Icy Lyrics Database",
+        }),
+      };
+    }
+    if (preference === "icy") return unavailableCreatorSource(preference);
+  }
+
   const trackId = uri.split(":")[2];
   if (!trackId) return { lyrics: null, source: { code: "draft", label: "No source" } };
   const accessToken = await Platform.GetSpotifyAccessToken();
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   const result = await Query(
     [{ operation: "lyrics", variables: buildCreatorLyricsQueryVariables(trackId, preference) }],
-    { "SpicyLyrics-WebAuth": `Bearer ${accessToken}` }
+    { "SpicyLyrics-WebAuth": `Bearer ${accessToken}` },
+    { signal }
   );
   const lyricResult = result.get("0");
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
@@ -534,7 +560,7 @@ export async function loadLyricsForCreator(
     };
   }
 
-  const lyrics = await decodeLyricsPayload(lyricResult.data);
+  const lyrics = await decodeLyricsPayload(lyricResult.data, { signal });
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!lyrics) return { lyrics: null, source: { code: "draft", label: "No lyrics found" } };
   await ProcessLyrics(lyrics);

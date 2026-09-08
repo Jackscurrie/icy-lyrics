@@ -28,6 +28,24 @@ fun LrclibConfig(
   allowInsecureForTests: Boolean = false,
 ): LrclibConfig = LrclibConfig(baseUrl.toString().toHttpUrl(), userAgent, requestSpacingMs, maxResponseBytes, allowInsecureForTests)
 
+fun IcyLyricsDatabaseConfig(
+  endpoint: HttpUrl,
+  userAgent: String = "IcyLyricsAndroid/1.1.0 (+https://jackscurrie.com/icy-lyrics)",
+  maxResponseBytes: Long = 2L * 1_024L * 1_024L,
+  requestTimeoutMs: Long = 15_000L,
+  positiveCacheTtlMs: Long = 30L * 24L * 60L * 60L * 1_000L,
+  negativeCacheTtlMs: Long = 60L * 60L * 1_000L,
+  allowInsecureForTests: Boolean = false,
+): IcyLyricsDatabaseConfig = IcyLyricsDatabaseConfig(
+  endpoint = endpoint.toString().toHttpUrl(),
+  userAgent = userAgent,
+  maxResponseBytes = maxResponseBytes,
+  requestTimeoutMs = requestTimeoutMs,
+  positiveCacheTtlMs = positiveCacheTtlMs,
+  negativeCacheTtlMs = negativeCacheTtlMs,
+  allowInsecureForTests = allowInsecureForTests,
+)
+
 fun SpotifyCatalogConfig(
   baseUrl: HttpUrl,
   maxResponseBytes: Long = 1L * 1_024L * 1_024L,
@@ -58,6 +76,22 @@ fun LrclibProvider(
   diagnostics: DiagnosticSink = DiagnosticSink.NONE,
   wait: suspend (Long) -> Unit = { delay(it) },
 ): LrclibProvider = LrclibProvider(OkHttpTransport(client), cache, config, enabled, online, diagnostics, wait)
+
+fun IcyLyricsDatabaseProvider(
+  client: OkHttpClient,
+  cache: LyricsCacheRepository,
+  config: IcyLyricsDatabaseConfig = IcyLyricsDatabaseConfig(),
+  enabled: suspend () -> Boolean = { true },
+  online: () -> Boolean = { true },
+  diagnostics: DiagnosticSink = DiagnosticSink.NONE,
+): IcyLyricsDatabaseProvider = IcyLyricsDatabaseProvider(
+  client = OkHttpTransport(client),
+  cache = cache,
+  config = config,
+  enabled = enabled,
+  online = online,
+  diagnostics = diagnostics,
+)
 
 fun SpotifyTrackResolver(
   client: OkHttpClient,

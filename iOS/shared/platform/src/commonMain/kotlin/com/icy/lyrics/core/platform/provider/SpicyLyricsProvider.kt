@@ -16,6 +16,7 @@ import com.icy.lyrics.core.platform.diagnostics.DiagnosticInput
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticSeverity
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticSink
 import com.icy.lyrics.core.platform.network.readUtf8Limited
+import com.icy.lyrics.core.platform.network.retryAfterMs
 import com.icy.lyrics.core.platform.storage.CachedLyrics
 import com.icy.lyrics.core.platform.storage.LyricsCacheRepository
 import com.icy.lyrics.core.platform.network.NetworkException
@@ -77,16 +78,25 @@ class SpicyHostCircuitBreaker(
   private var blockedUntilEpochMs = 0L
   private var blockedMessage = "Spicy Lyrics is temporarily unavailable."
 
-  private val mutex = kotlinx.coroutines.sync.Mutex()
+  private val stateMutex = kotlinx.coroutines.sync.Mutex()
+  private val requestMutex = kotlinx.coroutines.sync.Mutex()
 
-  suspend fun currentMessage(): String? = mutex.withLock {
+  suspend fun currentMessage(): String? = stateMutex.withLock {
     if (clock() >= blockedUntilEpochMs) return@withLock null
     blockedMessage
   }
 
-  suspend fun trip(message: String) = mutex.withLock {
-    blockedUntilEpochMs = clock() + coolDownMs
+  suspend fun trip(message: String, retryAfterMs: Long? = null) = stateMutex.withLock {
+    val requestedCoolDown = retryAfterMs?.coerceIn(coolDownMs, MAX_COOL_DOWN_MS) ?: coolDownMs
+    blockedUntilEpochMs = maxOf(blockedUntilEpochMs, clock() + requestedCoolDown)
     blockedMessage = message.take(160)
+  }
+
+  /** Prevent the automatic, Apple, and Spotify adapters from bursting the same host. */
+  suspend fun <T> runRequest(block: suspend () -> T): T = requestMutex.withLock { block() }
+
+  private companion object {
+    const val MAX_COOL_DOWN_MS = 24L * 60L * 60L * 1_000L
   }
 }
 
@@ -112,18 +122,18 @@ class SpicyLyricsProvider(
 
   override suspend fun fetch(request: LyricsRequest): ProviderResult {
     if (!enabled()) {
-      return ProviderResult.Unavailable(ProviderUnavailableReason.DISABLED, "Spicy Lyrics is disabled.")
+      return ProviderResult.Unavailable(ProviderUnavailableReason.DISABLED, "${sourceLabel()} is disabled.")
     }
     if (!tokenSharingConsent()) {
       return ProviderResult.Unavailable(
         ProviderUnavailableReason.NOT_CONFIGURED,
-        "Spotify token sharing with Spicy Lyrics has not been approved.",
+        "Token sharing for ${sourceLabel()} has not been approved.",
       )
     }
     val trackId = request.track.spotifyTrackId
       ?: return ProviderResult.Unavailable(
         ProviderUnavailableReason.UNSUPPORTED_TRACK,
-        "Spicy Lyrics requires an exact Spotify track URI.",
+        "${sourceLabel()} requires an exact Spotify track URI.",
       )
 
     val cached = if (request.allowCached) cache.get(id, request.track) else null
@@ -143,8 +153,8 @@ class SpicyLyricsProvider(
     val stale = (cache.get(id, request.track, allowExpired = true) as? CachedLyrics.Hit)
       ?.takeIf { it.isUsableForProvider() }
     if (!online()) {
-      return stale?.found("Offline; showing stale Spicy Lyrics cache")
-        ?: ProviderResult.Unavailable(ProviderUnavailableReason.OFFLINE, "Spicy Lyrics is unavailable offline.")
+      return stale?.found("Offline; showing stale ${sourceLabel()} cache")
+        ?: ProviderResult.Unavailable(ProviderUnavailableReason.OFFLINE, "${sourceLabel()} is unavailable offline.")
     }
     hostCircuitBreaker.currentMessage()?.let { message ->
       return stale?.found("Host unavailable; showing stale Spicy Lyrics cache")
@@ -154,24 +164,31 @@ class SpicyLyricsProvider(
     val token = tokenSource.accessToken()?.usableAccessToken()
       ?: return ProviderResult.Unavailable(
         ProviderUnavailableReason.AUTH_REQUIRED,
-        "Spicy Lyrics needs an experimental Spotify PKCE token.",
+        "${sourceLabel()} needs a connected Spotify session.",
       )
 
-    val firstAttempt = execute(trackId, token, request)
-    val response = if (firstAttempt.isAuthRejection()) {
-      val replacement = tokenSource.refreshAfterRejection(token)
-        ?.usableAccessToken()
-        ?.takeUnless { it == token }
-      if (replacement != null) execute(trackId, replacement, request) else firstAttempt
-    } else {
-      firstAttempt
-    }
-    if (response.isAuthRejection()) {
-      hostCircuitBreaker.trip("Spicy Lyrics rejected the Spotify authorization for this lookup.")
-      log(request, "auth", response.httpStatus(), "Spicy Lyrics rejected the Spotify token.")
+    val response = hostCircuitBreaker.runRequest {
+      hostCircuitBreaker.currentMessage()?.let(QueryAttempt::Blocked) ?: run {
+        val firstAttempt = execute(trackId, token, request)
+        val completedAttempt = if (firstAttempt.isAuthRejection()) {
+          val replacement = tokenSource.refreshAfterRejection(token)
+            ?.usableAccessToken()
+            ?.takeUnless { it == token }
+          if (replacement != null) execute(trackId, replacement, request) else firstAttempt
+        } else {
+          firstAttempt
+        }
+        if (completedAttempt.isAuthRejection()) {
+          hostCircuitBreaker.trip("Spicy Lyrics rejected the Spotify authorization for this lookup.")
+          log(request, "auth", completedAttempt.httpStatus(), "Spicy Lyrics rejected the Spotify token.")
+        }
+        completedAttempt
+      }
     }
 
     return when (response) {
+      is QueryAttempt.Blocked -> stale?.found("Host unavailable; showing stale Spicy Lyrics cache")
+        ?: ProviderResult.Unavailable(ProviderUnavailableReason.OFFLINE, response.message)
       QueryAttempt.Queued -> ProviderResult.Queued(
         message = "${sourceLabel()} is still preparing this track.",
       )
@@ -189,15 +206,16 @@ class SpicyLyricsProvider(
             document = parsed.document,
             rawFormat = parsed.format,
             message = sourceLabel(),
-            validatedForProvider = id.takeIf { it == LyricsProviderId.SPICY },
           )
         }
-        is ParsedQuery.NotFound -> {
-          ProviderResult.NotFound(parsed.message)
-        }
+        is ParsedQuery.NotFound -> stale?.found(
+          "${sourceLabel()} refresh unavailable (${parsed.message}); showing verified stale lyrics",
+        ) ?: ProviderResult.NotFound(parsed.message)
         is ParsedQuery.Failed -> parsed.result
       }
-      is QueryAttempt.Failed -> stale?.found("Network error; showing stale Spicy Lyrics cache")
+      is QueryAttempt.Failed -> stale?.found(
+        "${response.result.message}; showing verified stale Spicy Lyrics cache",
+      )
         ?: response.result
     }
   }
@@ -236,6 +254,9 @@ class SpicyLyricsProvider(
       .header("Sec-Fetch-Dest", "empty")
       .header("Sec-Fetch-Mode", "cors")
       .header("Sec-Fetch-Site", "cross-site")
+      .header("Sec-Ch-Ua", SPOTIFY_DESKTOP_CLIENT_HINT)
+      .header("Sec-Ch-Ua-Mobile", "?0")
+      .header("Sec-Ch-Ua-Platform", "\"Windows\"")
       .header("SpicyLyrics-Version", config.compatibilityVersion)
       .header("User-Agent", SPOTIFY_DESKTOP_USER_AGENT)
       .header("X-mode", "2")
@@ -264,8 +285,12 @@ class SpicyLyricsProvider(
           )
         }
         if (!response.isSuccessful) {
-          if (response.code >= 500) {
-            hostCircuitBreaker.trip("Spicy Lyrics is temporarily unavailable after a server error.")
+          val retryAfterMs = response.headers.retryAfterMs()
+          if (response.code == 429 || response.code >= 500) {
+            hostCircuitBreaker.trip(
+              "Spicy Lyrics is temporarily unavailable after HTTP ${response.code}.",
+              retryAfterMs,
+            )
           }
           log(lyricsRequest, "http", response.code, "Spicy Lyrics request failed.")
           return QueryAttempt.Failed(
@@ -273,6 +298,7 @@ class SpicyLyricsProvider(
               ProviderFailureCategory.HTTP,
               "Spicy Lyrics returned HTTP ${response.code}.",
               response.code,
+              retryAfterMs,
             ),
           )
         }
@@ -297,8 +323,27 @@ class SpicyLyricsProvider(
         }
         // Desktop queues only a 503 in query result slot "0". An outer HTTP
         // 503 is a failed Query request and must not be reinterpreted here.
-        if (envelope.httpStatus == 503) QueryAttempt.Queued
-        else QueryAttempt.Complete(envelope)
+        if (envelope.httpStatus == 503) {
+          QueryAttempt.Queued
+        } else if (envelope.httpStatus == 429 || envelope.httpStatus >= 500) {
+          val retryAfterMs = response.headers.retryAfterMs()
+          if (envelope.httpStatus == 429) {
+            hostCircuitBreaker.trip(
+              "Spicy Lyrics is rate limited after query status 429.",
+              retryAfterMs,
+            )
+          }
+          QueryAttempt.Failed(
+            ProviderResult.Failure(
+              ProviderFailureCategory.HTTP,
+              "Spicy Lyrics query returned status ${envelope.httpStatus}.",
+              envelope.httpStatus,
+              retryAfterMs,
+            ),
+          )
+        } else {
+          QueryAttempt.Complete(envelope)
+        }
       }
     } catch (error: CancellationException) {
       throw error
@@ -405,7 +450,17 @@ class SpicyLyricsProvider(
       )
     }
     val explicitSource = decoded.explicitSource()
-    if (id != LyricsProviderId.SPICY) {
+    if (id == LyricsProviderId.SPICY && decoded is JsonObject &&
+      LyricsSource.fromCode(explicitSource.orEmpty()) != LyricsSource.SPICY
+    ) {
+      return ParsedQuery.NotFound(
+        if (explicitSource == null) {
+          "Spicy Lyrics database was unavailable because its JSON response did not identify an spl source."
+        } else {
+          "Spicy Lyrics database was unavailable; automatic lookup returned $explicitSource instead."
+        },
+      )
+    } else if (id != LyricsProviderId.SPICY) {
       if (explicitSource == null) {
         return ParsedQuery.NotFound(
           "${sourceLabel()} was unavailable because the response did not identify that source.",
@@ -425,7 +480,6 @@ class SpicyLyricsProvider(
           request.track.exactStorageKey,
           sourceOverride = when {
             id != LyricsProviderId.SPICY -> id.expectedSource
-            explicitSource == null -> LyricsSource.SPICY
             else -> null
           },
         )
@@ -496,15 +550,15 @@ class SpicyLyricsProvider(
     fromCache = true,
     rawFormat = publicRawFormat(),
     message = message,
-    validatedForProvider = id.takeIf { it == LyricsProviderId.SPICY },
   )
 
   private fun CachedLyrics.Hit.isUsableForProvider(): Boolean =
     sourceVerified && if (id == LyricsProviderId.SPICY) {
-      // Positive rows written before the normal-player parity fix came from a
-      // Creator-hinted request. Refresh them once instead of allowing an old
-      // line-synced fallback to mask the corrected automatic desktop query.
-      rawFormat?.startsWith(PRIMARY_CACHE_FORMAT_PREFIX) == true
+      // Only rows written by this provenance-safe contract may satisfy the
+      // primary route. Earlier `spicy-auto-v1` rows can contain AML/LRCLIB and
+      // must be refreshed rather than masquerading as Spicy database results.
+      rawFormat?.startsWith(PRIMARY_CACHE_FORMAT_PREFIX) == true &&
+        document.metadata.source == LyricsSource.SPICY
     } else {
       document.metadata.source == id.expectedSource
     }
@@ -569,6 +623,7 @@ class SpicyLyricsProvider(
   private sealed interface QueryAttempt {
     data class Complete(val envelope: QueryEnvelope) : QueryAttempt
     data object Queued : QueryAttempt
+    data class Blocked(val message: String) : QueryAttempt
     data class Failed(val result: ProviderResult.Failure) : QueryAttempt
   }
 
@@ -586,9 +641,11 @@ class SpicyLyricsProvider(
     private const val AUTH_HEADER = "SpicyLyrics-WebAuth"
     private const val SPOTIFY_XPUI_ORIGIN = "https://xpui.app.spotify.com"
     private const val SPOTIFY_DESKTOP_USER_AGENT =
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
-        "Spotify/1.2.63 Chrome/132.0.6834.210 Electron/34.3.1 Safari/537.36"
-    private const val PRIMARY_CACHE_FORMAT_PREFIX = "spicy-auto-v1:"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+        "Chrome/146.0.7680.179 Spotify/1.2.98.301 Safari/537.36"
+    private const val SPOTIFY_DESKTOP_CLIENT_HINT =
+      "\"Not-A.Brand\";v=\"24\", \"Chromium\";v=\"146\""
+    private const val PRIMARY_CACHE_FORMAT_PREFIX = "spicy-desktop-v2:"
     private const val MAX_CACHED_RAW_CHARS = 1_000_000
     private val UPDATE_SENTINEL_MARKERS = listOf(
       "please update spicy lyrics",

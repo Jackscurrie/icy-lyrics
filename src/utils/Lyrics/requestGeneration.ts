@@ -29,4 +29,8 @@ export class LyricsRequestGeneration {
   currentGeneration(): number {
     return this.generation;
   }
+
+  hasActiveUri(uri: string | null): boolean {
+    return this.activeUri === uri;
+  }
 }

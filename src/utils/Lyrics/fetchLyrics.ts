@@ -5,6 +5,7 @@ import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import PageView, { PageContainer } from "../../components/Pages/PageView.ts";
 import { isCreatorPreviewActive } from "../../components/ReactComponents/LyricCreator/previewOwnership.ts";
 import { GetExpireStore } from "../../modules/Store.ts";
+import { lookupIcyLyricsDatabase } from "../API/IcyLyricsDatabase.ts";
 import { Query } from "../API/Query.ts";
 import Logger from "../Logger.ts";
 import {
@@ -14,10 +15,16 @@ import {
   $useLocalTtmlLyrics,
 } from "../stores.ts";
 import { LyricsQueueRetry } from "./LyricsQueueRetry.ts";
+import { lyricsFromIcyDatabaseLookup } from "./IcyLyricsDatabase.ts";
 import { LocalLyricsManager } from "./manager/index.ts";
 import { decodeLyricsPayload } from "./payload.ts";
 import { ProcessLyrics } from "./ProcessLyrics.ts";
 import { LyricsRequestGeneration, type LyricsRequestToken } from "./requestGeneration.ts";
+import {
+  ResolutionCoordinator,
+  shouldSettleLyricsResolution,
+  type ResolutionIntent,
+} from "./ResolutionCoordinator.ts";
 import { isLyricsObject, normalizeLyricsSchema } from "./schema.ts";
 import { isSpicyUpdateSentinel } from "./updateSentinel.ts";
 
@@ -28,16 +35,51 @@ const lyricsCacheLogger = new Logger("Lyrics Cache");
 
 export type FetchLyricsResult = [object | string, number] | null;
 
+export type LyricsFetchIntent = ResolutionIntent;
+
+export interface FetchLyricsOptions {
+  intent?: LyricsFetchIntent;
+}
+
+const MAX_RUNTIME_RESOLUTIONS = 128;
+export const REMOTE_LYRICS_CACHE_DAYS = 7;
+const REMOTE_LYRICS_CACHE_VERSION = 2;
+const lyricsResolutionCoordinator = new ResolutionCoordinator<FetchLyricsResult>(
+  shouldSettleLyricsResolution,
+  MAX_RUNTIME_RESOLUTIONS
+);
+const icyDatabaseLyricsByUri = new Map<string, Record<string, any> | null>();
+const activeRequestControllers = new Map<number, AbortController>();
+
+function setBounded<K, V>(map: Map<K, V>, key: K, value: V): void {
+  map.delete(key);
+  map.set(key, value);
+  while (map.size > MAX_RUNTIME_RESOLUTIONS) {
+    const oldestKey = map.keys().next().value as K | undefined;
+    if (oldestKey === undefined) break;
+    map.delete(oldestKey);
+  }
+}
+
+function isQueuedResult(value: Exclude<FetchLyricsResult, null>): boolean {
+  return value[0] === "lyrics-queued" && value[1] === 503;
+}
+
 export const LyricsStore = GetExpireStore<any>(
   "IcyLyrics_LyricsStore_g1",
-  1,
-  { Unit: "Days", Duration: 3 },
+  // Version 2 prevents a pre-1.1.0 Spicy result from masking a newly
+  // available higher-priority Icy database result after the upgrade.
+  REMOTE_LYRICS_CACHE_VERSION,
+  { Unit: "Days", Duration: REMOTE_LYRICS_CACHE_DAYS },
   isDev as true
 );
 
 const requestGuard = new LyricsRequestGeneration();
 
 export function invalidateLyricsRequests(nextUri: string | null = null): number {
+  for (const controller of activeRequestControllers.values()) controller.abort();
+  activeRequestControllers.clear();
+  lyricsResolutionCoordinator.invalidateInFlight();
   const generation = requestGuard.invalidate(nextUri);
   $currentlyFetching.set(false);
   return generation;
@@ -48,8 +90,12 @@ export function getLyricsRequestGeneration(): number {
 }
 
 function beginRequest(uri: string): LyricsRequestToken {
+  for (const controller of activeRequestControllers.values()) controller.abort();
+  activeRequestControllers.clear();
   $currentlyFetching.set(true);
-  return requestGuard.begin(uri);
+  const token = requestGuard.begin(uri);
+  activeRequestControllers.set(token.generation, new AbortController());
+  return token;
 }
 
 function isCurrentRequest(token: LyricsRequestToken): boolean {
@@ -57,7 +103,12 @@ function isCurrentRequest(token: LyricsRequestToken): boolean {
 }
 
 function finishRequest(token: LyricsRequestToken): void {
+  activeRequestControllers.delete(token.generation);
   if (requestGuard.isCurrent(token)) $currentlyFetching.set(false);
+}
+
+function requestSignal(token: LyricsRequestToken): AbortSignal | undefined {
+  return activeRequestControllers.get(token.generation)?.signal;
 }
 
 function setRomanizationClass(hasTransliterations: boolean | undefined): void {
@@ -86,12 +137,21 @@ function result(
   return [descriptor, status];
 }
 
-export default async function fetchLyrics(uri: string): Promise<FetchLyricsResult> {
+async function fetchLyricsInternal(
+  uri: string,
+  options: FetchLyricsOptions
+): Promise<FetchLyricsResult> {
   if (!uri) return null;
   // Creator Preview owns the singleton renderer and supplies its own project
   // clock. Normal route/settings/queue fetches must not mutate that isolated
   // stage; PreviewStage releases ownership and performs one fresh fetch on exit.
   if (isCreatorPreviewActive()) return null;
+  if (SpotifyPlayer.GetUri() !== uri) return null;
+  const intent = options.intent ?? "ensure";
+  if (intent === "refresh") {
+    lyricsResolutionCoordinator.forget(uri);
+    icyDatabaseLyricsByUri.delete(uri);
+  }
   const token = beginRequest(uri);
   lyricsLogger.debug("Fetch requested", { uri, generation: token.generation });
 
@@ -181,8 +241,80 @@ export default async function fetchLyrics(uri: string): Promise<FetchLyricsResul
     lyricsCacheLogger.warn("Ignoring unreadable lyrics cache entry", error);
   }
 
+  const sessionResult = lyricsResolutionCoordinator.getSettled(uri);
+  if (sessionResult && !(intent === "queue-retry" && isQueuedResult(sessionResult))) {
+    const [descriptor, status] = sessionResult;
+    if (isLyricsObject(descriptor)) {
+      const lyricsFromSession = normalizeLyricsSchema(structuredClone(descriptor));
+      const localDisabled = lyricsFromSession.source === "ldb" && !$useLocalTtmlLyrics.get();
+      if (!localDisabled) {
+        lyricsFromSession.uri = uri;
+        $currentLyricsData.set(JSON.stringify(lyricsFromSession));
+        if (!presentLyrics(lyricsFromSession, token)) return null;
+        return [{ ...lyricsFromSession, fromCache: true }, status];
+      }
+      lyricsResolutionCoordinator.forget(uri);
+    } else {
+      return result(descriptor, status, token);
+    }
+  }
+
   if (!navigator.onLine) return result("offline", 400, token);
   ShowLoaderContainer();
+
+  try {
+    let icyLyrics: Record<string, any> | null;
+    if (icyDatabaseLyricsByUri.has(uri)) {
+      icyLyrics = icyDatabaseLyricsByUri.get(uri) ?? null;
+    } else {
+      const icyLookup = await lookupIcyLyricsDatabase(uri, {
+        signal: requestSignal(token),
+      });
+      if (!isCurrentRequest(token)) return null;
+      icyLyrics = await lyricsFromIcyDatabaseLookup(icyLookup, uri, {
+        signal: requestSignal(token),
+      });
+      if (!isCurrentRequest(token)) return null;
+      setBounded(icyDatabaseLyricsByUri, uri, icyLyrics);
+
+      if (icyLookup.kind === "rate-limited") {
+        lyricsLogger.warn("Icy Lyrics Database rate limited this lookup; using Spicy fallback", {
+          uri,
+          retryAfterMs: icyLookup.retryAfterMs,
+        });
+      } else if (icyLookup.kind === "unavailable") {
+        lyricsLogger.warn("Icy Lyrics Database lookup unavailable; using Spicy fallback", {
+          uri,
+          status: icyLookup.httpStatus,
+          reason: icyLookup.reason,
+        });
+      } else if (icyLookup.kind === "found" && !icyLyrics) {
+        lyricsLogger.warn("Icy Lyrics Database returned unsupported TTML; using Spicy fallback", {
+          uri,
+          recordId: icyLookup.recordId,
+        });
+      }
+    }
+
+    if (icyLyrics) {
+      const lyrics = normalizeLyricsSchema(structuredClone(icyLyrics));
+      lyrics.uri = uri;
+      lyrics.source = "icy";
+      $currentLyricsData.set(JSON.stringify(lyrics));
+      try {
+        await LyricsStore.SetItem(uri, lyrics);
+      } catch (error) {
+        lyricsCacheLogger.warn("Could not save Icy database lyrics cache", error);
+      }
+      if (!isCurrentRequest(token)) return null;
+      if (!presentLyrics(lyrics, token)) return null;
+      return [{ ...lyrics, fromCache: false }, 200];
+    }
+  } catch (error) {
+    if (!isCurrentRequest(token)) return null;
+    lyricsLogger.warn("Icy Lyrics Database lookup failed; using Spicy fallback", error);
+    setBounded(icyDatabaseLyricsByUri, uri, null);
+  }
 
   try {
     const accessToken = await Platform.GetSpotifyAccessToken();
@@ -195,7 +327,8 @@ export default async function fetchLyrics(uri: string): Promise<FetchLyricsResul
           variables: { id: trackId, auth: "SpicyLyrics-WebAuth" },
         },
       ],
-      { "SpicyLyrics-WebAuth": `Bearer ${accessToken}` }
+      { "SpicyLyrics-WebAuth": `Bearer ${accessToken}` },
+      { signal: requestSignal(token) }
     );
     if (!isCurrentRequest(token)) return null;
 
@@ -222,7 +355,9 @@ export default async function fetchLyrics(uri: string): Promise<FetchLyricsResul
       return result("status-not-200", status, token);
     }
 
-    const lyrics = await decodeLyricsPayload(lyricsQuery.data);
+    const lyrics = await decodeLyricsPayload(lyricsQuery.data, {
+      signal: requestSignal(token),
+    });
     if (!isCurrentRequest(token)) return null;
     if (!lyrics) {
       HideLoaderContainer();
@@ -254,6 +389,23 @@ export default async function fetchLyrics(uri: string): Promise<FetchLyricsResul
     HideLoaderContainer();
     return ["unknown-error", 0];
   }
+}
+
+/**
+ * Coalesces every automatic request for one exact URI. Reopening a view or
+ * toggling a render-only option reuses the in-flight/settled resolution rather
+ * than starting another HTTP lookup. Explicit user refreshes use `refresh`,
+ * while the scheduled Spicy 503 loop uses `queue-retry`.
+ */
+export default function fetchLyrics(
+  uri: string,
+  options: FetchLyricsOptions = {}
+): Promise<FetchLyricsResult> {
+  if (!uri) return Promise.resolve(null);
+  const intent = options.intent ?? "ensure";
+  return lyricsResolutionCoordinator.run(uri, intent, () =>
+    fetchLyricsInternal(uri, options)
+  );
 }
 
 let containerShowLoaderTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -317,5 +469,9 @@ export function ClearLyricsPageContainer(): void {
 // the gap where an old network response could otherwise remain "current".
 Global.Event.listen("playback:songchange", (event: any) => {
   const nextUri: string | null = event?.data?.item?.uri ?? SpotifyPlayer.GetUri() ?? null;
+  // Spotify can emit duplicate songchange events for the same playback item.
+  // Keep the active generation and its coalesced request intact in that case;
+  // the app-level listener will simply reuse the current/cache/settled result.
+  if (requestGuard.hasActiveUri(nextUri)) return;
   invalidateLyricsRequests(nextUri);
 });

@@ -86,8 +86,9 @@ button only for lyrics authorization. The native integration now uses that
 same **Disconnect Spotify** control whenever either credential purpose exists.
 Stored authorization also makes Settings reachable before the first playback
 snapshot. The existing Connect action authorizes playback; explicitly enabling
-the experimental provider with token-sharing consent can request its separate
-lyrics authorization. Startup does not launch that authorization flow.
+the Apple Music compatibility fallback with token-sharing consent can request
+its separate lyrics authorization. Startup does not launch that authorization
+flow.
 It cancels pending authorization/reconnection, provider and import work,
 disconnects App Remote, clears current playback/artwork/lyrics, and deletes both
 credential purposes. A Keychain deletion error prevents token use in the current

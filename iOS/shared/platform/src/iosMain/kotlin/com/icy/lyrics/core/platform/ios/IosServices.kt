@@ -12,6 +12,8 @@ import com.icy.lyrics.core.platform.database.openIosDatabase
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticEvent
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticRepository
 import com.icy.lyrics.core.platform.network.DarwinLyricsHttpClient
+import com.icy.lyrics.core.platform.provider.IcyLyricsDatabaseProvider
+import com.icy.lyrics.core.platform.provider.IcyLyricsDatabaseConfig
 import com.icy.lyrics.core.platform.provider.LocalTtmlProvider
 import com.icy.lyrics.core.platform.provider.LrclibConfig
 import com.icy.lyrics.core.platform.provider.LrclibProvider
@@ -97,10 +99,17 @@ class IosServices private constructor(
         enabled = { settings.current().spicyEnabled },
         tokenSharingConsent = { settings.current().spicyTokenSharingConsent },
         diagnostics = diagnostics, hostCircuitBreaker = circuit)
-      val lrclib = LrclibProvider(http, cache, LrclibConfig(userAgent = "IcyLyricsIOS/1.0"),
+      val lrclib = LrclibProvider(http, cache, LrclibConfig(
+        userAgent = "IcyLyricsIOS/1.1.0 (https://jackscurrie.com/icy-lyrics; jack@jackscurrie.com)",
+      ),
         enabled = { settings.current().lrclibEnabled }, diagnostics = diagnostics)
+      val icyDatabase = IcyLyricsDatabaseProvider(http, cache,
+        config = IcyLyricsDatabaseConfig(
+          userAgent = "IcyLyricsIOS/1.1.0 (+https://jackscurrie.com/icy-lyrics)",
+        ),
+        enabled = { settings.current().icyDatabaseEnabled }, diagnostics = diagnostics)
       val resolver = PlatformLyricsResolver(LyricsOrchestrator(listOf(localProvider,
-        spicy(LyricsProviderId.SPICY), lrclib, spicy(LyricsProviderId.APPLE_MUSIC), spicy(LyricsProviderId.SPOTIFY))), settings, diagnostics)
+        icyDatabase, lrclib, spicy(LyricsProviderId.APPLE_MUSIC))), settings, diagnostics)
       return IosServices(database, http, settings, local, cache, diagnostics, localProvider,
         SpotifyTrackResolver(http, tokenSource, aliases, diagnostics = diagnostics), resolver,
         DeviceTimingRepository(database.deviceTimingDao()))

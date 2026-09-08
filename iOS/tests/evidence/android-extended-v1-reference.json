@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "suite": "extended-v1",
   "archive": "android-extended-v1-reference.zip",
-  "archiveBytes": 2248624,
-  "archiveSha256": "942e7641952cdf42b69008d0bee7c4e501e1672335c13e6e92abdb3ddd94ee22",
+  "archiveBytes": 2418943,
+  "archiveSha256": "bf9bc37b63d63ac1c90936464ef46c16c606752d9f97ed6036db049a4261d200",
   "caseCount": 11,
   "caseOrder": [
     "portrait-expanded",
@@ -29,8 +29,11 @@
     63
   ],
   "fullDisplayCaptureIncludesSystemBars": true,
+  "captureTree": "android-v2",
+  "captureRunId": "20260908T025403Z-e797567b",
+  "previousReferenceArchiveSha256": "942e7641952cdf42b69008d0bee7c4e501e1672335c13e6e92abdb3ddd94ee22",
   "caseClocksAndActions": "See each raw capture JSON in the archive",
-  "baselineProductionVerifiedFiles": 57,
+  "sourceProductionFilesRecorded": 102,
   "appearanceParityVerified": false,
   "iosComparison": "pending"
 }

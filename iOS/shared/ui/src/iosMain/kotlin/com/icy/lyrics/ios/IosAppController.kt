@@ -102,8 +102,9 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
             onBackgroundEnabled = { controller.setBackgroundEnabled(it) }, onKeepScreenAwake = { controller.setKeepScreenAwake(it) },
             onUseLocalTtml = { controller.setUseLocalTtml(it) }, onRevealEnabled = { controller.setRevealEnabled(it) },
             onSourceStrategy = { controller.setSourceStrategy(it) }, onDebugEnabled = { controller.setDebugEnabled(it) },
-            onSpicyEnabled = ::setSpicyEnabled,
-            onSpicyTokenSharingConsent = ::setSpicyConsent,
+            onIcyDatabaseEnabled = { controller.setIcyDatabaseEnabled(it) },
+            onAppleMusicEnabled = ::setAppleMusicEnabled,
+            onAppleMusicTokenSharingConsent = ::setAppleMusicConsent,
             onConnectSpotify = { host.connectSpotify(false) }, onCancelSpotifyAuthorization = host::cancelSpotifyAuthorization,
             onDisconnectSpotify = host::disconnectSpotify, onLrclibEnabled = { controller.setLrclibEnabled(it) },
             onShareDiagnostics = { host.shareDiagnostics(controller.state.value.diagnostics.asText()) },
@@ -163,12 +164,12 @@ class IosAppController(private val host: IosHost, versionName: String, authAvail
     controller.setAuthorization(false, false)
     controller.refreshPermissions(false, false)
   }
-  private fun setSpicyEnabled(value: Boolean) {
-    val action = controller.setSpicyEnabled(value)
+  private fun setAppleMusicEnabled(value: Boolean) {
+    val action = controller.setAppleMusicEnabled(value)
     requestLyricsAuthorizationAfter(action, value)
   }
-  private fun setSpicyConsent(value: Boolean) {
-    val action = controller.setSpicyTokenSharingConsent(value)
+  private fun setAppleMusicConsent(value: Boolean) {
+    val action = controller.setAppleMusicTokenSharingConsent(value)
     requestLyricsAuthorizationAfter(action, value)
   }
   private fun requestLyricsAuthorizationAfter(action: Job, requested: Boolean) {

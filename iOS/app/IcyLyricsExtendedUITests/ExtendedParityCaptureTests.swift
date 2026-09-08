@@ -17,27 +17,27 @@ final class ExtendedParityCaptureTests: XCTestCase {
     func testSettingsTroubleshooting() throws { try settings("settings-troubleshooting", title: "Troubleshooting") }
     func testSettingsPrivacy() throws { try settings("settings-privacy", title: "Privacy") }
     func testTokenConsent() throws {
-        try capture("token-consent", base: "settings", anchor: "Allow token sharing?") { app in
-            try self.scrollTo("Spicy Lyrics", app: app)
+        try capture("token-consent", base: "settings", anchor: "Enable Apple Music lookup?") { app in
+            try self.scrollTo("Apple Music", app: app)
             // ToggleRow is not a semantic ancestor on Android. Identify the
             // actual Switch using the observed label/description vertical span,
             // then invoke its semantic action rather than tapping coordinates.
-            let label = self.element("Spicy Lyrics", app: app)
-            let description = self.element("Experimental provider using a connected Spotify session.", app: app)
-            try self.requireVisible(label, named: "Spicy Lyrics")
-            try self.requireVisible(description, named: "Spicy Lyrics description")
+            let label = self.element("Apple Music", app: app)
+            let description = self.element("Try Apple Music-backed lyrics last. This compatibility fallback requires a connected Spotify session.", app: app)
+            try self.requireVisible(label, named: "Apple Music")
+            try self.requireVisible(description, named: "Apple Music description")
             let lower = min(label.frame.minY, description.frame.minY)
             let upper = max(label.frame.maxY, description.frame.maxY)
             let switches = app.switches.allElementsBoundByIndex.filter {
                 $0.isHittable && $0.frame.midY >= lower && $0.frame.midY <= upper
             }
             guard switches.count == 1 else {
-                throw ProbeError.missing("Exactly one accessible Switch within the observed Spicy Lyrics label/description span; found \(switches.count)")
+                throw ProbeError.missing("Exactly one accessible Switch within the observed Apple Music label/description span; found \(switches.count)")
             }
             self.actions.append(["action": "identify semantic Switch by observed row text", "label": self.describe(label),
                 "description": self.describe(description), "switch": self.describe(switches[0])])
-            try self.tap(switches[0], named: "Spicy Lyrics Switch")
-            try self.requireVisible(app.buttons["Allow and enable"], named: "Allow and enable")
+            try self.tap(switches[0], named: "Apple Music Switch")
+            try self.requireVisible(app.buttons["Allow and enable Apple Music"], named: "Allow and enable Apple Music")
             try self.requireVisible(app.buttons["Cancel"], named: "Cancel")
         }
     }

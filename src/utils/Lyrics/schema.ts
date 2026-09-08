@@ -1,4 +1,4 @@
-export type LyricsSource = "spt" | "aml" | "spl" | "ldb";
+export type LyricsSource = "spt" | "aml" | "spl" | "icy" | "ldb";
 
 const SOURCE_ALIASES: Record<string, LyricsSource> = {
   spt: "spt",
@@ -9,6 +9,10 @@ const SOURCE_ALIASES: Record<string, LyricsSource> = {
   spl: "spl",
   spicy: "spl",
   spicylyrics: "spl",
+  icy: "icy",
+  icylyrics: "icy",
+  icylyricsdatabase: "icy",
+  icydb: "icy",
   ldb: "ldb",
   local: "ldb",
   localdb: "ldb",

@@ -12,6 +12,7 @@ import com.icy.lyrics.core.platform.storage.LocalTtmlRepository
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -68,6 +69,36 @@ class NativePersistenceTest {
       assertTrue(reopened.spicyEnabled)
       assertTrue(reopened.spicyTokenSharingConsent)
       assertEquals(SettingsDefaults.MAX_TIMING_OFFSET_MS, reopened.globalTimingOffsetMs)
+    } finally {
+      defaults.removePersistentDomainForName(suite)
+    }
+  }
+
+  @Test
+  fun preOnePointOneSettingsDefaultIcyDatabaseToEnabledAndPersistItsToggle() = runBlocking {
+    val suite = "icy-lyrics-test-${NSUUID().UUIDString}"
+    val defaults = NSUserDefaults(suiteName = suite)
+    try {
+      // This is the v2 preferences key used before AppSettings gained icyDatabaseEnabled.
+      defaults.setObject(
+        """{"spicyEnabled":true,"spicyTokenSharingConsent":true,"lrclibEnabled":false}""",
+        forKey = "icy_lyrics_settings_v2",
+      )
+      assertTrue(defaults.synchronize())
+
+      val settings = SettingsRepository(IosSettingsBackend(defaults))
+      val migrated = settings.current()
+      assertTrue(migrated.icyDatabaseEnabled)
+      assertTrue(migrated.spicyEnabled)
+      assertTrue(migrated.spicyTokenSharingConsent)
+      assertFalse(migrated.lrclibEnabled)
+
+      settings.setIcyDatabaseEnabled(false)
+      val reopened = SettingsRepository(IosSettingsBackend(NSUserDefaults(suiteName = suite))).current()
+      assertFalse(reopened.icyDatabaseEnabled)
+      assertTrue(reopened.spicyEnabled)
+      assertTrue(reopened.spicyTokenSharingConsent)
+      assertFalse(reopened.lrclibEnabled)
     } finally {
       defaults.removePersistentDomainForName(suite)
     }

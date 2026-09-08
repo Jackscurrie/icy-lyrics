@@ -29,7 +29,7 @@ beforeAll(() => {
 
 describe("Icy and Spicy Lyrics version compatibility", () => {
   it("keeps Icy's public version separate from the Spicy API compatibility version", () => {
-    expect(ProjectVersion).toBe("1.0.0");
+    expect(ProjectVersion).toBe("1.1.0");
     expect(SpicyLyricsApiVersion).toBe("6.3.12");
     expect(API_COMPATIBILITY_VERSION).toBe(SpicyLyricsApiVersion);
   });

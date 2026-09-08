@@ -55,8 +55,9 @@ data class AppSettings(
   val revealEnabled: Boolean = false,
   val sourceStrategy: SourceStrategy = SourceStrategy.STRICT_PRIORITY,
   val debugEnabled: Boolean = false,
-  val spicyEnabled: Boolean = false,
-  val spicyTokenSharingConsent: Boolean = false,
+  val icyDatabaseEnabled: Boolean = true,
+  val appleMusicEnabled: Boolean = false,
+  val appleMusicTokenSharingConsent: Boolean = false,
   val lrclibEnabled: Boolean = true,
 ) {
   val effectiveTimingOffsetMs: Int

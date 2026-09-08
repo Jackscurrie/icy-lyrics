@@ -51,6 +51,7 @@ private class AndroidSettingsBackend private constructor(
       )
       preferences[Keys.rememberBluetoothTiming] = value.rememberBluetoothTiming
       preferences[Keys.sourceSelectionMode] = value.sourceSelectionMode.name
+      preferences[Keys.icyDatabaseEnabled] = value.icyDatabaseEnabled
       preferences[Keys.spicyEnabled] = value.spicyEnabled
       preferences[Keys.spicyTokenConsent] = value.spicyTokenSharingConsent
       preferences[Keys.lrclibEnabled] = value.lrclibEnabled
@@ -83,6 +84,7 @@ private class AndroidSettingsBackend private constructor(
       sourceSelectionMode = preferences[Keys.sourceSelectionMode]
         ?.let { runCatching { SourceSelectionMode.valueOf(it) }.getOrNull() }
         ?: defaults.sourceSelectionMode,
+      icyDatabaseEnabled = preferences[Keys.icyDatabaseEnabled] ?: defaults.icyDatabaseEnabled,
       spicyEnabled = preferences[Keys.spicyEnabled] ?: defaults.spicyEnabled,
       spicyTokenSharingConsent = preferences[Keys.spicyTokenConsent]
         ?: defaults.spicyTokenSharingConsent,
@@ -102,6 +104,7 @@ private class AndroidSettingsBackend private constructor(
     val globalTimingOffsetMs = intPreferencesKey("lyric_delay_ms")
     val rememberBluetoothTiming = booleanPreferencesKey("remember_bluetooth_timing")
     val sourceSelectionMode = stringPreferencesKey("source_selection_mode")
+    val icyDatabaseEnabled = booleanPreferencesKey("icy_database_enabled")
     val spicyEnabled = booleanPreferencesKey("spicy_enabled")
     val spicyTokenConsent = booleanPreferencesKey("spicy_token_sharing_consent")
     val lrclibEnabled = booleanPreferencesKey("lrclib_enabled")

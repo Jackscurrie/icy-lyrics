@@ -23,6 +23,10 @@ export interface QueryResultGetter {
   get(operationId: string): QueryObjectResult | undefined;
 }
 
+export interface QueryRequestOptions {
+  signal?: AbortSignal;
+}
+
 const queryLogger = new Logger("API Query");
 export const API_COMPATIBILITY_VERSION = SpicyLyricsApiVersion;
 
@@ -55,7 +59,8 @@ export function buildQueryBody(queries: Query[]) {
 
 export async function Query(
   queries: Query[],
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  options: QueryRequestOptions = {}
 ): Promise<QueryResultGetter> {
   const host = Defaults.lyrics.api.url;
 
@@ -71,6 +76,7 @@ export async function Query(
       method: "POST",
       headers: buildQueryHeaders(headers),
       body: JSON.stringify(buildQueryBody(queries)),
+      signal: options.signal,
     });
 
     queryLogger.info("Received response", { status: res.status });
@@ -105,7 +111,11 @@ export async function Query(
       },
     };
   } catch (error) {
-    queryLogger.error("Query error", error);
+    if (options.signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+      queryLogger.debug("Query cancelled");
+    } else {
+      queryLogger.error("Query error", error);
+    }
     throw error;
   }
 }

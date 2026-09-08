@@ -4,17 +4,34 @@ PUBLIC GOOGLE PLAY STORE RELEASE COMING SOON!! Currently in closed testing
  
 Icy Lyrics is a fork of the popular Spicetify lyrics extension "Spicy Lyrics" by Spikerko with multiple fullscreen modes, a lyric creator, and more
 
-Icy Lyrics 1.0.0 is the first public release. The desktop extension auto-updates on startup from jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails.
+Icy Lyrics 1.1.0 is the current public desktop release, following the original 1.0.0 public release. The desktop extension auto-updates on startup from jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails.
 
-## 1.0.0 Highlights
+## 1.1.0 Highlights
 
-- Spotify, Apple Music, and community lyrics through the current Spicy Lyrics API protocol, including packed and raw-TTML responses.
+- Approved TTML from the public Icy Lyrics Database, with automatic fallback to Spotify, Apple Music, and community lyrics through the current Spicy Lyrics API protocol.
+- Packed and raw-TTML Spicy API responses remain supported.
 - Saved TTML files in the `icylyrics` IndexedDB, keyed by the complete Spotify URI and protected from ordinary cache clearing.
 - Searchable settings, Lyric Creator, Lyrics Manager, compact/expanded Now Playing View card, virtualized lyrics, playback offset, volume controls, and the current renderer fixes.
 - Four bounded cinema/fullscreen views: album art only, album art with titles, mixed, and lyrics only.
 - Optional lyrics Reveal Mode and fullscreen-only animated-background blur control.
 
 Saved TTML normally survives Spotify restarts. Clearing Spotify's profile data or uninstalling the client can still remove browser-managed IndexedDB data.
+
+## Lyrics lookup, caching, and API compatibility
+
+For a standard Spotify track, Icy Lyrics uses this source priority:
+
+1. A saved local TTML record for the complete Spotify URI, when saved local lyrics are enabled.
+2. An approved exact-URI match from the Icy Lyrics Database at `https://jackscurrie.com/api/ttml`.
+3. The Spicy Lyrics API as the fallback for Spotify, Apple Music, and community sources.
+
+An Icy Lyrics Database miss, rate limit, timeout, invalid response, or unsupported TTML never blocks the fallback. Full `spotify:local:` URIs remain eligible for saved local TTML but are not sent to the online Icy database.
+
+Lyric Creator's Auto source follows the same order, and its source dropdown can request the Icy Lyrics Database directly when a creator wants to inspect that source alone.
+
+Before making another network request, the extension reuses lyric results cached under the exact complete Spotify URI. Remote results are retained in the expiring cache for up to seven days, concurrent automatic requests for one URI are coalesced, and recent in-session resolutions and Icy database outcomes use bounded 128-entry caches. This reduces repeat downloads when Spotify rebuilds a view or returns to a recently played song, while exact-URI keys prevent different tracks—especially local tracks—from sharing a cache entry. Explicit refreshes and expired entries can be resolved again.
+
+The public Icy Lyrics version and the Spicy API compatibility version are deliberately separate. Icy Lyrics identifies this desktop release as `1.1.0`, while requests to the Spicy service continue to send `SpicyLyrics-Version: 6.3.12`, `client.version: 6.3.12`, and `X-mode: 2`. The Icy release number must not replace that upstream compatibility value.
 
 ## Android repositories
 

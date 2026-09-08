@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
     override val fixedFrameTimeNanos = IcyParityFixtures.FRAME_TIME_NANOS
     override fun monotonicTimeMs() = 0L
     override fun monotonicTimeNanos() = fixedFrameTimeNanos
-    override val versionName = "1.0.0-alpha01"
-    override val onboardingInstructions = "Android opens a system settings page. Enable Icy Lyrics, then come back here."
+    override val versionName = "1.1.0"
+    override val onboardingCopy = androidIcyOnboardingCopy
     override val emptyPlayerInstructions = "The player appears as soon as Spotify publishes its media session."
     override val aboutDescription = "A full-screen lyrics experience for Android and an independently distributed modification of Spicy Lyrics."
     @Composable override fun ReducedMotionEnabled() = IcyParityFixtures.reducedMotion(id)
@@ -43,8 +43,9 @@ import androidx.compose.runtime.remember
       onRevealEnabled = {},
       onSourceStrategy = {},
       onDebugEnabled = {},
-      onSpicyEnabled = {},
-      onSpicyTokenSharingConsent = {},
+      onIcyDatabaseEnabled = {},
+      onAppleMusicEnabled = {},
+      onAppleMusicTokenSharingConsent = {},
       onConnectSpotify = {},
       onCancelSpotifyAuthorization = {},
       onDisconnectSpotify = {},

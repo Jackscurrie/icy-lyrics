@@ -42,7 +42,6 @@ import ApplyLyrics from "./utils/Lyrics/Global/Applyer.ts";
 import { ScrollingIntervalTime } from "./utils/Lyrics/lyrics.ts";
 import { ScrollToActiveLine } from "./utils/Scrolling/ScrollToActiveLine.ts";
 import { ScrollSimplebar } from "./utils/Scrolling/Simplebar/ScrollSimplebar.ts";
-import { $lastFetchedUri } from "./utils/uiState.ts";
 import { needsMigration, showMigrationModal } from "./utils/migration/DataMigration.tsx";
 import { LocalLyricsManager } from "./utils/Lyrics/manager/index.ts";
 import "./css/settings-panel.css";
@@ -737,6 +736,17 @@ async function main() {
     }
     Global.Event.listen("playback:songchange", onSongChange);
 
+    window.addEventListener("online", () => {
+      if (isCreatorPreviewActive()) return;
+      const uri = Spicetify.Player.data?.item?.uri;
+      if (!uri) return;
+      // Transient failures are not settled, so this retries after reconnecting
+      // while durable hits, misses, and queued results keep their cache policy.
+      fetchLyrics(uri).then((lyrics) => {
+        if (!isCreatorPreviewActive()) ApplyLyrics(lyrics);
+      });
+    });
+
     const _initStaticBgMode = $staticBackgroundMode.get();
     if (
       _initStaticBgMode !== "off" &&
@@ -752,15 +762,6 @@ async function main() {
         dynamicBgLogger.error("Unable to prefetch static background");
       }
     }
-
-    window.addEventListener("online", () => {
-      $lastFetchedUri.set(null);
-
-      if (isCreatorPreviewActive()) return;
-      fetchLyrics(Spicetify.Player.data?.item?.uri).then((lyrics) => {
-        if (!isCreatorPreviewActive()) return ApplyLyrics(lyrics);
-      });
-    });
 
     new IntervalManager(ScrollingIntervalTime, () => {
       if (ScrollSimplebar) {

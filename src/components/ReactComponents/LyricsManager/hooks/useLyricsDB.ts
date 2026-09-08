@@ -39,7 +39,7 @@ export function useLyricsDB(): UseLyricsDBResult {
     // lyrics and re-apply the (now deleted) non-playing track's lyrics.
     if (SpotifyPlayer.GetUri() === uri) {
       $currentLyricsData.set("");
-      await ApplyLyrics(await fetchLyrics(uri));
+      await ApplyLyrics(await fetchLyrics(uri, { intent: "refresh" }));
     }
     await refresh();
   }, [refresh]);

@@ -23,10 +23,9 @@ class LyricsOrchestratorTest {
     val orchestrator = LyricsOrchestrator(
       listOf(
         provider(LyricsProviderId.LOCAL_TTML, ProviderResult.NotFound()),
-        provider(LyricsProviderId.SPICY, ProviderResult.Queued(800, "building")),
+        provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Queued(800, "building")),
         provider(LyricsProviderId.LRCLIB, ProviderResult.Found(line(LyricsSource.LRCLIB))),
         provider(LyricsProviderId.APPLE_MUSIC, ProviderResult.Found(line(LyricsSource.APPLE_MUSIC))),
-        provider(LyricsProviderId.SPOTIFY, ProviderResult.Found(line(LyricsSource.SPOTIFY))),
       ),
     )
 
@@ -39,15 +38,15 @@ class LyricsOrchestratorTest {
   }
 
   @Test
-  fun `default strict order is local spicy lrclib apple spotify`() = runTest {
+  fun `default strict order is local icy lrclib apple`() = runTest {
     val calls = mutableListOf<LyricsProviderId>()
     val orchestrator = LyricsOrchestrator(
       LyricsResolutionPolicy.DEFAULT_PROVIDER_ORDER.map { id ->
         recordingProvider(
           id = id,
           calls = calls,
-          result = if (id == LyricsProviderId.SPOTIFY) {
-            ProviderResult.Found(line(LyricsSource.SPOTIFY))
+          result = if (id == LyricsProviderId.APPLE_MUSIC) {
+            ProviderResult.Found(line(LyricsSource.APPLE_MUSIC))
           } else {
             ProviderResult.NotFound()
           },
@@ -57,14 +56,13 @@ class LyricsOrchestratorTest {
 
     val result = orchestrator.resolve(REQUEST) as LyricsResolution.Found
 
-    assertEquals(LyricsProviderId.SPOTIFY, result.provider)
+    assertEquals(LyricsProviderId.APPLE_MUSIC, result.provider)
     assertEquals(
       listOf(
         LyricsProviderId.LOCAL_TTML,
-        LyricsProviderId.SPICY,
+        LyricsProviderId.ICY_DATABASE,
         LyricsProviderId.LRCLIB,
         LyricsProviderId.APPLE_MUSIC,
-        LyricsProviderId.SPOTIFY,
       ),
       calls,
     )
@@ -75,13 +73,13 @@ class LyricsOrchestratorTest {
     val orchestrator = LyricsOrchestrator(
       listOf(
         provider(LyricsProviderId.LOCAL_TTML, ProviderResult.NotFound()),
-        provider(LyricsProviderId.SPICY, ProviderResult.Queued(800)),
-        provider(LyricsProviderId.SPOTIFY, ProviderResult.NotFound()),
+        provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Queued(800)),
+        provider(LyricsProviderId.APPLE_MUSIC, ProviderResult.NotFound()),
       ),
     )
 
     val result = orchestrator.resolve(REQUEST) as LyricsResolution.Pending
-    assertEquals(LyricsProviderId.SPICY, result.provider)
+    assertEquals(LyricsProviderId.ICY_DATABASE, result.provider)
     assertEquals(800L, result.retryAfterMs)
     assertEquals(3, result.attempts.size)
   }
@@ -92,7 +90,7 @@ class LyricsOrchestratorTest {
     val result = LyricsOrchestrator(
       listOf(
         provider(LyricsProviderId.LOCAL_TTML, ProviderResult.Found(local)),
-        provider(LyricsProviderId.SPICY, ProviderResult.Found(syllable(LyricsSource.SPICY))),
+        provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Found(syllable(LyricsSource.ICY_DATABASE))),
       ),
     ).resolve(REQUEST, LyricsResolutionPolicy(LyricsSelectionMode.BETTER_SYNC)) as LyricsResolution.Found
 
@@ -106,27 +104,50 @@ class LyricsOrchestratorTest {
     val result = LyricsOrchestrator(
       listOf(
         provider(LyricsProviderId.LOCAL_TTML, ProviderResult.NotFound()),
-        provider(LyricsProviderId.SPICY, ProviderResult.Found(line(LyricsSource.SPICY))),
-        provider(LyricsProviderId.SPOTIFY, ProviderResult.Found(syllable(LyricsSource.SPOTIFY))),
+        provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Found(line(LyricsSource.ICY_DATABASE))),
+        provider(LyricsProviderId.LRCLIB, ProviderResult.Found(syllable(LyricsSource.LRCLIB))),
         provider(LyricsProviderId.APPLE_MUSIC, ProviderResult.Found(static(LyricsSource.APPLE_MUSIC))),
       ),
     ).resolve(REQUEST, LyricsResolutionPolicy(LyricsSelectionMode.BETTER_SYNC)) as LyricsResolution.Found
-    assertEquals(LyricsProviderId.SPOTIFY, result.provider)
+    assertEquals(LyricsProviderId.LRCLIB, result.provider)
 
     val tie = LyricsOrchestrator(
       listOf(
-        provider(LyricsProviderId.SPICY, ProviderResult.Found(syllable(LyricsSource.SPICY))),
-        provider(LyricsProviderId.SPOTIFY, ProviderResult.Found(syllable(LyricsSource.SPOTIFY))),
+        provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Found(syllable(LyricsSource.ICY_DATABASE))),
+        provider(LyricsProviderId.LRCLIB, ProviderResult.Found(syllable(LyricsSource.LRCLIB))),
       ),
     ).resolve(REQUEST, LyricsResolutionPolicy(LyricsSelectionMode.BETTER_SYNC)) as LyricsResolution.Found
-    assertEquals(LyricsProviderId.SPICY, tie.provider)
+    assertEquals(LyricsProviderId.ICY_DATABASE, tie.provider)
+  }
+
+  @Test
+  fun `better sync stops after the first valid syllable result`() = runTest {
+    val calls = mutableListOf<LyricsProviderId>()
+    val result = LyricsOrchestrator(
+      listOf(
+        recordingProvider(
+          LyricsProviderId.ICY_DATABASE,
+          calls,
+          ProviderResult.Found(syllable(LyricsSource.ICY_DATABASE)),
+        ),
+        recordingProvider(
+          LyricsProviderId.LRCLIB,
+          calls,
+          ProviderResult.Found(syllable(LyricsSource.LRCLIB)),
+        ),
+      ),
+    ).resolve(REQUEST, LyricsResolutionPolicy(LyricsSelectionMode.BETTER_SYNC)) as LyricsResolution.Found
+
+    assertEquals(LyricsProviderId.ICY_DATABASE, result.provider)
+    assertEquals(listOf(LyricsProviderId.ICY_DATABASE), calls)
+    assertEquals(1, result.attempts.size)
   }
 
   @Test
   fun `rejects forged source and captures thrown provider failure`() = runTest {
-    val forged = provider(LyricsProviderId.SPICY, ProviderResult.Found(line(LyricsSource.SPOTIFY)))
+    val forged = provider(LyricsProviderId.ICY_DATABASE, ProviderResult.Found(line(LyricsSource.SPOTIFY)))
     val throwing = object : LyricsProvider {
-      override val id = LyricsProviderId.SPOTIFY
+      override val id = LyricsProviderId.LRCLIB
       override suspend fun fetch(request: LyricsRequest): ProviderResult = error("boom")
     }
     val result = LyricsOrchestrator(listOf(forged, throwing)).resolve(REQUEST) as LyricsResolution.Missing

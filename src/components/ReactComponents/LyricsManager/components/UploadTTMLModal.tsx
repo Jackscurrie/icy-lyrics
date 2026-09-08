@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { SpotifyPlayer } from "../../../../components/Global/SpotifyPlayer.ts";
-import fetchLyrics from "../../../../utils/Lyrics/fetchLyrics.ts";
+import fetchLyrics, {
+  invalidateLyricsRequests,
+} from "../../../../utils/Lyrics/fetchLyrics.ts";
 import ApplyLyrics from "../../../../utils/Lyrics/Global/Applyer.ts";
 import {
   InvalidLocalTtmlError,
@@ -29,7 +31,7 @@ export default function UploadTTMLModal({ onBack, onDone }: UploadTTMLModalProps
   async function applySavedLyrics(uri: string): Promise<void> {
     if (!$useLocalTtmlLyrics.get() || SpotifyPlayer.GetUri() !== uri) return;
     $currentLyricsData.set("");
-    await ApplyLyrics(await fetchLyrics(uri));
+    await ApplyLyrics(await fetchLyrics(uri, { intent: "refresh" }));
   }
 
   async function handleUpload() {
@@ -58,6 +60,7 @@ export default function UploadTTMLModal({ onBack, onDone }: UploadTTMLModalProps
       } else if (error instanceof LocalTtmlPersistenceError) {
         const canApply = $useLocalTtmlLyrics.get() && SpotifyPlayer.GetUri() === uri;
         if (canApply) {
+          invalidateLyricsRequests(uri);
           const sessionLyrics = { ...error.lyrics, uri, source: "ldb" };
           $currentLyricsData.set(JSON.stringify(sessionLyrics));
           await ApplyLyrics([sessionLyrics, 200]);

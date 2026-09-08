@@ -15,6 +15,7 @@ enum class LyricsSyncKind {
 @Serializable
 enum class LyricsSource(val code: String) {
   LOCAL_TTML("ldb"),
+  ICY_DATABASE("icy"),
   SPICY("spl"),
   SPOTIFY("spt"),
   APPLE_MUSIC("aml"),
@@ -33,6 +34,7 @@ enum class LyricsSource(val code: String) {
 
       return when (normalized) {
         "ldb", "local", "localdb", "localttml" -> LOCAL_TTML
+        "icy", "icylyrics", "icylyricsdatabase" -> ICY_DATABASE
         "spl", "spicy", "spicylyrics", "lyricsdatabase" -> SPICY
         "spt", "spotify" -> SPOTIFY
         "aml", "apple", "applemusic" -> APPLE_MUSIC

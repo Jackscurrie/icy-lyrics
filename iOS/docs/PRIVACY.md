@@ -21,8 +21,9 @@ you share to operate their own services under their own terms and policies.
 | --- | --- | --- |
 | Spotify connection and playback | Spotify authorization, current track URI, title, artists, album, duration, artwork, position, pause state and available controls allow the app to display and synchronize lyrics. App Remote supplies live state and controls when its local channel connects; a serial current-playback request supplies metadata and progress when that channel is unavailable. Audio playback stays in Spotify; Icy Lyrics does not record or upload audio. | Spotify's authorization service, installed Spotify app through App Remote, and `api.spotify.com`. |
 | Optional catalog matching | If a track lacks a usable catalog identity, an authorized lookup can read the currently playing track and search by title/artist. A confident match is remembered locally. A complete `spotify:local:` identity stays the local import key. | `api.spotify.com`, using the separate lyrics authorization. |
+| Icy Lyrics Database | When enabled for a catalog track, the app sends only its exact Spotify track URI in an anonymous HTTPS request. It never sends a `spotify:local:` URI or Spotify token. Returned word-synced TTML is parsed locally and cached for 30 days; a miss is cached for one hour. Normal playback updates do not repeat the request for the same song. | `jackscurrie.com/api/ttml`. |
 | LRCLIB lyrics | When enabled, lyric lookup sends title, artist, available album and, for exact matching, duration. LRCLIB is enabled by default. No Spotify token is included. | `lrclib.net/api/`. |
-| Experimental Spicy Lyrics | Disabled by default. Requires both enabling the provider and separate token-sharing consent. Requests send the Spotify catalog track ID, requested source, compatibility version and the short-lived **lyrics** access token. A token is a credential, not anonymous data. Playback credentials and refresh tokens are not sent to this provider. | `api.spicylyrics.org/query`. Apple-backed and Spotify-backed fallback requests also go through this service; the app does not directly authorize Apple Music. |
+| Optional Apple Music fallback | Disabled by default. Requires enabling Apple, a Spotify connection and separate token-sharing consent. Requests send the Spotify catalog track ID, the Apple source selector, compatibility/browser-routing headers and the short-lived Spotify access token. A token is a credential, not anonymous data. Refresh tokens are not sent. | `api.spicylyrics.org/query`. The compatibility route is provided through Spicy Lyrics; the app does not directly authorize Apple Music. Raw Spicy and direct Spotify lyrics are not active sources. |
 | Imported TTML | The selected file's text, parsed lyrics, matching song metadata, complete track key and import timestamps are saved locally. A private copy avoids dependence on continuing access to the original Files provider. | Application storage. The app does not upload imported TTML contents to lyric providers. Selecting a cloud file may cause your Files provider to download it. |
 | Diagnostics | Local provider/playback outcomes, timestamps, HTTP status, redacted messages and hashed track keys help troubleshoot failures. | Local storage, unless you explicitly copy or share diagnostics. |
 
@@ -35,9 +36,10 @@ system services; their own privacy notices apply. See
 [Spotify's privacy policy](https://www.spotify.com/legal/privacy-policy/).
 
 An exact saved TTML match is checked before remote lyric lookup when local
-lyrics are enabled. Without one, enabled providers may receive song metadata,
-including metadata for a local song. Disabling a provider stops using that
-provider; it does not retroactively erase requests already received by it.
+lyrics are enabled. Without one, enabled providers may receive song metadata;
+the Icy Lyrics Database is skipped for local tracks. Disabling a provider stops
+using that provider; it does not retroactively erase requests already received
+by it.
 
 ## Authorization and passwords
 
@@ -75,8 +77,9 @@ those credentials from its own interface.
   The original file in your chosen Files provider is never deleted by this
   action. All eight native cleanup regressions passed in macOS simulator run
   33855937655. Physical-device verification remains pending.
-- Positive provider cache entries normally expire after three days; negative
-  lookups after one hour. Initialization removes expired entries and trims the
+- Icy Lyrics Database positive cache entries expire after 30 days. Other positive
+  provider entries normally expire after three days; negative lookups expire
+  after one hour. Initialization removes expired entries and trims the
   cache to 250 records. During an active session, an expired result
   may still be used when a provider fails. Expiry is not a secure-erasure
   guarantee. Catalog aliases have no automatic age limit in this revision.
@@ -115,8 +118,8 @@ own controls. Rejecting or clearing login cookies may require signing in again.
 
 ## Choices and present deletion limits
 
-Use Settings to disable LRCLIB or the experimental provider, withdraw
-experimental token sharing, change local-lyrics use, or turn off keep-awake.
+Use Settings to disable Local, Icy Lyrics Database, LRCLIB or Apple, withdraw
+Apple fallback token sharing, or turn off keep-awake.
 Use Library to remove saved lyric entries and Diagnostics to clear reports.
 
 The iPhone **Disconnect Spotify** action cancels authorization/reconnection and

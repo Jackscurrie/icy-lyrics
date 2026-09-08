@@ -27,6 +27,7 @@ import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
 import Emphasize from "../Utils/Emphasize.ts";
 import { IsLetterCapable } from "../Utils/IsLetterCapable.ts";
 import { ApplyLyricsProvider } from "../Credits/ApplyProvider.ts";
+import type { LyricsSource } from "../../schema.ts";
 
 // Define the data structure for syllable lyrics
 interface SyllableData {
@@ -61,7 +62,7 @@ interface LyricsData {
   Content: LineData[];
   StartTime: number;
   SongWriters?: string[];
-  source?: "spt" | "spl" | "aml";
+  source?: LyricsSource;
   classes?: string;
   styles?: Record<string, string>;
 }

@@ -12,7 +12,10 @@ const queueLogger = new Logger("Lyrics Queue Retry");
 
 export const LyricsQueueRetry = new LyricsQueueRetryController({
   getCurrentUri: () => SpotifyPlayer.GetUri(),
-  fetch: (uri) => (isCreatorPreviewActive() ? Promise.resolve(null) : fetchLyrics(uri)),
+  fetch: (uri) =>
+    isCreatorPreviewActive()
+      ? Promise.resolve(null)
+      : fetchLyrics(uri, { intent: "queue-retry" }),
   apply: (result) => (isCreatorPreviewActive() ? Promise.resolve() : ApplyLyrics(result)),
   showQueue: () => ShowQueueLoader(),
   setTimer: (callback, delay) => setTimeout(callback, delay),

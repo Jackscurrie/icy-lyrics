@@ -3,9 +3,6 @@ package com.icy.lyrics.core.lyrics.provider
 import com.icy.lyrics.core.lyrics.model.LyricsDocument
 import com.icy.lyrics.core.lyrics.model.LyricsSource
 import com.icy.lyrics.core.lyrics.model.LyricsSyncKind
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
 
 /**
@@ -33,10 +30,9 @@ data class LyricsResolutionPolicy(
     /** Canonical strict priority shared by resolution, diagnostics, and retry promotion. */
     val DEFAULT_PROVIDER_ORDER = listOf(
       LyricsProviderId.LOCAL_TTML,
-      LyricsProviderId.SPICY,
+      LyricsProviderId.ICY_DATABASE,
       LyricsProviderId.LRCLIB,
       LyricsProviderId.APPLE_MUSIC,
-      LyricsProviderId.SPOTIFY,
     )
   }
 }
@@ -142,11 +138,22 @@ class LyricsOrchestrator(
       }
     }
 
-    val remotes = selected.filterNot { it.id == LyricsProviderId.LOCAL_TTML }
-    val results = supervisorScope {
-      remotes.map { provider -> async { provider to fetchSafely(provider, request) } }.awaitAll()
+    val results = mutableListOf<Pair<LyricsProvider, ProviderResult>>()
+    for (provider in selected.filterNot { it.id == LyricsProviderId.LOCAL_TTML }) {
+      val result = fetchSafely(provider, request)
+      results += provider to result
+      attemptsById[provider.id] = result.toAttempt(provider.id)
+      if (result is ProviderResult.Queued && firstQueued == null) {
+        firstQueued = provider.id to result
+      }
+      if (result is ProviderResult.Found &&
+        result.hasExpectedSource(provider.id) &&
+        result.document.syncKind == LyricsSyncKind.SYLLABLE
+      ) {
+        val attempts = selected.mapNotNull { attemptsById[it.id] }
+        return LyricsResolution.Found(result.document, provider.id, attempts)
+      }
     }
-    results.forEach { (provider, result) -> attemptsById[provider.id] = result.toAttempt(provider.id) }
     val attempts = selected.mapNotNull { attemptsById[it.id] }
 
     val winner = results
@@ -160,11 +167,6 @@ class LyricsOrchestrator(
     }
 
     // A queue is useful only when no already-complete provider supplied lyrics.
-    if (firstQueued == null) {
-      results.firstOrNull { it.second is ProviderResult.Queued }?.let { (provider, queued) ->
-        firstQueued = provider.id to (queued as ProviderResult.Queued)
-      }
-    }
     firstQueued?.let { (provider, queued) ->
       return LyricsResolution.Pending(provider, queued.retryAfterMs, queued.message, attempts)
     }
@@ -185,7 +187,7 @@ class LyricsOrchestrator(
 
   private fun ProviderResult.hasExpectedSource(provider: LyricsProviderId): Boolean =
     this is ProviderResult.Found &&
-      (document.metadata.source == provider.expectedSource || validatedForProvider == provider)
+      document.metadata.source == provider.expectedSource
 
   private fun ProviderResult.toAttempt(provider: LyricsProviderId): ProviderAttempt = when (this) {
     is ProviderResult.Found -> {

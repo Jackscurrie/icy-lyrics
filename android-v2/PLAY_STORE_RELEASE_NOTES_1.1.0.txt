@@ -1,0 +1,1 @@
+Icy Lyrics Android 1.1.0 adds the first-party Icy Lyrics Database for word-synced TTML. Lyrics now resolve in this order: saved local TTML, Icy Lyrics Database, LRCLIB, then Apple Music. Every source can be switched on or off. Icy results are cached to reduce network use. This update also makes the first-run Now Playing access instructions clearer and easier to follow.

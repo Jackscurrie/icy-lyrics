@@ -63,6 +63,8 @@ jobs:
         working-directory: android-v2
         run: >-
           ./gradlew --no-daemon
+          :core:lyrics:testDebugUnitTest
+          :core:platform:testDebugUnitTest
           testPlayDebugUnitTest
           lintPlayDebug
           verifyPlayDistributionBoundary

@@ -15,10 +15,36 @@ import androidx.compose.ui.text.rememberTextMeasurer
 
 enum class IcyLegalDocument { AGPL, THIRD_PARTY }
 
+data class IcyOnboardingCopy(
+  val title: String,
+  val description: String,
+  val stepsHeading: String,
+  val steps: List<String>,
+  val actionLabel: String,
+  val footer: String,
+)
+
+/** Canonical Android wording used by Android and deterministic parity fixtures. */
+internal val androidIcyOnboardingCopy = IcyOnboardingCopy(
+  title = "Set up Now Playing access",
+  description =
+    "Icy Lyrics reads Spotify's Now Playing notification to show the song, playback time, artwork, and synced lyrics. It does not read your messages or control your Spotify account.",
+  stepsHeading = "On the Android screen that opens:",
+  steps = listOf(
+    "1. Find Icy Lyrics in the app list.",
+    "2. Tap the switch beside Icy Lyrics. If Android opens another page, turn on “Allow notification access.”",
+    "3. Tap “Allow” in the confirmation message.",
+    "4. Use Android's Back button to return here.",
+  ),
+  actionLabel = "Open notification access",
+  footer =
+    "After you enable Icy Lyrics, use Android's Back button to return. The player will connect automatically.",
+)
+
 /** Native integration only. Layout, text, vectors and interactions stay in common code. */
 interface IcyUiPlatform {
   val versionName: String
-  val onboardingInstructions: String
+  val onboardingCopy: IcyOnboardingCopy
   val emptyPlayerInstructions: String
   val aboutDescription: String
   /** Null retains Android's existing default font and its existing metrics. */

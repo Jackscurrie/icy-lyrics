@@ -20,6 +20,7 @@ import { initLyricsVirtualizer } from "../LyricsVirtualizer.ts";
 import { ApplyLyricsCredits } from "./Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "./OnApply.ts";
 import { ApplyLyricsProvider } from "./Credits/ApplyProvider.ts";
+import type { LyricsSource } from "../schema.ts";
 
 /**
  * Interface for static lyrics data
@@ -33,7 +34,7 @@ export interface StaticLyricsData {
   offline?: boolean;
   classes?: string;
   styles?: StyleProperties;
-  source?: "spt" | "spl" | "aml";
+  source?: LyricsSource;
 }
 
 /**

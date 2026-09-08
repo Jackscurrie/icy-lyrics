@@ -225,9 +225,16 @@ export function ParseTTMLLocally(ttml: string): ParsedTTMLResult | null {
   }
 }
 
-async function ParseTTMLRemotely(ttml: string): Promise<ParsedTTMLResult | null> {
+async function ParseTTMLRemotely(
+  ttml: string,
+  signal?: AbortSignal
+): Promise<ParsedTTMLResult | null> {
   try {
-    const query = await Query([{ operation: "parseTTML", variables: { ttml } }]);
+    const query = await Query(
+      [{ operation: "parseTTML", variables: { ttml } }],
+      {},
+      { signal }
+    );
     const queryResult = query.get("0");
     if (
       !queryResult ||
@@ -243,7 +250,7 @@ async function ParseTTMLRemotely(ttml: string): Promise<ParsedTTMLResult | null>
     if (!isLyricsObject(candidate)) return null;
     return { Result: normalizeLyricsSchema(candidate) };
   } catch (error) {
-    logger.error("Remote TTML fallback failed", error);
+    if (!signal?.aborted) logger.error("Remote TTML fallback failed", error);
     return null;
   }
 }
@@ -254,10 +261,10 @@ async function ParseTTMLRemotely(ttml: string): Promise<ParsedTTMLResult | null>
  */
 export async function ParseTTML(
   ttml: string,
-  options: { allowRemoteFallback?: boolean } = {}
+  options: { allowRemoteFallback?: boolean; signal?: AbortSignal } = {}
 ): Promise<ParsedTTMLResult | null> {
   if (!looksLikeTTML(ttml)) return null;
   const local = ParseTTMLLocally(ttml);
   if (local || options.allowRemoteFallback === false) return local;
-  return ParseTTMLRemotely(ttml);
+  return ParseTTMLRemotely(ttml, options.signal);
 }

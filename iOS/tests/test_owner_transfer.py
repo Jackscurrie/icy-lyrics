@@ -12,8 +12,51 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from bootstrap_age import WORK, bootstrap, digest
 from owner_transfer import (FILES, LABEL, age_transform, checked_members, inspect_delivery,
-                            public_recipient, publish_directory, setup_identity)
+                            public_recipient, publish_directory, setup_identity,
+                            validate_reported_app_metadata)
 from package_ipa import corresponding_source
+
+class ApplicationMetadataBinding(unittest.TestCase):
+    def setUp(self):
+        self.info = {"CFBundleIdentifier": "com.icy.lyrics.ios", "MinimumOSVersion": "16.0"}
+        self.binaries = {"IcyLyrics": {"architecture": "arm64"}}
+        self.app_version = {
+            "marketingVersion": "1.1.0",
+            "buildVersion": "4",
+            "displayVersion": "1.1.0",
+        }
+        self.report = {
+            "bundleIdentifier": "com.icy.lyrics.ios",
+            "minimumOS": "16.0",
+            "appVersion": self.app_version.copy(),
+            "binaries": self.binaries.copy(),
+        }
+
+    def test_inspected_application_version_is_bound_to_the_build_report(self):
+        self.assertEqual(
+            self.report,
+            validate_reported_app_metadata(
+                self.info,
+                self.binaries,
+                self.app_version,
+                self.report,
+            ),
+        )
+
+    def test_missing_or_changed_application_version_is_rejected(self):
+        for value in (None, {}, self.app_version | {"buildVersion": "5"}):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "differs from its build report"):
+                report = self.report.copy()
+                if value is None:
+                    report.pop("appVersion")
+                else:
+                    report["appVersion"] = value
+                validate_reported_app_metadata(
+                    self.info,
+                    self.binaries,
+                    self.app_version,
+                    report,
+                )
 
 class AgeTransport(unittest.TestCase):
     @classmethod

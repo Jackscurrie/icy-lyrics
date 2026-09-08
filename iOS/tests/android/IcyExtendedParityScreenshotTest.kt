@@ -42,7 +42,7 @@ class IcyExtendedParityScreenshotTest {
     ExtendedCase("settings-sources", "settings", "Lyric sources", 3),
     ExtendedCase("settings-troubleshooting", "settings", "Troubleshooting", 4),
     ExtendedCase("settings-privacy", "settings", "Privacy", 5),
-    ExtendedCase("token-consent", "settings", "Allow token sharing?", 3, dialog = true),
+    ExtendedCase("token-consent", "settings", "Enable Apple Music lookup?", 3, dialog = true),
     ExtendedCase("legal-lower", "legal", "Online policies", 3),
     ExtendedCase("legal-agpl", "legal", "GNU AGPL v3 or later", 2, dialog = true),
     ExtendedCase("legal-agpl-scrolled", "legal", "GNU AGPL v3 or later", 2, dialog = true, scrollDialog = true),
@@ -103,15 +103,15 @@ class IcyExtendedParityScreenshotTest {
             // The original Row has no Semantics node: its three switches share
             // a card parent. Disambiguate using the measured label/description
             // vertical span, then click the unique semantic control (no fixed tap coordinates).
-            val rowWithSpicyLabel = hasAnyDescendant(hasText("Spicy Lyrics"))
-            val labelBounds = compose.onNodeWithText("Spicy Lyrics", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-            val descriptionBounds = compose.onNodeWithText("Experimental provider using a connected Spotify session.", useUnmergedTree = true)
+            val rowWithAppleLabel = hasAnyDescendant(hasText("Apple Music"))
+            val labelBounds = compose.onNodeWithText("Apple Music", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            val descriptionBounds = compose.onNodeWithText("Try Apple Music-backed lyrics last. This compatibility fallback requires a connected Spotify session.", useUnmergedTree = true)
               .fetchSemanticsNode().boundsInRoot
-            val switch = compose.onAllNodes(isToggleable() and hasParent(rowWithSpicyLabel), useUnmergedTree = true)
+            val switch = compose.onAllNodes(isToggleable() and hasParent(rowWithAppleLabel), useUnmergedTree = true)
               .fetchSemanticsNodes().single { it.boundsInRoot.center.y in labelBounds.top..descriptionBounds.bottom }
-            compose.onNode(SemanticsMatcher("Spicy Lyrics row switch") { it.id == switch.id }, useUnmergedTree = true).performClick()
+            compose.onNode(SemanticsMatcher("Apple Music row switch") { it.id == switch.id }, useUnmergedTree = true).performClick()
             settle()
-            actions.put(JSONObject().put("action", "clickSwitchInRow").put("rowText", "Spicy Lyrics")
+            actions.put(JSONObject().put("action", "clickSwitchInRow").put("rowText", "Apple Music")
               .put("rowTextVerticalSpanPx", JSONArray(listOf(labelBounds.top, descriptionBounds.bottom)))
               .put("switchBoundsInRootPx", JSONArray(listOf(switch.boundsInRoot.left, switch.boundsInRoot.top,
                 switch.boundsInRoot.right, switch.boundsInRoot.bottom)))

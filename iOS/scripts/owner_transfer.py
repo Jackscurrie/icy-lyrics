@@ -159,6 +159,17 @@ def extract_checked(archive, destination, *, flat=False):
                 with package.open(member) as source, target.open("xb") as output:
                     shutil.copyfileobj(source, output, length=1024 * 1024)
 
+def validate_reported_app_metadata(info, binaries, app_version, report):
+    actual = {
+        "bundleIdentifier": info["CFBundleIdentifier"],
+        "minimumOS": info["MinimumOSVersion"],
+        "appVersion": app_version,
+        "binaries": binaries,
+    }
+    if any(report.get(key) != value for key, value in actual.items()):
+        raise ValueError("Actual application metadata differs from its build report")
+    return actual
+
 def inspect_delivery(directory, expected_commit):
     if {path.name for path in directory.iterdir()} != FILES:
         raise ValueError("Delivery must contain exactly the five validated package files")
@@ -188,9 +199,11 @@ def inspect_delivery(directory, expected_commit):
     with tempfile.TemporaryDirectory(prefix="inspect-ipa-", dir=WORK) as temporary:
         expanded = Path(temporary)
         extract_checked(ipa, expanded)
-        info, binaries = validate_app(expanded / "Payload/IcyLyrics.app", resource_hashes=committed_asset_hashes(expected_commit))
-    if binaries != report.get("binaries") or info["CFBundleIdentifier"] != report.get("bundleIdentifier") or info["MinimumOSVersion"] != report.get("minimumOS"):
-        raise ValueError("Actual application metadata differs from its build report")
+        info, binaries, app_version = validate_app(
+            expanded / "Payload/IcyLyrics.app",
+            resource_hashes=committed_asset_hashes(expected_commit),
+        )
+    validate_reported_app_metadata(info, binaries, app_version, report)
     if spotify_configuration(info) != report.get("spotify"):
         raise ValueError("Packaged Spotify configuration differs from its build report")
     return report

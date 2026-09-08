@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "suite": "mixed-lyrics-motion-v1",
   "archive": "android-motion-v1-reference.zip",
-  "archiveBytes": 23256905,
-  "archiveSha256": "e5e9022384c8cbaf2ea7708fa66d37851716ee1fd6a1def948ac843b81398bf3",
+  "archiveBytes": 23249293,
+  "archiveSha256": "6740d8968a68b25df87fa4ae1d88a02f7a1197d4be21f1675a78b4ac95d0c2e4",
   "frameCount": 44,
   "framesPerSide": 22,
   "sides": [
@@ -21,8 +21,10 @@
     63
   ],
   "singleCompositionPerSide": true,
-  "originalProductionFilesVerified": 57,
-  "repeatIdenticalPngCount": 44,
+  "captureTree": "android-v2",
+  "captureRunId": "20260908T024510Z-688deb03",
+  "previousReferenceArchiveSha256": "e5e9022384c8cbaf2ea7708fa66d37851716ee1fd6a1def948ac843b81398bf3",
+  "pixelsIdenticalToPreviousReference": 44,
   "appearanceParityVerified": false,
   "iosComparison": "pending"
 }

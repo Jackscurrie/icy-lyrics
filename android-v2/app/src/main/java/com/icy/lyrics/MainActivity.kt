@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.icy.lyrics.core.platform.auth.SpotifyAuthorizationLaunch
 import com.icy.lyrics.ui.IcyLyricsApp
 import com.icy.lyrics.ui.LocalIcyUiPlatform
+import com.icy.lyrics.ui.LocalOptionalMixedModePresentation
 import com.icy.lyrics.ui.rememberAndroidIcyUiPlatform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -40,7 +42,13 @@ class MainActivity : ComponentActivity() {
     applySystemBars(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
     setContent {
       val uiPlatform = rememberAndroidIcyUiPlatform()
-      CompositionLocalProvider(LocalIcyUiPlatform provides uiPlatform) {
+      val optionalMixedModePresentation = remember {
+        loadOptionalMixedModePresentation(this@MainActivity)
+      }
+      CompositionLocalProvider(
+        LocalIcyUiPlatform provides uiPlatform,
+        LocalOptionalMixedModePresentation provides optionalMixedModePresentation,
+      ) {
         val state by viewModel.state.collectAsStateWithLifecycle()
         val configuration = androidx.compose.ui.platform.LocalConfiguration.current
         val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -90,8 +98,9 @@ class MainActivity : ComponentActivity() {
           onRevealEnabled = viewModel::setRevealEnabled,
           onSourceStrategy = viewModel::setSourceStrategy,
           onDebugEnabled = viewModel::setDebugEnabled,
-          onSpicyEnabled = viewModel::setSpicyEnabled,
-          onSpicyTokenSharingConsent = viewModel::setSpicyTokenSharingConsent,
+          onIcyDatabaseEnabled = viewModel::setIcyDatabaseEnabled,
+          onAppleMusicEnabled = viewModel::setAppleMusicEnabled,
+          onAppleMusicTokenSharingConsent = viewModel::setAppleMusicTokenSharingConsent,
           onConnectSpotify = ::connectSpotify,
           onCancelSpotifyAuthorization = ::cancelSpotifyAuthorization,
           onDisconnectSpotify = viewModel::disconnectSpotify,

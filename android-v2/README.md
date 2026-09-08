@@ -18,16 +18,17 @@ A clean Android 13+ rewrite of Icy Lyrics. It lives beside the original `android
 Strict priority (the default) uses:
 
 1. Saved local TTML (`ldb`)
-2. The desktop-compatible Spicy Lyrics automatic query (upstream provenance remains visible as `spl`, `aml`, or `spt`)
+2. Icy Lyrics Database (`icy`) at `https://jackscurrie.com/api/ttml`
 3. LRCLIB
 4. Apple Music-backed result (`aml`)
-5. Spotify-backed result (`spt`)
 
-The optional **Prefer better sync** policy keeps local TTML absolute, then chooses the highest timing resolution returned by the remote sources. A queued Spicy request does not prevent a lower-priority source from being shown while it prepares. In strict mode, queued Spicy jobs are rechecked on the desktop cadence (2s, 3s, 4.5s, 6.75s, then every 10s indefinitely) until they resolve or the track changes. As on desktop, the queue cadence ignores `Retry-After`; a visible lower-priority result remains on screen during those checks.
+Each source has its own settings toggle. The optional **Prefer better sync** policy keeps local TTML absolute, then checks enabled remote sources sequentially and chooses the highest timing resolution returned. It stops as soon as a source supplies syllable timing.
 
-Spicy Lyrics is an unofficial/experimental protocol and is disabled by default. Android's primary Spicy route uses the normal desktop extension's exact `POST https://api.spicylyrics.org/query` contract: the `SpicyLyrics-Version`, `X-mode: 2`, and `SpicyLyrics-WebAuth` headers; the `queries` plus `client.version` body; result slot `0`; no Creator-only source variable; and the same packed-response shape. A valid automatic result wins in the Spicy route before LRCLIB while retaining its actual upstream source label for diagnostics. The later Apple and Spotify fallback slots use explicit source requests and validate their returned marker. LRCLIB and local TTML work without Spotify authorization.
+The Icy Lyrics Database adapter anonymously sends only the complete Spotify track URI in an exact-match POST. It parses the returned TTML locally so word timing is preserved. The app performs that request only when a different song is loaded or the user explicitly reloads lyrics. Concurrent app/personal-car surfaces share a serialized cache lookup, successful results remain in the on-device cache for 30 days, and misses remain cached for one hour. Rate limits and server errors fall through without automatic Icy retries.
 
-Spotify's Web API supplies playback/catalog data, not lyric text. The developer app is therefore used for the experimental PKCE token capability and to resolve a notification that lacks a Spotify ID: the app first verifies the signed-in account's currently-playing item, then permits an exact, duration-compatible, unambiguous catalog match. The resolved URI is remembered locally and unlocks the Spicy/Spotify/Apple lyric queries; it is not treated as a direct Spotify lyrics endpoint.
+LRCLIB removes known Spotify quality badges from artist metadata, validates exact responses, tries album/artist/broad/title-only searches, handles reordered or featured artist credits with album/duration corroboration, prefers synchronized representations at equal match confidence, and versions away cache rows written by the older matching policy. Static hits are rechecked for newly available timing, and rejected identities are not negative-cached.
+
+The automatic Spicy Lyrics database source and the direct Spotify lyric source are no longer part of Android resolution. Spotify account integration remains only because the optional Apple Music fallback is still transported through Spicy Lyrics and because it can resolve a notification that lacks a Spotify ID. Spotify's Web API itself supplies playback/catalog data, not lyric text. Local TTML, Icy Lyrics Database, and LRCLIB do not need Spotify authorization.
 
 ## Local setup
 
@@ -38,11 +39,11 @@ sdk.dir=C\:\\path\\to\\Android\\Sdk
 spotifyClientId=your_public_client_id
 ```
 
-For Spotify connection:
+For the optional Apple Music fallback:
 
 1. In the Spotify developer dashboard, register `http://127.0.0.1/callback` as a redirect URI. Leave the port out of the registered URI; the app adds a short-lived dynamically assigned port to each authorization request, as Spotify permits for loopback IP literals.
 2. Build with the public client id above. Do not put a client secret in this app.
-3. In Icy Lyrics settings, connect Spotify, then separately approve the Spicy Lyrics token-sharing dialog.
+3. Enable **Apple Music** in Icy Lyrics settings, approve the one-time token-sharing explanation, and connect Spotify.
 
 Authorization requests only `user-read-currently-playing` and uses Code + PKCE, a CSRF state value, a loopback-only callback, refresh tokens, and Android Keystore-backed AES-GCM storage. There is no exported OAuth activity or custom URI scheme. See Spotify's [PKCE](https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow), [redirect URI](https://developer.spotify.com/documentation/web-api/concepts/redirect_uri), [refresh token](https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens), and [currently playing](https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track) documentation.
 

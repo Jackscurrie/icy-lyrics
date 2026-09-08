@@ -154,8 +154,9 @@ fun IcyLyricsApp(
   onRevealEnabled: (Boolean) -> Unit,
   onSourceStrategy: (SourceStrategy) -> Unit,
   onDebugEnabled: (Boolean) -> Unit,
-  onSpicyEnabled: (Boolean) -> Unit,
-  onSpicyTokenSharingConsent: (Boolean) -> Unit,
+  onIcyDatabaseEnabled: (Boolean) -> Unit,
+  onAppleMusicEnabled: (Boolean) -> Unit,
+  onAppleMusicTokenSharingConsent: (Boolean) -> Unit,
   onConnectSpotify: () -> Unit,
   onCancelSpotifyAuthorization: () -> Unit,
   onDisconnectSpotify: () -> Unit,
@@ -211,8 +212,9 @@ fun IcyLyricsApp(
             onRevealEnabled = onRevealEnabled,
             onSourceStrategy = onSourceStrategy,
             onDebugEnabled = onDebugEnabled,
-            onSpicyEnabled = onSpicyEnabled,
-            onSpicyTokenSharingConsent = onSpicyTokenSharingConsent,
+            onIcyDatabaseEnabled = onIcyDatabaseEnabled,
+            onAppleMusicEnabled = onAppleMusicEnabled,
+            onAppleMusicTokenSharingConsent = onAppleMusicTokenSharingConsent,
             onConnectSpotify = onConnectSpotify,
             onCancelSpotifyAuthorization = onCancelSpotifyAuthorization,
             onDisconnectSpotify = onDisconnectSpotify,
@@ -323,23 +325,60 @@ private fun PlayerHost(
 
 @Composable
 private fun Onboarding(onOpenNotificationAccess: () -> Unit) {
+  val copy = LocalIcyUiPlatform.current.onboardingCopy
   CenteredPage {
-    Text("Welcome to Icy Lyrics", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(12.dp))
-    Text(
-      "Allow now-playing access so Icy Lyrics can follow Spotify without controlling your account.",
-      color = Color.White.copy(alpha = 0.72f),
-      textAlign = TextAlign.Center,
-    )
-    Spacer(Modifier.height(22.dp))
-    Button(onClick = onOpenNotificationAccess) { Text("Allow now-playing access") }
-    Spacer(Modifier.height(10.dp))
-    Text(
-      LocalIcyUiPlatform.current.onboardingInstructions,
-      style = MaterialTheme.typography.bodySmall,
-      color = Color.White.copy(alpha = 0.52f),
-      textAlign = TextAlign.Center,
-    )
+    Surface(
+      modifier = Modifier.fillMaxWidth().sizeIn(maxWidth = 540.dp),
+      shape = RoundedCornerShape(24.dp),
+      color = Color.White.copy(alpha = 0.09f),
+    ) {
+      Column(
+        Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Text(
+          copy.title,
+          style = MaterialTheme.typography.headlineLarge,
+          fontWeight = FontWeight.Bold,
+          textAlign = TextAlign.Center,
+          modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+          copy.description,
+          style = MaterialTheme.typography.bodyLarge,
+          color = Color.White.copy(alpha = 0.88f),
+          textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(22.dp))
+        Surface(
+          shape = RoundedCornerShape(16.dp),
+          color = Color.Black.copy(alpha = 0.24f),
+          modifier = Modifier.fillMaxWidth(),
+        ) {
+          Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(copy.stepsHeading, fontWeight = FontWeight.Bold)
+            copy.steps.forEach { step ->
+              Text(step, color = Color.White.copy(alpha = 0.82f))
+            }
+          }
+        }
+        Spacer(Modifier.height(22.dp))
+        Button(
+          onClick = onOpenNotificationAccess,
+          modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        ) {
+          Text(copy.actionLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+          copy.footer,
+          style = MaterialTheme.typography.bodyMedium,
+          color = Color.White.copy(alpha = 0.7f),
+          textAlign = TextAlign.Center,
+        )
+      }
+    }
   }
 }
 
@@ -578,6 +617,9 @@ private fun LandscapePlayer(
   onSeek: (Long) -> Unit,
 ) {
   val reducedMotion = rememberReducedMotionEnabled()
+  val optionalMixedModePresentation = LocalOptionalMixedModePresentation.current
+  val optionalMixedModeActive =
+    optionalMixedModePresentation?.isActive(state.settings.mixedMediaSide) == true
   val desktopEasing = remember { CubicBezierEasing(0.16f, 1f, 0.3f, 1f) }
   BoxWithConstraints(Modifier.fillMaxSize()) {
     val edgeWidth = landscapeEdgeGutter(maxWidth)
@@ -717,16 +759,29 @@ private fun LandscapePlayer(
           onNext = onNext,
           onSeek = onSeek,
         )
-        LandscapeMode.MIXED -> MixedMode(
-          snapshot = snapshot,
-          playbackPositionMs = playbackPositionMs,
-          layout = desktopMixedLayout,
-          showPersistentPlaybackButtons = controlsPolicy.persistentPlaybackButtons,
-          onPlayPause = onPlayPause,
-          onPrevious = onPrevious,
-          onNext = onNext,
-          onSeek = onSeek,
-        )
+        LandscapeMode.MIXED -> if (optionalMixedModeActive) {
+          optionalMixedModePresentation.Content(
+            snapshot = snapshot,
+            playbackPositionMs = playbackPositionMs,
+            layout = desktopMixedLayout,
+            lyricsEdge = lyricsX,
+            onPlayPause = onPlayPause,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onSeek = onSeek,
+          )
+        } else {
+          MixedMode(
+            snapshot = snapshot,
+            playbackPositionMs = playbackPositionMs,
+            layout = desktopMixedLayout,
+            showPersistentPlaybackButtons = controlsPolicy.persistentPlaybackButtons,
+            onPlayPause = onPlayPause,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onSeek = onSeek,
+          )
+        }
         LandscapeMode.LYRICS -> Box(Modifier.fillMaxSize())
       }
     }
@@ -766,6 +821,11 @@ private fun LandscapePlayer(
       left = true,
       enabled = state.landscapeMode != LandscapeMode.ARTWORK_ONLY,
       width = edgeWidth,
+      bottomInset = if (optionalMixedModeActive && state.landscapeMode == LandscapeMode.MIXED) {
+        optionalMixedModePresentation?.edgeNavigationBottomInset ?: 0.dp
+      } else {
+        0.dp
+      },
       onClick = { onStep(-1) },
     )
     LandscapeEdge(
@@ -1205,6 +1265,7 @@ private fun androidx.compose.foundation.layout.BoxScope.LandscapeEdge(
   left: Boolean,
   enabled: Boolean,
   width: androidx.compose.ui.unit.Dp,
+  bottomInset: androidx.compose.ui.unit.Dp = 0.dp,
   onClick: () -> Unit,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
@@ -1219,6 +1280,7 @@ private fun androidx.compose.foundation.layout.BoxScope.LandscapeEdge(
       .align(if (left) Alignment.CenterStart else Alignment.CenterEnd)
       .fillMaxHeight()
       .width(width)
+      .padding(bottom = bottomInset.coerceAtLeast(0.dp))
       .clickable(
         interactionSource = interactionSource,
         indication = null,
@@ -1253,7 +1315,7 @@ private fun androidx.compose.foundation.layout.BoxScope.LandscapeEdge(
 }
 
 @Composable
-private fun Artwork(bitmap: ImageBitmap?, modifier: Modifier = Modifier) {
+internal fun Artwork(bitmap: ImageBitmap?, modifier: Modifier = Modifier) {
   Box(
     modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.08f)),
     contentAlignment = Alignment.Center,
@@ -1411,13 +1473,14 @@ private fun PlaybackButtons(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun PlaybackTimeline(
+internal fun PlaybackTimeline(
   snapshot: NowPlayingSnapshot,
   positionMs: Long,
   onSeek: (Long) -> Unit,
   inlineTimeLabels: Boolean = false,
   inlineTrackGap: androidx.compose.ui.unit.Dp = 0.dp,
   inlineLabelWidth: androidx.compose.ui.unit.Dp = 48.dp,
+  alwaysShowPlayhead: Boolean = false,
   modifier: Modifier = Modifier,
 ) {
   val duration = snapshot.durationMs?.takeIf { it > 0L } ?: return
@@ -1450,7 +1513,7 @@ private fun PlaybackTimeline(
           Modifier.width(4.dp).height(28.dp),
           contentAlignment = Alignment.Center,
         ) {
-          if (dragPreviewMs != null) {
+          if (alwaysShowPlayhead || dragPreviewMs != null) {
             Box(
               Modifier
                 .width(3.dp)
@@ -1458,6 +1521,8 @@ private fun PlaybackTimeline(
                 .clip(CircleShape)
                 .background(Color.White),
             )
+          }
+          if (dragPreviewMs != null) {
             Popup(
               alignment = Alignment.TopCenter,
               offset = IntOffset(0, popupOffsetPx),
@@ -1785,8 +1850,9 @@ private fun SettingsScreen(
   onRevealEnabled: (Boolean) -> Unit,
   onSourceStrategy: (SourceStrategy) -> Unit,
   onDebugEnabled: (Boolean) -> Unit,
-  onSpicyEnabled: (Boolean) -> Unit,
-  onSpicyTokenSharingConsent: (Boolean) -> Unit,
+  onIcyDatabaseEnabled: (Boolean) -> Unit,
+  onAppleMusicEnabled: (Boolean) -> Unit,
+  onAppleMusicTokenSharingConsent: (Boolean) -> Unit,
   onConnectSpotify: () -> Unit,
   onCancelSpotifyAuthorization: () -> Unit,
   onDisconnectSpotify: () -> Unit,
@@ -1794,7 +1860,7 @@ private fun SettingsScreen(
 ) {
   val settings = state.settings
   val uriHandler = LocalUriHandler.current
-  var showSpicyConsent by remember { mutableStateOf(false) }
+  var showAppleMusicConsent by remember { mutableStateOf(false) }
   Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 18.dp)) {
     ScreenHeader("Settings", onBack)
     LazyColumn(
@@ -1803,7 +1869,6 @@ private fun SettingsScreen(
     ) {
       item {
         SettingsCard("Local lyrics") {
-          ToggleRow("Use saved TTML first", "Saved lyrics always win when enabled.", settings.useLocalTtml, onUseLocalTtml)
           Text(
             "Imported TTML is always saved to your local library.",
             style = MaterialTheme.typography.bodySmall,
@@ -1868,34 +1933,51 @@ private fun SettingsScreen(
       item {
         SettingsCard("Lyric sources") {
           ChoiceRow(SourceStrategy.entries, settings.sourceStrategy, { it.label }, onSourceStrategy)
+          Text(
+            "Strict priority checks these enabled sources from top to bottom.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White.copy(alpha = 0.66f),
+          )
           ToggleRow(
-            "Spicy Lyrics",
-            "Experimental provider using a connected Spotify session.",
-            settings.spicyEnabled,
+            "Saved local TTML",
+            "Use an exact file from your local library before any network request.",
+            settings.useLocalTtml,
+            onUseLocalTtml,
+          )
+          ToggleRow(
+            "Icy Lyrics Database",
+            "Check approved word-synced TTML from jackscurrie.com immediately after saved local files.",
+            settings.icyDatabaseEnabled,
+            onIcyDatabaseEnabled,
+          )
+          ToggleRow(
+            "LRCLIB",
+            "Search LRCLIB after the Icy Lyrics Database misses.",
+            settings.lrclibEnabled,
+            onLrclibEnabled,
+          )
+          ToggleRow(
+            "Apple Music",
+            "Try Apple Music-backed lyrics last. This compatibility fallback requires a connected Spotify session.",
+            settings.appleMusicEnabled,
           ) { enabled ->
-            if (enabled && !settings.spicyTokenSharingConsent) showSpicyConsent = true
-            else onSpicyEnabled(enabled)
+            if (enabled && !settings.appleMusicTokenSharingConsent) showAppleMusicConsent = true
+            else onAppleMusicEnabled(enabled)
           }
-          ToggleRow(
-            "Share Spotify token",
-            "Allows Spicy Lyrics to receive the short-lived Spotify access token for lyric lookup.",
-            settings.spicyTokenSharingConsent,
-          ) { consent ->
-            if (consent) showSpicyConsent = true else onSpicyTokenSharingConsent(false)
-          }
-          when {
-            !state.spotifyAuthAvailable -> Text(
-              "Spotify developer client ID is not configured. Local TTML and LRCLIB still work.",
-              style = MaterialTheme.typography.bodySmall,
-              color = Color.White.copy(alpha = 0.58f),
-            )
-            state.spotifyConnected -> Button(onClick = onDisconnectSpotify) { Text("Disconnect Spotify") }
-            state.spotifyAuthorizationInProgress -> Button(onClick = onCancelSpotifyAuthorization) {
-              Text("Cancel Spotify connection")
+          if (settings.appleMusicEnabled || state.spotifyConnected) {
+            when {
+              !state.spotifyAuthAvailable -> Text(
+                "Apple Music lookup is unavailable because Spotify account integration is not configured. Local, Icy, and LRCLIB still work.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.66f),
+              )
+              state.spotifyConnected -> Button(onClick = onDisconnectSpotify) { Text("Disconnect Spotify") }
+              state.spotifyAuthorizationInProgress -> Button(onClick = onCancelSpotifyAuthorization) {
+                Text("Cancel Spotify connection")
+              }
+              else -> Button(onClick = onConnectSpotify) { Text("Connect Spotify for Apple Music") }
             }
-            else -> Button(onClick = onConnectSpotify) { Text("Connect Spotify") }
           }
-          ToggleRow("LRCLIB", "Search LRCLIB after the Spicy database misses.", settings.lrclibEnabled, onLrclibEnabled)
         }
       }
       item {
@@ -1935,26 +2017,26 @@ private fun SettingsScreen(
       item { Spacer(Modifier.height(20.dp)) }
     }
   }
-  if (showSpicyConsent) {
+  if (showAppleMusicConsent) {
     AlertDialog(
-      onDismissRequest = { showSpicyConsent = false },
-      title = { Text("Allow token sharing?") },
+      onDismissRequest = { showAppleMusicConsent = false },
+      title = { Text("Enable Apple Music lookup?") },
       text = {
         Text(
-          "Spicy Lyrics is an experimental third-party service. Icy Lyrics will send it your short-lived Spotify access token only for lyric requests. The token is never written to diagnostics.",
+          "The Apple Music fallback is provided through Spicy Lyrics. Icy Lyrics sends that service a short-lived Spotify access token only for this lyric lookup. The token is never written to diagnostics.",
         )
       },
       confirmButton = {
         TextButton(
           onClick = {
-            showSpicyConsent = false
-            onSpicyTokenSharingConsent(true)
-            onSpicyEnabled(true)
+            showAppleMusicConsent = false
+            onAppleMusicTokenSharingConsent(true)
+            onAppleMusicEnabled(true)
           },
-        ) { Text("Allow and enable") }
+        ) { Text("Allow and enable Apple Music") }
       },
       dismissButton = {
-        TextButton(onClick = { showSpicyConsent = false }) { Text("Cancel") }
+        TextButton(onClick = { showAppleMusicConsent = false }) { Text("Cancel") }
       },
     )
   }
@@ -2222,12 +2304,19 @@ private fun TimingSlider(value: Int, onChange: (Int) -> Unit) {
 
 @Composable
 private fun CenteredPage(content: @Composable ColumnScope.() -> Unit) {
-  Column(
+  LazyColumn(
     Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(28.dp),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally,
-    content = content,
-  )
+  ) {
+    item {
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        content = content,
+      )
+    }
+  }
 }
 
 @Composable
@@ -2254,6 +2343,7 @@ private fun offsetLabel(value: Int): String = when {
 
 private fun LyricsSource.displayName(): String = when (this) {
   LyricsSource.LOCAL_TTML -> "Local TTML"
+  LyricsSource.ICY_DATABASE -> "Icy Lyrics Database"
   LyricsSource.SPICY -> "Spicy Lyrics"
   LyricsSource.SPOTIFY -> "Spotify"
   LyricsSource.APPLE_MUSIC -> "Apple Music"

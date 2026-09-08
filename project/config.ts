@@ -1,7 +1,11 @@
 ﻿export const ProjectName = "icy-lyrics";
 // Icy Lyrics has its own public release line. This is the version shown to
 // users and compared by the website startup updater.
-export const ProjectVersion = "1.0.0";
+export const ProjectVersion = "1.1.0";
+
+// Public read-only API for Icy's approved TTML database. Keep this separate
+// from the Spicy Lyrics compatibility endpoint and version handshake below.
+export const IcyLyricsDatabaseApiUrl = "https://jackscurrie.com/api/ttml";
 
 // The Spicy Lyrics service performs compatibility checks against the upstream
 // client version. Keep this independent from Icy Lyrics' public version so an

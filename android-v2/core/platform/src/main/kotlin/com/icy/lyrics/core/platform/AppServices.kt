@@ -10,6 +10,8 @@ import com.icy.lyrics.core.platform.database.IcyLyricsDatabase
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticRepository
 import com.icy.lyrics.core.platform.migration.LegacyPreferenceCleaner
 import com.icy.lyrics.core.platform.provider.LocalTtmlProvider
+import com.icy.lyrics.core.platform.provider.IcyLyricsDatabaseConfig
+import com.icy.lyrics.core.platform.provider.IcyLyricsDatabaseProvider
 import com.icy.lyrics.core.platform.provider.LrclibConfig
 import com.icy.lyrics.core.platform.provider.LrclibProvider
 import com.icy.lyrics.core.platform.provider.PlatformLyricsResolver
@@ -43,8 +45,7 @@ class AppServices private constructor(
   val localTtmlProvider: LocalTtmlProvider,
   val spotifyPkceClient: SpotifyPkceClient?,
   val spotifyTrackResolver: SpotifyTrackResolver,
-  val spicyProvider: SpicyLyricsProvider,
-  val spotifyProvider: SpicyLyricsProvider,
+  val icyDatabaseProvider: IcyLyricsDatabaseProvider,
   val appleMusicProvider: SpicyLyricsProvider,
   val lrclibProvider: LrclibProvider,
   val lyricsResolver: PlatformLyricsResolver,
@@ -56,6 +57,7 @@ class AppServices private constructor(
       spotifyScopes: Set<String> = emptySet(),
       spotifyAccessTokenSource: SpotifyAccessTokenSource? = null,
       httpClient: OkHttpClient = defaultHttpClient(),
+      icyDatabaseConfig: IcyLyricsDatabaseConfig = IcyLyricsDatabaseConfig(),
       spicyConfig: SpicyLyricsConfig = SpicyLyricsConfig(),
       lrclibConfig: LrclibConfig = LrclibConfig(),
       spotifyCatalogConfig: SpotifyCatalogConfig = SpotifyCatalogConfig(),
@@ -88,29 +90,14 @@ class AppServices private constructor(
       val timingResolver = BluetoothTimingResolver(settings, deviceTimings, routeMonitor)
       val legacyCleaner = LegacyPreferenceCleaner(appContext, settings)
       val localProvider = LocalTtmlProvider(local) { settings.current().useLocalTtml }
+      val icyDatabase = IcyLyricsDatabaseProvider(
+        client = httpClient,
+        cache = cache,
+        config = icyDatabaseConfig,
+        enabled = { settings.current().icyDatabaseEnabled },
+        diagnostics = diagnostics,
+      )
       val spicyHostCircuitBreaker = SpicyHostCircuitBreaker()
-      val spicyProvider = SpicyLyricsProvider(
-        id = LyricsProviderId.SPICY,
-        client = httpClient,
-        tokenSource = effectiveTokenSource,
-        cache = cache,
-        config = spicyConfig,
-        enabled = { settings.current().spicyEnabled },
-        tokenSharingConsent = { settings.current().spicyTokenSharingConsent },
-        diagnostics = diagnostics,
-        hostCircuitBreaker = spicyHostCircuitBreaker,
-      )
-      val spotify = SpicyLyricsProvider(
-        id = LyricsProviderId.SPOTIFY,
-        client = httpClient,
-        tokenSource = effectiveTokenSource,
-        cache = cache,
-        config = spicyConfig,
-        enabled = { settings.current().spicyEnabled },
-        tokenSharingConsent = { settings.current().spicyTokenSharingConsent },
-        diagnostics = diagnostics,
-        hostCircuitBreaker = spicyHostCircuitBreaker,
-      )
       val apple = SpicyLyricsProvider(
         id = LyricsProviderId.APPLE_MUSIC,
         client = httpClient,
@@ -130,7 +117,7 @@ class AppServices private constructor(
         diagnostics = diagnostics,
       )
       val orchestrator = LyricsOrchestrator(
-        listOf(localProvider, spicyProvider, lrclib, apple, spotify),
+        listOf(localProvider, icyDatabase, lrclib, apple),
       )
       val resolver = PlatformLyricsResolver(orchestrator, settings, diagnostics)
       return AppServices(
@@ -147,8 +134,7 @@ class AppServices private constructor(
         localProvider,
         pkce,
         spotifyTrackResolver,
-        spicyProvider,
-        spotify,
+        icyDatabase,
         apple,
         lrclib,
         resolver,

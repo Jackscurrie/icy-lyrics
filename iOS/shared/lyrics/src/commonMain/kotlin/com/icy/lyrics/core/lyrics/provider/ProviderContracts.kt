@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class LyricsProviderId(val expectedSource: LyricsSource) {
   LOCAL_TTML(LyricsSource.LOCAL_TTML),
+  ICY_DATABASE(LyricsSource.ICY_DATABASE),
   SPICY(LyricsSource.SPICY),
   SPOTIFY(LyricsSource.SPOTIFY),
   APPLE_MUSIC(LyricsSource.APPLE_MUSIC),
@@ -35,13 +36,6 @@ sealed interface ProviderResult {
     val fromCache: Boolean = false,
     val rawFormat: String? = null,
     val message: String? = null,
-    /**
-     * Allows a provider route to validate a document whose upstream source is
-     * intentionally more specific than the route itself. The Spicy route uses
-     * this for the desktop-compatible automatic query while retaining `aml` or
-     * `spt` in [document] for diagnostics and source display.
-     */
-    val validatedForProvider: LyricsProviderId? = null,
   ) : ProviderResult
 
   data class NotFound(val message: String? = null) : ProviderResult

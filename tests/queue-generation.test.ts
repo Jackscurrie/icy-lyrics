@@ -68,11 +68,13 @@ describe("URI/generation guards", () => {
     const guard = new LyricsRequestGeneration();
     const first = guard.begin("spotify:track:aaaaaaaaaaaaaaaaaaaaaa");
     const second = guard.begin("spotify:track:aaaaaaaaaaaaaaaaaaaaaa");
+    expect(guard.hasActiveUri(second.uri)).toBe(true);
     expect(guard.isCurrent(first, first.uri)).toBe(false);
     expect(guard.isCurrent(second, second.uri)).toBe(true);
     expect(guard.isCurrent(second, null)).toBe(false);
 
     guard.invalidate(null);
+    expect(guard.hasActiveUri(null)).toBe(true);
     expect(guard.isCurrent(second, null)).toBe(false);
   });
 });

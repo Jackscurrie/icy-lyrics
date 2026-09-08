@@ -19,7 +19,10 @@ function unpackPayload(data: unknown): unknown {
 }
 
 /** Decode an X-mode 2 object-pack payload, including raw XML/TTML responses. */
-export async function decodeLyricsPayload(data: unknown): Promise<Record<string, any> | null> {
+export async function decodeLyricsPayload(
+  data: unknown,
+  options: { signal?: AbortSignal } = {}
+): Promise<Record<string, any> | null> {
   let unpacked: unknown;
   try {
     unpacked = unpackPayload(data);
@@ -45,7 +48,7 @@ export async function decodeLyricsPayload(data: unknown): Promise<Record<string,
   }
 
   if (looksLikeTTML(unpacked)) {
-    const parsed = await ParseTTML(unpacked);
+    const parsed = await ParseTTML(unpacked, { signal: options.signal });
     if (!parsed?.Result) return null;
     parsed.Result.source = "spl";
     return normalizeLyricsSchema(parsed.Result);

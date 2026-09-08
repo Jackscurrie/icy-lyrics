@@ -49,7 +49,9 @@ class LyricsModelsTest {
   @Test
   fun `source aliases map to stable codes`() {
     assertEquals(LyricsSource.LOCAL_TTML, LyricsSource.fromCode("local_ttml"))
+    assertEquals(LyricsSource.ICY_DATABASE, LyricsSource.fromCode("Icy Lyrics Database"))
     assertEquals(LyricsSource.SPICY, LyricsSource.fromCode("Spicy Lyrics"))
+    assertEquals(LyricsSource.SPICY, LyricsSource.fromCode("lyricsdatabase"))
     assertEquals(LyricsSource.APPLE_MUSIC, LyricsSource.fromCode("aml"))
     assertEquals(LyricsSource.UNKNOWN, LyricsSource.fromCode("future-provider"))
   }

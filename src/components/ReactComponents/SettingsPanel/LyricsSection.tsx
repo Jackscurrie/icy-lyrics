@@ -75,7 +75,7 @@ export default function LyricsSection({ query, sectionFilter }: Props) {
     const uri = SpotifyPlayer.GetUri();
     $currentLyricsData.set("");
     invalidateLyricsRequests(uri ?? null);
-    if (uri) void fetchLyrics(uri).then(ApplyLyrics);
+    if (uri) void fetchLyrics(uri, { intent: "refresh" }).then(ApplyLyrics);
   }
 
   return (

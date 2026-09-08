@@ -235,6 +235,53 @@ class MobileControllerTest {
   }
 
   @Test
+  fun playbackProgressDoesNotReloadLyricsButAnExplicitReloadDoes() = runTest {
+    val h = Harness(backgroundScope)
+    h.playback.snapshots.value = snapshot("Same song")
+    runCurrent()
+    assertEquals(1, h.backend.requests.size)
+
+    h.playback.snapshots.value = h.playback.snapshots.value!!.copy(
+      positionMs = 42_000L,
+      capturedAtElapsedMs = 42_000L,
+    )
+    runCurrent()
+    assertEquals(1, h.backend.requests.size)
+
+    h.controller.reloadLyrics()
+    runCurrent()
+    assertEquals(listOf(true, false), h.backend.requests.map { it.allowCached })
+  }
+
+  @Test
+  fun eachVisibleSourceTogglePersistsAndReloadsTheCurrentSong() = runTest {
+    val h = Harness(backgroundScope)
+    h.playback.snapshots.value = snapshot("Source settings")
+    runCurrent()
+
+    h.controller.setUseLocalTtml(false)
+    h.controller.setIcyDatabaseEnabled(false)
+    h.controller.setLrclibEnabled(false)
+    h.controller.setAppleMusicTokenSharingConsent(true)
+    h.controller.setAppleMusicEnabled(true)
+    runCurrent()
+
+    val saved = h.backend.settings.value
+    assertFalse(saved.useLocalTtml)
+    assertFalse(saved.icyDatabaseEnabled)
+    assertFalse(saved.lrclibEnabled)
+    assertTrue(saved.spicyTokenSharingConsent)
+    assertTrue(saved.spicyEnabled)
+    assertFalse(h.controller.state.value.settings.icyDatabaseEnabled)
+    assertFalse(h.controller.state.value.settings.lrclibEnabled)
+    assertTrue(h.controller.state.value.settings.appleMusicTokenSharingConsent)
+    assertTrue(h.controller.state.value.settings.appleMusicEnabled)
+    // StateFlow conflates the burst into one cache-allowed re-resolution.
+    assertEquals(2, h.backend.requests.size)
+    assertTrue(h.backend.requests.drop(1).all { it.allowCached })
+  }
+
+  @Test
   fun concurrentSettingsEditsPreserveSavedSettingsAndTheActiveDeviceTiming() = runTest {
     val backend = FakeBackend(AppSettings(rememberLocalTtml = false, spicyTokenSharingConsent = true))
     backend.settingsWriteDelayMs = 20L

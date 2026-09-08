@@ -48,7 +48,7 @@ evidence has been compared and reviewed. Link the report when checking a row.
 | [ ] | Original 20 scenes | Complete strict iOS comparison and investigate every difference; production UIKit comparison at measured matching profiles |
 | [ ] | Expanded portrait | Expand/collapse/back, scrollable full-height lyrics, track-change reset; preserve ordinary portrait lyric presentation |
 | [ ] | Settings: Fullscreen | Entire section, selected style/side chips, Reveal and awake switches; background-off hides style choices |
-| [ ] | Settings: lyric sources and account | Source strategy, Spicy/token/LRCLIB switches; connected, disconnected, connecting/cancel, client-ID-unconfigured states |
+| [ ] | Settings: lyric sources and account | Source strategy and Local/Icy/LRCLIB/Apple switches; Apple consent; connected, disconnected, connecting/cancel, client-ID-unconfigured states |
 | [ ] | Settings: timing/Bluetooth | Positive/negative/reset and slider-preview values; permission needed, no device, device/global fallback, override and remembering disabled |
 | [ ] | Settings: remaining sections | Troubleshooting/debug, Privacy and About controls; scrolled content and wrapping |
 | [ ] | Token-sharing consent dialog | Title/body/buttons, backdrop, dismissal and confirmation; normal and large text |

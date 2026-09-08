@@ -78,6 +78,25 @@ class NowPlayingTest {
     assertEquals(first.exactStorageKey, second.exactStorageKey)
   }
 
+  @Test
+  fun trailingSpotifyLosslessBadgeDoesNotChangeTrackIdentity() {
+    val clean = snapshot(artist = "Radiohead").identity
+    val badged = snapshot(artist = "Radiohead • Lossless").identity
+
+    assertEquals(clean, badged)
+    assertEquals(listOf("Radiohead"), badged.artists)
+  }
+
+  @Test
+  fun artistCleanupOnlyRemovesTheKnownTrailingSpotifyBadge() {
+    assertEquals(listOf("Lossless"), snapshot(artist = "Lossless").identity.artists)
+    assertEquals(
+      listOf("Earth, Wind & Fire"),
+      snapshot(artist = "Earth, Wind & Fire").identity.artists,
+    )
+    assertEquals(listOf("Artist • Guest"), snapshot(artist = "Artist • Guest").identity.artists)
+  }
+
   private fun snapshot(
     positionMs: Long = 0L,
     speed: Float = 1f,
@@ -87,10 +106,11 @@ class NowPlayingTest {
     durationMs: Long = 10_000L,
     extras: Map<String, String> = emptyMap(),
     playbackState: Int = PlaybackState.STATE_PLAYING,
+    artist: String = "Artist",
   ) = NowPlayingSnapshot(
     packageName = "com.spotify.music",
     title = "Song",
-    artist = "Artist",
+    artist = artist,
     album = "Album",
     durationMs = durationMs,
     positionMs = positionMs,
