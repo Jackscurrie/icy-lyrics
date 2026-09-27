@@ -16,14 +16,10 @@ class IcyNotificationListenerService : NotificationListenerService() {
   override fun onListenerDisconnected() = tracker.stop()
 
   override fun onNotificationPosted(sbn: StatusBarNotification?) {
-    if (sbn?.packageName == SPOTIFY_PACKAGE) tracker.refresh()
+    if (SpotifyPackages.contains(sbn?.packageName)) tracker.refresh()
   }
 
   override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-    if (sbn?.packageName == SPOTIFY_PACKAGE) tracker.refresh()
-  }
-
-  private companion object {
-    const val SPOTIFY_PACKAGE = "com.spotify.music"
+    if (SpotifyPackages.contains(sbn?.packageName)) tracker.refresh()
   }
 }

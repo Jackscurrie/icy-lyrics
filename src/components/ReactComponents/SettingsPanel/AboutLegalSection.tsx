@@ -7,7 +7,7 @@ export const SPICY_LYRICS_SOURCE_URL = "https://github.com/Spikerko/spicy-lyrics
 
 const ICY_LABEL = "Icy Lyrics";
 const ICY_DESCRIPTION =
-  "Copyright © 2026 Jackscurrie. Modified in 2026 from Spicy Lyrics. Licensed under the GNU AGPL v3-or-later and provided without warranty. Icy Lyrics is independent and is not affiliated with or endorsed by Spicy Lyrics, Spikerko, Spotify, Apple, LRCLIB, or their respective owners.";
+  "Copyright © 2026 Jackscurrie. Modified in 2026 from Spicy Lyrics. Licensed under the GNU AGPL v3-or-later and provided without warranty. Optional Auto-time modules run locally using Transformers.js, ONNX Runtime, and Whisper-derived models; audio is not uploaded. Icy Lyrics is independent and is not affiliated with or endorsed by Spicy Lyrics, Spikerko, Spotify, Apple, LRCLIB, Hugging Face, OpenAI, Microsoft, or their respective owners.";
 const SPICY_LABEL = "Spicy Lyrics by Spikerko";
 const SPICY_DESCRIPTION = "Original work Copyright © 2026 Spikerko.";
 

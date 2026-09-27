@@ -30,6 +30,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Tool caches
 /.cache/
+/src/generated/autoTimingWorkerSource.ts
 /.parcel-cache/
 /.npm/
 /.eslintcache
@@ -105,6 +106,7 @@ Desktop.ini
 
 # Local archives and release/browser-profile artifacts
 /BACKUP/
+/base/
 
 # The original Android prototype is not part of the public project.
 /android/

@@ -10,6 +10,7 @@ import {
   creatorTimingActionFromKeyboardEvent,
   isCreatorEditableTarget,
   isCreatorPlaybackShortcut,
+  isCreatorTimingAdvanceShortcut,
   isCreatorTextEditingTarget,
 } from "../src/components/ReactComponents/LyricCreator/interaction.ts";
 import { constrainCreatorPreviewPage } from "../src/components/ReactComponents/LyricCreator/previewOwnership.ts";
@@ -30,6 +31,36 @@ const track = (name: string): CreatorTrack => ({
 });
 
 describe("Lyric Creator keyboard isolation", () => {
+  it("recognizes legacy/native Space without surrendering it to Spotify playback", () => {
+    const target = { closest: vi.fn(() => null) } as unknown as EventTarget;
+    const base = { code: "", repeat: false, isComposing: false, target };
+    for (const details of [{ key: "Spacebar" }, { key: "Space" }, { keyCode: 32 }, { which: 32 }, { code: "Unidentified", keyCode: 32 }]) {
+      expect(isCreatorTimingAdvanceShortcut({ ...base, ...details })).toBe(true);
+      expect(isCreatorPlaybackShortcut({ ...base, ...details })).toBe(true);
+      expect(isCreatorTimingAdvanceShortcut({ ...base, ...details, ctrlKey: true })).toBe(false);
+      expect(isCreatorTimingAdvanceShortcut({ ...base, ...details, repeat: true })).toBe(false);
+    }
+    expect(isCreatorTimingAdvanceShortcut({ ...base, code: "KeyA", keyCode: 32 })).toBe(false);
+  });
+
+  it("uses Space/J for selection navigation without taking typing or modifier shortcuts", () => {
+    const target = { closest: vi.fn(() => null) } as unknown as EventTarget;
+    const base = { code: "", repeat: false, isComposing: false, target };
+    for (const key of [" ", "j", "J"]) expect(isCreatorTimingAdvanceShortcut({ ...base, key })).toBe(true);
+    for (const code of ["Space", "KeyJ"]) expect(isCreatorTimingAdvanceShortcut({ ...base, code })).toBe(true);
+    expect(isCreatorTimingAdvanceShortcut({ ...base, code: "KeyF" })).toBe(false);
+    expect(isCreatorTimingAdvanceShortcut({ ...base, code: "KeyJ", repeat: true })).toBe(false);
+    expect(isCreatorTimingAdvanceShortcut({ ...base, code: "KeyJ", isComposing: true })).toBe(false);
+    for (const modifier of ["altKey", "ctrlKey", "metaKey"]) {
+      expect(isCreatorTimingAdvanceShortcut({ ...base, code: "KeyJ", [modifier]: true })).toBe(false);
+      expect(creatorTimingActionFromKeyboardEvent({ ...base, code: "KeyG", [modifier]: true })).toBeNull();
+      expect(isCreatorPlaybackShortcut({ ...base, code: "Space", [modifier]: true })).toBe(false);
+    }
+    const input = { closest: vi.fn(() => ({ tagName: "INPUT" })) } as unknown as EventTarget;
+    expect(isCreatorTimingAdvanceShortcut({ ...base, code: "Space", target: input })).toBe(false);
+    expect(isCreatorPlaybackShortcut({ ...base, code: "Space", target: input })).toBe(false);
+  });
+
   it("recognizes nested editable controls and never turns their F/G/H into timing actions", () => {
     const inputTarget = { closest: vi.fn(() => ({ tagName: "INPUT" })) } as unknown as EventTarget;
     expect(isCreatorEditableTarget(inputTarget)).toBe(true);

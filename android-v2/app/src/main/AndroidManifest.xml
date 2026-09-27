@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission
+    android:name="android.permission.BLUETOOTH"
+    android:maxSdkVersion="30" />
   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
   <queries>
     <package android:name="com.spotify.music" />
+    <package android:name="com.spotify.tv.android" />
   </queries>
 
   <application
@@ -26,6 +30,12 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
+    <activity
+      android:name=".creator.LyricCreatorActivity"
+      android:exported="false"
+      android:label="@string/lyric_creator_name"
+      android:resizeableActivity="true" />
 
     <service
       android:name=".media.IcyNotificationListenerService"

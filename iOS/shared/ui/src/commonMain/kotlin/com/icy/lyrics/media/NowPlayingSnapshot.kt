@@ -7,8 +7,18 @@ import androidx.compose.ui.graphics.ImageBitmap
 import kotlin.math.roundToLong
 
 object TrackIdentityExtractor {
-  private val spotifyTrack = Regex("""^spotify:track:([A-Za-z0-9]{22})$""")
-  private val spotifyUrl = Regex("""open\.spotify\.com/track/([A-Za-z0-9]{22})""")
+  private val spotifyTrack = Regex(
+    """spotify:track:([A-Za-z0-9]{22})(?![A-Za-z0-9])""",
+    RegexOption.IGNORE_CASE,
+  )
+  private val encodedSpotifyTrack = Regex(
+    """spotify%3Atrack%3A([A-Za-z0-9]{22})(?![A-Za-z0-9])""",
+    RegexOption.IGNORE_CASE,
+  )
+  private val spotifyUrl = Regex(
+    """open\.spotify\.com/track/([A-Za-z0-9]{22})(?![A-Za-z0-9])""",
+    RegexOption.IGNORE_CASE,
+  )
   private val bareSpotifyId = Regex("""^[A-Za-z0-9]{22}$""")
   private val spotifyQualityBadge = Regex(
     """\s*[•·]\s*Lossless\s*$""",
@@ -24,13 +34,17 @@ object TrackIdentityExtractor {
 
     val localUri = candidates.firstOrNull { it.startsWith("spotify:local:", ignoreCase = true) }
     val explicitSpotifyId = candidates.firstNotNullOfOrNull(::extractExplicitSpotifyId)
-    val rawMediaId = snapshot.rawMediaId?.trim()?.takeIf(bareSpotifyId::matches)
     val keyedExtrasId = snapshot.extras.entries.firstNotNullOfOrNull { (key, value) ->
       val specificKey = key.contains("spotify", ignoreCase = true) ||
-        key.contains("track", ignoreCase = true)
+        key.contains("track", ignoreCase = true) ||
+        key.equals(MEDIA3_COMPAT_MEDIA_ID_KEY, ignoreCase = true)
       value.trim().takeIf { specificKey && bareSpotifyId.matches(it) }
     }
-    val exact = localUri ?: (explicitSpotifyId ?: rawMediaId ?: keyedExtrasId)
+    // The Media3 state extra is explicitly track-specific, so prefer it over a
+    // generic description id. Retain the legacy bare-id fallback because some
+    // Spotify sessions expose the track only through MediaDescription.mediaId.
+    val rawMediaId = snapshot.rawMediaId?.trim()?.takeIf(bareSpotifyId::matches)
+    val exact = localUri ?: (explicitSpotifyId ?: keyedExtrasId ?: rawMediaId)
       ?.let { "spotify:track:$it" }
 
     val metadataIdentity = TrackIdentity(
@@ -50,13 +64,17 @@ object TrackIdentityExtractor {
   }
 
   private fun extractExplicitSpotifyId(value: String): String? =
-    spotifyTrack.matchEntire(value)?.groupValues?.getOrNull(1)
+    spotifyTrack.find(value)?.groupValues?.getOrNull(1)
+      ?: encodedSpotifyTrack.find(value)?.groupValues?.getOrNull(1)
       ?: spotifyUrl.find(value)?.groupValues?.getOrNull(1)
 
   private fun withoutSpotifyQualityBadge(value: String): String {
     val original = value.trim()
     return spotifyQualityBadge.replace(original, "").trim().ifBlank { original }
   }
+
+  private const val MEDIA3_COMPAT_MEDIA_ID_KEY =
+    "androidx.media.PlaybackStateCompat.Extras.KEY_MEDIA_ID"
 }
 
 data class NowPlayingSnapshot(

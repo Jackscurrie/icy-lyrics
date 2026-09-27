@@ -2,17 +2,23 @@ package com.icy.lyrics.core.platform.provider
 
 import com.icy.lyrics.core.lyrics.model.LineLyrics
 import com.icy.lyrics.core.lyrics.model.LyricsSource
+import com.icy.lyrics.core.lyrics.model.LyricsSyncKind
 import com.icy.lyrics.core.lyrics.model.TrackIdentity
+import com.icy.lyrics.core.lyrics.provider.LyricsOrchestrator
+import com.icy.lyrics.core.lyrics.provider.LyricsProvider
 import com.icy.lyrics.core.lyrics.provider.LyricsProviderId
 import com.icy.lyrics.core.lyrics.provider.LyricsRequest
+import com.icy.lyrics.core.lyrics.provider.LyricsResolution
 import com.icy.lyrics.core.lyrics.provider.ProviderFailureCategory
 import com.icy.lyrics.core.lyrics.provider.ProviderResult
 import com.icy.lyrics.core.lyrics.provider.ProviderUnavailableReason
+import com.icy.lyrics.core.lyrics.parser.TtmlParser
 import com.icy.lyrics.core.platform.database.LyricsCacheDao
 import com.icy.lyrics.core.platform.database.LyricsCacheEntity
 import com.icy.lyrics.core.platform.network.HttpUrl.Companion.toHttpUrl
 import com.icy.lyrics.core.platform.network.OkHttpTransport
 import com.icy.lyrics.core.platform.storage.LyricsCacheRepository
+import com.icy.lyrics.core.platform.storage.CachedLyrics
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -86,6 +92,107 @@ class IcyLyricsDatabaseProviderTest {
     assertEquals(1, server.requestCount)
     val row = cacheDao.get(LyricsProviderId.ICY_DATABASE.name, TRACK.uri)!!
     assertEquals(30L * DAY_MS, row.expiresAtEpochMs - row.fetchedAtEpochMs)
+  }
+
+  @Test
+  fun legacyV1ParsedCacheIsInvalidatedAndFetchedAgain() = runTest {
+    cache.put(
+      provider = LyricsProviderId.ICY_DATABASE,
+      track = TRACK,
+      document = TtmlParser.parse(
+        rawTtml = lineTtml("Legacy parsed row"),
+        trackUri = TRACK.uri,
+        source = LyricsSource.ICY_DATABASE,
+      ),
+      ttlMs = 30L * DAY_MS,
+      rawFormat = "icy-ttml-v1",
+      sourceVerified = true,
+    )
+    server.enqueue(ttmlResponse(lineTtml("Reparsed with 1.2.0")))
+
+    val result = provider().fetch(LyricsRequest(TRACK))
+
+    assertTrue(result is ProviderResult.Found)
+    result as ProviderResult.Found
+    assertFalse(result.fromCache)
+    assertEquals("Reparsed with 1.2.0", (result.document as LineLyrics).lines.single().text)
+    assertEquals(1, server.requestCount)
+    assertEquals(
+      "icy-ttml-v2",
+      cacheDao.get(LyricsProviderId.ICY_DATABASE.name, TRACK.uri)?.rawFormat,
+    )
+  }
+
+  @Test
+  fun staleLineCachesCannotMaskWordSyncedIcyAfterUpgradeOrExplicitReload() = runTest {
+    cache.put(
+      provider = LyricsProviderId.ICY_DATABASE,
+      track = TRACK,
+      document = TtmlParser.parse(
+        rawTtml = lineTtml("Legacy Icy line cache"),
+        trackUri = TRACK.uri,
+        source = LyricsSource.ICY_DATABASE,
+      ),
+      ttlMs = 30L * DAY_MS,
+      rawFormat = "icy-ttml-v1",
+      sourceVerified = true,
+    )
+    cache.put(
+      provider = LyricsProviderId.LRCLIB,
+      track = TRACK,
+      document = TtmlParser.parse(
+        rawTtml = lineTtml("Persisted LRCLIB line cache"),
+        trackUri = TRACK.uri,
+        source = LyricsSource.LRCLIB,
+      ),
+      ttlMs = 30L * DAY_MS,
+      rawFormat = "lrc",
+      sourceVerified = true,
+    )
+    server.enqueue(ttmlResponse(WORD_TTML))
+    server.enqueue(ttmlResponse(WORD_TTML))
+    var lrclibFetches = 0
+    val cachedLrclib = object : LyricsProvider {
+      override val id = LyricsProviderId.LRCLIB
+
+      override suspend fun fetch(request: LyricsRequest): ProviderResult {
+        lrclibFetches += 1
+        val hit = cache.get(id, request.track) as? CachedLyrics.Hit
+          ?: return ProviderResult.NotFound()
+        return ProviderResult.Found(hit.document, fromCache = true, rawFormat = hit.rawFormat)
+      }
+    }
+    val orchestrator = LyricsOrchestrator(listOf(provider(), cachedLrclib))
+
+    val afterUpgrade = orchestrator.resolve(LyricsRequest(TRACK)) as LyricsResolution.Found
+
+    assertEquals(LyricsProviderId.ICY_DATABASE, afterUpgrade.provider)
+    assertEquals(LyricsSyncKind.SYLLABLE, afterUpgrade.document.syncKind)
+    assertEquals(0, lrclibFetches)
+    assertEquals(1, server.requestCount)
+
+    // A user reload must also bypass a current-format line cache rather than
+    // allowing the lower-priority persisted LRCLIB result to remain visible.
+    cache.put(
+      provider = LyricsProviderId.ICY_DATABASE,
+      track = TRACK,
+      document = TtmlParser.parse(
+        rawTtml = lineTtml("Current Icy line cache"),
+        trackUri = TRACK.uri,
+        source = LyricsSource.ICY_DATABASE,
+      ),
+      ttlMs = 30L * DAY_MS,
+      rawFormat = "icy-ttml-v2",
+      sourceVerified = true,
+    )
+    val afterReload = orchestrator.resolve(
+      LyricsRequest(TRACK, allowCached = false),
+    ) as LyricsResolution.Found
+
+    assertEquals(LyricsProviderId.ICY_DATABASE, afterReload.provider)
+    assertEquals(LyricsSyncKind.SYLLABLE, afterReload.document.syncKind)
+    assertEquals(0, lrclibFetches)
+    assertEquals(2, server.requestCount)
   }
 
   @Test

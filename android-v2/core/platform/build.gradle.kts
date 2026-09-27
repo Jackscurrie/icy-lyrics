@@ -12,7 +12,7 @@ android {
   namespace = "com.icy.lyrics.core.platform"
   compileSdk = 36
 
-  defaultConfig { minSdk = 33 }
+  defaultConfig { minSdk = 30 }
 
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17

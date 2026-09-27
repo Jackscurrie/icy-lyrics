@@ -7,6 +7,7 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.MediaRoute2Info
 import android.media.MediaRouter2
+import android.os.Build
 import androidx.core.content.ContextCompat
 import com.icy.lyrics.core.platform.settings.SettingsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +31,7 @@ class BluetoothRouteMonitor(context: Context) {
   val activeRoute: Flow<BluetoothRoute?> = permissionRevision.flatMapLatest { observeRoute() }
     .distinctUntilChanged()
 
-  /** Call after a runtime BLUETOOTH_CONNECT permission result. */
+  /** Call after the platform Bluetooth permission state changes. */
   fun refreshPermission() {
     permissionRevision.update { it + 1L }
   }
@@ -100,19 +101,29 @@ class BluetoothRouteMonitor(context: Context) {
     }
   }
 
-  private fun hasBluetoothPermission(): Boolean = ContextCompat.checkSelfPermission(
-    appContext,
-    Manifest.permission.BLUETOOTH_CONNECT,
-  ) == PackageManager.PERMISSION_GRANTED
+  private fun hasBluetoothPermission(): Boolean {
+    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      Manifest.permission.BLUETOOTH_CONNECT
+    } else {
+      Manifest.permission.BLUETOOTH
+    }
+    return ContextCompat.checkSelfPermission(appContext, permission) == PackageManager.PERMISSION_GRANTED
+  }
 
   companion object {
-    private val BLUETOOTH_AUDIO_DEVICE_TYPES = setOf(
-      AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-      AudioDeviceInfo.TYPE_BLE_HEADSET,
-      AudioDeviceInfo.TYPE_BLE_SPEAKER,
-      AudioDeviceInfo.TYPE_BLE_BROADCAST,
-      AudioDeviceInfo.TYPE_HEARING_AID,
-    )
+    private val BLUETOOTH_AUDIO_DEVICE_TYPES: Set<Int> by lazy {
+      buildSet {
+        add(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
+        add(AudioDeviceInfo.TYPE_HEARING_AID)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          add(AudioDeviceInfo.TYPE_BLE_HEADSET)
+          add(AudioDeviceInfo.TYPE_BLE_SPEAKER)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          add(AudioDeviceInfo.TYPE_BLE_BROADCAST)
+        }
+      }
+    }
   }
 
   private data class BluetoothAudioDevice(

@@ -2,7 +2,9 @@ package com.icy.lyrics.media
 
 import android.media.MediaMetadata
 import android.media.session.MediaController
+import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.os.Bundle
 import android.os.SystemClock
 import androidx.compose.ui.graphics.asImageBitmap
 
@@ -11,14 +13,23 @@ object NowPlayingMapper {
     val metadata = controller.metadata ?: return null
     val state = controller.playbackState
     val description = metadata.description
+    val activeQueueDescription = state?.activeQueueItemId
+      ?.takeIf { it != MediaSession.QueueItem.UNKNOWN_ID.toLong() }
+      ?.let { activeId ->
+        controller.queue?.firstOrNull { it.queueId == activeId }?.description
+      }
     val extras = buildMap {
       metadata.keySet().forEach { key -> metadata.textOrNull(key)?.let { put(key, it) } }
-      description.extras?.keySet()?.forEach { key ->
-        @Suppress("DEPRECATION")
-        description.extras?.get(key)?.toString()?.takeIf(String::isNotBlank)?.let { put(key, it) }
-      }
+      putBundleValues(description.extras)
+      putBundleValues(activeQueueDescription?.extras)
+      putBundleValues(controller.extras)
+      // Media3 can expose the current media id to legacy/platform controllers
+      // in PlaybackState extras. Keep these item-specific values last so a
+      // same-named session extra cannot replace them.
+      putBundleValues(state?.extras)
     }
-    val rawUri = description.mediaUri?.toString()
+    val rawUri = activeQueueDescription?.mediaUri?.toString()
+      ?: description.mediaUri?.toString()
       ?: metadata.textOrNull(MediaMetadata.METADATA_KEY_MEDIA_URI)
 
     return NowPlayingSnapshot(
@@ -38,7 +49,9 @@ object NowPlayingMapper {
         ?: description.iconBitmap)?.asImageBitmap(),
       capturedAtElapsedMs = state?.lastPositionUpdateTime?.takeIf { it > 0L }
         ?: SystemClock.elapsedRealtime(),
-      rawMediaId = description.mediaId ?: metadata.textOrNull(MediaMetadata.METADATA_KEY_MEDIA_ID),
+      rawMediaId = activeQueueDescription?.mediaId
+        ?: description.mediaId
+        ?: metadata.textOrNull(MediaMetadata.METADATA_KEY_MEDIA_ID),
       rawUri = rawUri,
       extras = extras,
       availableActions = state?.actions ?: 0L,
@@ -47,4 +60,15 @@ object NowPlayingMapper {
 
   private fun MediaMetadata.textOrNull(key: String): String? = runCatching { getText(key) }
     .getOrNull()?.toString()?.takeIf(String::isNotBlank)
+
+  private fun MutableMap<String, String>.putBundleValues(bundle: Bundle?) {
+    bundle?.keySet()?.forEach { key ->
+      @Suppress("DEPRECATION")
+      runCatching { bundle.get(key) }
+        .getOrNull()
+        ?.toString()
+        ?.takeIf(String::isNotBlank)
+        ?.let { put(key, it) }
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   creatorPlaybackActivity,
+  createCreatorPlaybackActivityReader,
   isCreatorPlaybackIntervalActive,
 } from "../src/components/ReactComponents/LyricCreator/activeWord.ts";
 import {
@@ -96,5 +97,21 @@ describe("Lyric Creator playback activity", () => {
 
     expect(creatorPlaybackActivity(project, -1).fragmentIds.size).toBe(0);
     expect(creatorPlaybackActivity(project, Number.NaN).fragmentIds.size).toBe(0);
+  });
+
+  it("reuses playback snapshots between boundaries and changes immediately on a seek", () => {
+    const project = createEmptyProject();
+    project.lines[0].tokens = [{ ...createToken(), id: "word", fragments: [
+      timedFragment("first", 1000, 1010), timedFragment("second", 1010, 2000),
+    ] }];
+    const read = createCreatorPlaybackActivityReader(project);
+    const first = read(1000);
+    expect(read(1009.999)).toBe(first);
+    const second = read(1010);
+    expect(second).not.toBe(first);
+    expect([...second.fragmentIds]).toEqual(["second"]);
+    expect(read(1500)).toBe(second);
+    expect([...read(1005).fragmentIds]).toEqual(["first"]);
+    expect(read(999).fragmentIds.size).toBe(0);
   });
 });

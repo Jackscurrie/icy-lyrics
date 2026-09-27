@@ -4,7 +4,10 @@ import ApplyLyrics from "../../../utils/Lyrics/Global/Applyer.ts";
 import fetchLyrics, { invalidateLyricsRequests } from "../../../utils/Lyrics/fetchLyrics.ts";
 import { SpotifyPlayer } from "../../Global/SpotifyPlayer.ts";
 import { acquireLyricsClockOverride } from "../../../utils/Lyrics/lyrics.ts";
+import { getLyricsInputPositionForAnimation } from "../../../utils/Lyrics/Animator/Shared.ts";
+import { $simpleLyricsMode } from "../../../utils/stores.ts";
 import { creatorProjectToLyrics, type CreatorProject } from "./model.ts";
+import type { CreatorPlaybackReading } from "./playbackClock.ts";
 import {
   acquireCreatorPreviewOwnership,
   constrainCreatorPreviewPage,
@@ -16,7 +19,7 @@ import {
 
 interface PreviewStageProps {
   project: CreatorProject;
-  clock: () => number;
+  clock: () => CreatorPlaybackReading;
 }
 
 export default function PreviewStage({ project, clock }: PreviewStageProps) {
@@ -40,8 +43,12 @@ export default function PreviewStage({ project, clock }: PreviewStageProps) {
     let originalNextSibling: Node | null = null;
     let releasePreviewBounds: (() => void) | null = null;
     const releaseClock = acquireLyricsClockOverride(() => {
-      const positionMs = clockRef.current();
-      return { positionMs, rawPositionMs: positionMs };
+      const { positionMs: rawPositionMs, playing: isPlaying } = clockRef.current();
+      return {
+        positionMs: getLyricsInputPositionForAnimation(rawPositionMs, $simpleLyricsMode.get()),
+        rawPositionMs,
+        isPlaying,
+      };
     });
     const releasePreviewOwnership = acquireCreatorPreviewOwnership();
 

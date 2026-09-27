@@ -1,5 +1,6 @@
 import { dbPromise, ObjectStores, type CreatorDraftRecord } from "../../../utils/db.ts";
 import { createCreatorId, normalizeCreatorSource, type CreatorProject } from "./model.ts";
+import { normalizeCreatorArtworkUrl } from "./draftArtwork.ts";
 
 export interface CreatorDraftSongSnapshot {
   uri: string;
@@ -49,6 +50,7 @@ function projectShape(record: CreatorDraftRecord): DraftProjectShape {
 
 function spotifyTrackUri(value: unknown): string {
   const candidate = stringValue(value);
+  if (candidate.startsWith("spotify:local:")) return candidate;
   if (/^spotify:track:[A-Za-z0-9]+$/u.test(candidate)) return candidate;
   if (/^[A-Za-z0-9]{22}$/u.test(candidate)) return `spotify:track:${candidate}`;
   return "";
@@ -61,24 +63,22 @@ function normalizeIdentityPart(value: string): string {
 function songSnapshotForRecord(record: CreatorDraftRecord): CreatorDraftSongSnapshot {
   const project = projectShape(record);
   const metadata = project.metadata ?? {};
-  const storedSong = record.song;
+  const projectUri = spotifyTrackUri(project.uri) || spotifyTrackUri(record.uri) || spotifyTrackUri(metadata.spotifyTrackId);
+  const storedSong = record.song && (!projectUri || !record.song.uri || record.song.uri === projectUri) ? record.song : undefined;
   const artists =
     stringArray(storedSong?.artists).length > 0
       ? stringArray(storedSong?.artists)
       : stringArray(metadata.artists);
   const albums = stringArray(metadata.albums);
   const uri =
-    spotifyTrackUri(storedSong?.uri) ||
-    spotifyTrackUri(record.uri) ||
-    spotifyTrackUri(project.uri) ||
-    spotifyTrackUri(metadata.spotifyTrackId);
+    projectUri || spotifyTrackUri(storedSong?.uri);
 
   return {
     uri,
     name: stringValue(storedSong?.name) || stringValue(metadata.name) || record.name || "Untitled",
     artists,
     album: stringValue(storedSong?.album) || albums[0] || "",
-    coverUrl: stringValue(storedSong?.coverUrl),
+    coverUrl: normalizeCreatorArtworkUrl(storedSong?.coverUrl),
   };
 }
 
@@ -152,6 +152,11 @@ export async function saveCreatorDraft(
   const database = await dbPromise;
   const id = draftId ?? createCreatorId("draft");
   const previous = await database.get(ObjectStores.CreatorDrafts, id);
+  const projectUri = spotifyTrackUri(project.uri) || spotifyTrackUri(project.metadata.spotifyTrackId);
+  // A stale selected track or a reused draft ID must not attach another song's
+  // art to the current project. Saves for the same song retain the old cover.
+  const matchingSong = song && (!projectUri || !song.uri || song.uri === projectUri) ? song : undefined;
+  const previousSong = previous?.song && (!projectUri || previous.song.uri === projectUri) ? previous.song : undefined;
   const now = Date.now();
   const record: CreatorDraftRecord = {
     id,
@@ -159,18 +164,18 @@ export async function saveCreatorDraft(
     name: project.metadata.name || "Untitled lyric draft",
     createdAt: previous?.createdAt ?? now,
     updatedAt: now,
-    ...(song || previous?.song
+    ...(matchingSong || previousSong
       ? {
           song: {
-            uri: stringValue(song?.uri) || previous?.song?.uri || project.uri,
-            name: stringValue(song?.name) || previous?.song?.name || project.metadata.name,
+            uri: stringValue(matchingSong?.uri) || previousSong?.uri || project.uri,
+            name: stringValue(matchingSong?.name) || previousSong?.name || project.metadata.name,
             artists:
-              stringArray(song?.artists).length > 0
-                ? stringArray(song?.artists)
-                : (previous?.song?.artists ?? project.metadata.artists),
+              stringArray(matchingSong?.artists).length > 0
+                ? stringArray(matchingSong?.artists)
+                : (previousSong?.artists ?? project.metadata.artists),
             album:
-              stringValue(song?.album) || previous?.song?.album || project.metadata.albums[0] || "",
-            coverUrl: stringValue(song?.coverUrl) || previous?.song?.coverUrl || "",
+              stringValue(matchingSong?.album) || previousSong?.album || project.metadata.albums[0] || "",
+            coverUrl: normalizeCreatorArtworkUrl(matchingSong?.coverUrl) || normalizeCreatorArtworkUrl(previousSong?.coverUrl),
           },
         }
       : {}),
@@ -188,6 +193,19 @@ export async function listCreatorDrafts(): Promise<CreatorDraftRecord[]> {
   return (await (await dbPromise).getAll(ObjectStores.CreatorDrafts)).sort(
     (left, right) => right.updatedAt - left.updatedAt
   );
+}
+
+/** Update artwork only, keeping draft edits and their saved ordering untouched. */
+export async function persistCreatorDraftArtwork(uri: string, coverUrl: string): Promise<void> {
+  const normalized = normalizeCreatorArtworkUrl(coverUrl);
+  if (!uri || !normalized) return;
+  const transaction = (await dbPromise).transaction(ObjectStores.CreatorDrafts, "readwrite");
+  for (const record of await transaction.store.getAll()) {
+    const song = songSnapshotForRecord(record);
+    if (song.uri !== uri || song.coverUrl === normalized) continue;
+    await transaction.store.put({ ...record, song: { ...song, coverUrl: normalized } });
+  }
+  await transaction.done;
 }
 
 export async function removeCreatorDraft(id: string): Promise<void> {

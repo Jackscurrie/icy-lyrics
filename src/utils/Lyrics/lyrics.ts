@@ -6,6 +6,9 @@ import { Lyrics } from "./Animator/Main.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
 import { Maid } from "../../modules/Maid.ts";
 import { getLyricsAnimationPosition } from "./Animator/Shared.ts";
+import { createLyricsClock, type LyricsClockReading } from "./clock.ts";
+
+export type { LyricsClockReading } from "./clock.ts";
 
 export const ScrollingIntervalTime = Infinity;
 
@@ -177,17 +180,14 @@ const logLyric = (lyric: string) => {
   lastLyric = lyric;
 }
  */
-export interface LyricsClockReading {
-  positionMs: number;
-  rawPositionMs?: number;
-}
+const lyricsClock = createLyricsClock({
+  positionMs: () => SpotifyPlayer.GetPosition(),
+  rawPositionMs: () => SpotifyPlayer.GetRawPosition(),
+  isPlaying: () => SpotifyPlayer.IsPlaying,
+});
 
-type LyricsClockOverride = {
-  owner: symbol;
-  provider: () => LyricsClockReading | null;
-};
-
-let ActiveLyricsClockOverride: LyricsClockOverride | null = null;
+/** Animation, frame events, and list scrolling must follow the same clock. */
+export const readLyricsClock = () => lyricsClock.read();
 
 /**
  * Temporarily replaces only the lyric animation clock. The returned release
@@ -196,11 +196,7 @@ let ActiveLyricsClockOverride: LyricsClockOverride | null = null;
 export function acquireLyricsClockOverride(
   provider: () => LyricsClockReading | null
 ): () => void {
-  const owner = Symbol("IcyLyricsClockOverride");
-  ActiveLyricsClockOverride = { owner, provider };
-  return () => {
-    if (ActiveLyricsClockOverride?.owner === owner) ActiveLyricsClockOverride = null;
-  };
+  return lyricsClock.acquire(provider);
 }
 
 const LyricsInterval = () => {
@@ -245,9 +241,7 @@ const LyricsInterval = () => {
   } */
 
   if ($lyricsContainerExists.get()) {
-    const clockOverride = ActiveLyricsClockOverride?.provider();
-    const progress = clockOverride?.positionMs ?? SpotifyPlayer.GetPosition();
-    const rawProgress = clockOverride?.rawPositionMs ?? SpotifyPlayer.GetRawPosition();
+    const { positionMs: progress, rawPositionMs: rawProgress } = readLyricsClock();
     Lyrics.TimeSetter(progress);
     Lyrics.Animate(progress);
     // Fullscreen presentation is animation state, not scroll state. Drive it

@@ -34,19 +34,28 @@ import {
 } from "./model.ts";
 import PreviewStage from "./PreviewStage.tsx";
 import CreatorTimeWorkspace from "./CreatorTimeWorkspace.tsx";
-import CreatorWaveformTimeline from "./CreatorWaveformTimeline.tsx";
 import CreatorDraftLibrary from "./CreatorDraftLibrary.tsx";
 import IcyLogo from "./IcyLogo.tsx";
-import { creatorPlaybackActivity } from "./activeWord.ts";
+import {
+  CreatorPlaybackTime,
+  CreatorPlaybackTimeline,
+  useCreatorPlaybackActivity,
+  useCreatorPlaybackClock,
+  useCreatorPlaybackDuration,
+  type CreatorPlaybackClock,
+} from "./useCreatorPlayback.tsx";
 import {
   applyCreatorPlaybackSpeed,
   applyTimingAction,
   creatorTimingTargets,
+  nextCreatorTimingWordIndex,
   DEFAULT_CREATOR_TIMING_OPTIONS,
   formatCreatorTime,
   type CreatorTimingOptions,
 } from "./timing.ts";
-import { creatorTimingActionFromKeyboardEvent, isCreatorPlaybackShortcut } from "./interaction.ts";
+import { creatorTimingActionFromKeyboardEvent, isCreatorPlaybackShortcut, isCreatorTimingAdvanceShortcut } from "./interaction.ts";
+import FragmentationPrompt from "./FragmentationPrompt.tsx";
+import { applyCreatorFragmentationProposal, splitCreatorWordOnBackslashes, type CreatorFragmentationProposal } from "./fragmentation.ts";
 import {
   CREATOR_TTML_FILE_ACCEPT,
   downloadCreatorTTML,
@@ -71,57 +80,22 @@ import {
   requestCreatorSourceSwitch,
   type CreatorTrackLoadOptions,
 } from "./sourceSwitch.ts";
+import AutoTimingDialog from "./autoTiming/AutoTimingDialog.tsx";
+import { CreatorTaskScope } from "./autoTiming/session.ts";
+import {
+  creatorAudioHandoffTrackUrl,
+  openCreatorLucidaHandoff,
+  type CreatorAudioHandoffResult,
+} from "./localAudioHandoff.ts";
+import {
+  decodeAutoTimingAudio,
+  type DecodedAutoTimingAudio,
+} from "./autoTiming/audio.ts";
 
 type CreatorMode = "edit" | "time" | "preview";
 
 interface LyricCreatorProps {
   onClose: () => void;
-}
-
-function usePlaybackPosition(
-  localAudio: React.RefObject<HTMLAudioElement | null>,
-  expectedSpotifyTrack: CreatorTrack | null
-) {
-  const [positionMs, setPositionMs] = useState(0);
-  const [durationMs, setDurationMs] = useState(0);
-
-  useEffect(() => {
-    let frame = 0;
-    let lastUpdate = 0;
-    const update = () => {
-      const now = performance.now();
-      if (now - lastUpdate < 40) {
-        frame = requestAnimationFrame(update);
-        return;
-      }
-      lastUpdate = now;
-      const audio = localAudio.current;
-      if (audio?.src) {
-        setPositionMs(Math.round(audio.currentTime * 1000));
-        setDurationMs(Number.isFinite(audio.duration) ? Math.round(audio.duration * 1000) : 0);
-      } else {
-        const playerUri = Spicetify.Player.data?.item?.uri;
-        if (expectedSpotifyTrack && playerUri !== expectedSpotifyTrack.uri) {
-          // Never draw the previous song's playhead while Spotify changes track.
-          setPositionMs(0);
-          setDurationMs(Math.max(0, expectedSpotifyTrack.durationMs));
-        } else {
-          setPositionMs(Math.max(0, Math.round(Spicetify.Player.getProgress?.() ?? 0)));
-          setDurationMs(
-            Math.max(
-              0,
-              Math.round(Spicetify.Player.getDuration?.() ?? expectedSpotifyTrack?.durationMs ?? 0)
-            )
-          );
-        }
-      }
-      frame = requestAnimationFrame(update);
-    };
-    frame = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(frame);
-  }, [expectedSpotifyTrack, localAudio]);
-
-  return { positionMs, durationMs };
 }
 
 function ArrayMetadataField({
@@ -243,7 +217,7 @@ function EditWorkspace({
   setImportText,
   activeLine,
   setActiveLine,
-  positionMs,
+  playbackClock,
 }: {
   project: CreatorProject;
   setProject: React.Dispatch<React.SetStateAction<CreatorProject>>;
@@ -251,8 +225,9 @@ function EditWorkspace({
   setImportText: (value: string) => void;
   activeLine: number;
   setActiveLine: (value: number) => void;
-  positionMs: number;
+  playbackClock: CreatorPlaybackClock;
 }) {
+  const [fragmentationProposal, setFragmentationProposal] = useState<CreatorFragmentationProposal | null>(null);
   const [draggedToken, setDraggedToken] = useState<{
     lineIndex: number;
     tokenIndex: number;
@@ -260,16 +235,26 @@ function EditWorkspace({
   const [dropToken, setDropToken] = useState<{ lineIndex: number; tokenIndex: number } | null>(
     null
   );
-  const playbackActivity = useMemo(
-    () => creatorPlaybackActivity(project, positionMs),
-    [project, positionMs]
-  );
+  const playbackActivity = useCreatorPlaybackActivity(project, playbackClock);
   const mutate = (updater: (draft: CreatorProject) => void) => {
     setProject((current) => {
       const draft = cloneCreatorProject(current);
       updater(draft);
       return draft;
     });
+  };
+
+  useEffect(() => {
+    if (fragmentationProposal && creatorProjectCheckpoint(project) !== fragmentationProposal.checkpoint) {
+      setFragmentationProposal(null);
+    }
+  }, [project, fragmentationProposal]);
+
+  const splitWord = (tokenId: string) => {
+    const result = splitCreatorWordOnBackslashes(project, tokenId);
+    if (!result) return;
+    setProject(result.project);
+    setFragmentationProposal(result.proposal);
   };
 
   const attachBackground = (line: CreatorLine, lineIndex: number, enabled: boolean) => {
@@ -289,11 +274,11 @@ function EditWorkspace({
     <main className="il-creator-edit" aria-label="Lyric editor">
       <details className="il-creator-import">
         <summary>Import plain text</summary>
-        <p>Use a backslash (\) between words. Each text line becomes one lyric line.</p>
+        <p>Spaces separate words. Use backslashes inside a word to split its timed parts, like fore\ver. Each text line becomes one lyric line.</p>
         <textarea
           value={importText}
           onChange={(event) => setImportText(event.currentTarget.value)}
-          placeholder={"We\\are\\the\\music\nAnd\\we\\make\\the\\dreams"}
+          placeholder={"We are the mu\\sic\nAnd we make the dreams"}
         />
         <button
           type="button"
@@ -317,7 +302,7 @@ function EditWorkspace({
           <article
             id={`il-creator-line-${line.id}`}
             key={line.id}
-            className={`il-creator-line-card${activeLine === lineIndex ? " is-active" : ""}`}
+            className={`il-creator-line-card${activeLine === lineIndex ? " is-active" : ""}${line.isBackground ? " is-background" : ""}${line.isSecondSpeaker ? " is-second-speaker" : ""}`}
             onFocus={() => setActiveLine(lineIndex)}
             onPointerDown={() => setActiveLine(lineIndex)}
           >
@@ -417,6 +402,7 @@ function EditWorkspace({
                       >
                         <input
                           value={fragment.text}
+                          title="Use backslashes to mark word fragments, then press Enter"
                           aria-label={`Line ${lineIndex + 1}, word ${tokenIndex + 1}, fragment ${fragmentIndex + 1}`}
                           onChange={(event) => {
                             const value = event.currentTarget.value;
@@ -425,6 +411,12 @@ function EditWorkspace({
                                 fragmentIndex
                               ].text = value;
                             });
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter" || event.nativeEvent.isComposing || !fragment.text.includes("\\")) return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            splitWord(token.id);
                           }}
                         />
                         {token.fragments.length > 1 && (
@@ -538,6 +530,17 @@ function EditWorkspace({
           </article>
         ))}
       </div>
+      {fragmentationProposal && (
+        <FragmentationPrompt
+          proposal={fragmentationProposal}
+          onDismiss={() => setFragmentationProposal(null)}
+          onApply={() => {
+            const next = applyCreatorFragmentationProposal(project, fragmentationProposal);
+            if (next) setProject(next);
+            setFragmentationProposal(null);
+          }}
+        />
+      )}
     </main>
   );
 }
@@ -565,6 +568,15 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   const [draftLibraryOpen, setDraftLibraryOpen] = useState(false);
   const [localAudioUrl, setLocalAudioUrl] = useState("");
   const [localAudioName, setLocalAudioName] = useState("");
+  const [localAudioFile, setLocalAudioFile] = useState<File | null>(null);
+  const [decodedAutoTimingAudio, setDecodedAutoTimingAudio] =
+    useState<DecodedAutoTimingAudio | null>(null);
+  const [autoTimingOpen, setAutoTimingOpen] = useState(false);
+  const [lucidaHandoff, setLucidaHandoff] = useState<CreatorAudioHandoffResult | null>(null);
+  const [autoTimingUndo, setAutoTimingUndo] = useState<{
+    previous: CreatorProject;
+    appliedFingerprint: string;
+  } | null>(null);
   const [speed, setSpeed] = useState(1);
   const [speedMessage, setSpeedMessage] = useState("Spotify music timing uses 1× playback.");
   const [metadataDraft, setMetadataDraft] = useState<CreatorMetadata | null>(null);
@@ -577,6 +589,9 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   const ttmlInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const nativeDialogReleaseRef = useRef<(() => void) | null>(null);
+  const pendingAutoTimingAudioRef = useRef(false);
+  const audioTaskScopeRef = useRef(new CreatorTaskScope());
+  const handoffTaskScopeRef = useRef(new CreatorTaskScope());
   const lyricsAbortRef = useRef<AbortController | null>(null);
   const draftOpenRequestRef = useRef(0);
   const programmaticSearchValueRef = useRef("");
@@ -588,21 +603,32 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   const targetIndexRef = useRef(targetIndex);
   const timingOptionsRef = useRef(timingOptions);
   const modeRef = useRef(mode);
+  const modalOpenRef = useRef(false);
   const togglePlaybackRef = useRef<() => void>(() => undefined);
   const workspaceScrollTrackerRef = useRef(new CreatorWorkspaceScrollTracker());
   const searchController = useMemo(
     () => new CreatorSearchController(searchSpotifyTracks, { debounceMs: 260 }),
     []
   );
-  const { positionMs, durationMs } = usePlaybackPosition(localAudioRef, selectedTrack);
+  const playbackClock = useCreatorPlaybackClock(localAudioRef, selectedTrack);
+  const durationMs = useCreatorPlaybackDuration(playbackClock);
 
   projectRef.current = project;
   targetIndexRef.current = targetIndex;
   timingOptionsRef.current = timingOptions;
   modeRef.current = mode;
+  modalOpenRef.current = autoTimingOpen || metadataDraft !== null || draftLibraryOpen;
 
   const currentWorkflowStep = workflowStep;
   const draftGroups = useMemo(() => groupCreatorDraftsBySong(drafts), [drafts]);
+  const lucidaTrackUrl = creatorAudioHandoffTrackUrl({
+    projectUri: project.uri,
+    metadataTrackId: project.metadata.spotifyTrackId,
+    selectedTrackUri: selectedTrack?.uri,
+  });
+  const lucidaDisabledReason = loadingLyrics
+    ? "Wait for the selected song to finish loading."
+    : !lucidaTrackUrl ? "Choose a standard Spotify track or enter its Spotify Track ID in Metadata. Local tracks cannot be linked." : undefined;
 
   const refreshDrafts = async () => setDrafts(await listCreatorDrafts());
 
@@ -617,19 +643,47 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     if (!openCreatorFilePicker(input)) finishNativeDialog();
   };
 
+  const clearLocalTimingAudio = () => {
+    audioTaskScopeRef.current.cancel();
+    handoffTaskScopeRef.current.cancel();
+    pendingAutoTimingAudioRef.current = false;
+    setAutoTimingOpen(false);
+    setLucidaHandoff(null);
+    const audio = localAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    if (localAudioUrlRef.current) URL.revokeObjectURL(localAudioUrlRef.current);
+    localAudioUrlRef.current = "";
+    setLocalAudioUrl("");
+    setLocalAudioName("");
+    setLocalAudioFile(null);
+    setDecodedAutoTimingAudio(null);
+    setSpeed(1);
+    setSpeedMessage("Spotify music timing uses 1× playback.");
+  };
+
   useEffect(() => {
     document.body.classList.add("IcyLyricCreatorOpen");
     void refreshDrafts();
     const ttmlInput = ttmlInputRef.current;
     const audioInput = audioInputRef.current;
+    const finishAudioDialog = () => {
+      pendingAutoTimingAudioRef.current = false;
+      finishNativeDialog();
+    };
     ttmlInput?.addEventListener("cancel", finishNativeDialog);
-    audioInput?.addEventListener("cancel", finishNativeDialog);
+    audioInput?.addEventListener("cancel", finishAudioDialog);
     return () => {
       ttmlInput?.removeEventListener("cancel", finishNativeDialog);
-      audioInput?.removeEventListener("cancel", finishNativeDialog);
+      audioInput?.removeEventListener("cancel", finishAudioDialog);
       document.body.classList.remove("IcyLyricCreatorOpen");
       searchController.cancel();
       lyricsAbortRef.current?.abort();
+      audioTaskScopeRef.current.cancel();
+      handoffTaskScopeRef.current.cancel();
       finishNativeDialog();
       if (localAudioUrlRef.current) URL.revokeObjectURL(localAudioUrlRef.current);
     };
@@ -679,18 +733,14 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     });
   }, [searchController, searchQuery]);
 
-  const getPlaybackPosition = () => {
-    const audio = localAudioRef.current;
-    return audio?.src
-      ? Math.round(audio.currentTime * 1000)
-      : Math.round(Spicetify.Player.getProgress?.() ?? 0);
-  };
+  const getPlaybackPosition = playbackClock.getPosition;
 
   const chooseTrack = async (
     track: CreatorTrack,
     requestedSource: CreatorLyricsSourcePreference = sourcePreference,
     options: CreatorTrackLoadOptions = {}
   ) => {
+    if (track.uri !== projectRef.current.uri) clearLocalTimingAudio();
     searchController.cancel();
     setSearching(false);
     lyricsAbortRef.current?.abort();
@@ -735,6 +785,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       };
       projectCheckpointRef.current = creatorProjectCheckpoint(next);
       setProject(next);
+      setAutoTimingUndo(null);
       setDraftId(undefined);
       setTargetIndex(0);
       setActiveLine(0);
@@ -818,8 +869,10 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     lyricsAbortRef.current?.abort();
     try {
       const next = parseCreatorTTML(await readCreatorTextFile(file));
+      clearLocalTimingAudio();
       projectCheckpointRef.current = creatorProjectCheckpoint(next);
       setProject(next);
+      setAutoTimingUndo(null);
       setSelectedTrack(null);
       programmaticSearchValueRef.current = "";
       setSearchQuery("");
@@ -859,10 +912,38 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       event.stopImmediatePropagation();
     };
     const isTimingKey = (event: KeyboardEvent) =>
-      modeRef.current === "time" && creatorTimingActionFromKeyboardEvent(event) !== null;
+      modeRef.current === "time" && creatorTimingActionFromKeyboardEvent({
+        code: event.code, key: event.key, repeat: false, isComposing: event.isComposing,
+        target: event.target, altKey: event.altKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey,
+      }) !== null;
+    const advanceShortcut = (event: KeyboardEvent) => modeRef.current === "time" &&
+      isCreatorTimingAdvanceShortcut({
+        code: event.code, key: event.key, repeat: false, isComposing: event.isComposing,
+        keyCode: event.keyCode, which: event.which,
+        target: event.target, altKey: event.altKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey,
+      });
+    const promptControl = (event: KeyboardEvent) => event.target instanceof Element &&
+      event.target.closest(".il-creator-fragmentation-prompt") !== null;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      // Dialog controls must keep their native keyboard behavior. In particular,
+      // F/G/H must never silently edit the draft behind Auto-time's review.
+      if (modalOpenRef.current || nativeDialogReleaseRef.current || promptControl(event)) return;
       if (modeRef.current === "time") {
+        if (event.repeat && isTimingKey(event)) {
+          consume(event);
+          return;
+        }
+        if (advanceShortcut(event)) {
+          consume(event);
+          if (event.repeat) return;
+          const targets = creatorTimingTargets(projectRef.current, timingOptionsRef.current);
+          const next = nextCreatorTimingWordIndex(targets, targetIndexRef.current);
+          targetIndexRef.current = next;
+          setTargetIndex(next);
+          if (targets[next]) setActiveLine(targets[next].lineIndex);
+          return;
+        }
         const action = creatorTimingActionFromKeyboardEvent(event);
         if (action) {
           consume(event);
@@ -895,13 +976,19 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       }
     };
     const suppressShortcutRemainder = (event: KeyboardEvent) => {
+      if (modalOpenRef.current || nativeDialogReleaseRef.current || promptControl(event)) return;
       if (
+        advanceShortcut(event) ||
         isTimingKey(event) ||
         isCreatorPlaybackShortcut({
           code: event.code,
+          key: event.key,
+          keyCode: event.keyCode,
+          which: event.which,
           repeat: false,
           isComposing: event.isComposing,
           target: event.target,
+          altKey: event.altKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey,
         })
       ) {
         consume(event);
@@ -958,13 +1045,115 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     }
   };
 
+  const loadLocalAudioFile = async (file: File) => {
+    const task = audioTaskScopeRef.current.begin();
+    const shouldOpenAutoTiming = pendingAutoTimingAudioRef.current;
+    setAutoTimingOpen(false);
+    localAudioRef.current?.pause();
+    if (localAudioUrlRef.current) URL.revokeObjectURL(localAudioUrlRef.current);
+    const url = URL.createObjectURL(file);
+    localAudioUrlRef.current = url;
+    Spicetify.Player.pause();
+    setLocalAudioUrl(url);
+    setLocalAudioFile(file);
+    setLocalAudioName(file.name);
+    setDecodedAutoTimingAudio(null);
+    setSpeed(1);
+    setSpeedMessage("Decoding local audio for timing…");
+    setActionStatus(`Loading local timing audio: ${file.name}.`);
+    try {
+      const decoded = await decodeAutoTimingAudio(file);
+      task.throwIfCancelled();
+      setDecodedAutoTimingAudio(decoded);
+      setWaveform(
+        creatorWaveformFromPcmChannels([decoded.pcm], decoded.durationMs)
+      );
+      setSpeedMessage("Local audio loaded. Variable speed and Auto-time are available.");
+      setActionStatus(`Loaded local timing audio: ${file.name}.`);
+      if (shouldOpenAutoTiming) setAutoTimingOpen(true);
+    } catch (error) {
+      if (!task.isCurrent()) return;
+      const message = error instanceof Error ? error.message : "The local audio could not be decoded.";
+      setWaveform(creatorWaveformFromSpotifyAnalysis(null));
+      setSpeedMessage("Local audio can play, but it is unavailable to Auto-time.");
+      setActionStatus(message);
+      toast.error(message);
+    } finally {
+      if (task.isCurrent()) pendingAutoTimingAudioRef.current = false;
+    }
+  };
+
+  const openAutoTiming = () => {
+    if (!project.lines.some((line) => lineText(line).trim())) {
+      toast.error("Add your lyrics in Set up lyrics before using Auto-time.");
+      return;
+    }
+    if (localAudioFile && decodedAutoTimingAudio) {
+      setAutoTimingOpen(true);
+      return;
+    }
+    pendingAutoTimingAudioRef.current = true;
+    setActionStatus("Choose the matching local song file to use Auto-time.");
+    openNativeFilePicker(audioInputRef.current);
+  };
+
+  const openLucida = async () => {
+    if (!lucidaTrackUrl || lucidaDisabledReason) return;
+    const task = handoffTaskScopeRef.current.begin();
+    const checkpoint = creatorProjectCheckpoint(projectRef.current);
+    try {
+      const result = await openCreatorLucidaHandoff(lucidaTrackUrl, {
+        copy: (value) => {
+          const clipboard = Spicetify.Platform?.ClipboardAPI;
+          if (typeof clipboard?.copy === "function") return clipboard.copy(value);
+          if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(value);
+          throw new Error("Clipboard access is unavailable.");
+        },
+        open: (url) => window.open(url, "_blank", "noopener,noreferrer"),
+      });
+      if (!task.isCurrent() || creatorProjectCheckpoint(projectRef.current) !== checkpoint) return;
+      setLucidaHandoff(result);
+      setActionStatus(result.copied
+        ? "Song link copied. Paste into Lucida, download manually, then choose Load local audio."
+        : "Clipboard access failed. Copy the song link shown beside Auto-time, then paste it into Lucida.");
+      if (!result.copied || !result.openRequested) {
+        toast.error("The browser handoff needs a manual step. Follow the instructions beside Auto-time.");
+      } else {
+        toast.success("Song link copied. Paste it into Lucida, then load your downloaded audio here.");
+      }
+    } catch (error) {
+      if (!task.isCurrent() || creatorProjectCheckpoint(projectRef.current) !== checkpoint) return;
+      const message = error instanceof Error ? error.message : "Could not open the local audio handoff.";
+      setActionStatus(message);
+      toast.error(message);
+    }
+  };
+
+  const undoLastAutoTiming = () => {
+    if (!autoTimingUndo) return;
+    if (creatorProjectCheckpoint(project) !== autoTimingUndo.appliedFingerprint) {
+      const message = "The project changed after Auto-time, so that automatic update can no longer be undone safely.";
+      setActionStatus(message);
+      toast.error(message);
+      setAutoTimingUndo(null);
+      return;
+    }
+    projectRef.current = autoTimingUndo.previous;
+    setProject(autoTimingUndo.previous);
+    setAutoTimingUndo(null);
+    setActionStatus("Undid the last automatic timing update.");
+    toast.success("Auto-time changes undone.");
+  };
+
   const startNewProject = () => {
+    clearLocalTimingAudio();
     searchController.cancel();
     setSearching(false);
     lyricsAbortRef.current?.abort();
     const next = createEmptyProject();
     projectCheckpointRef.current = creatorProjectCheckpoint(next);
     setProject(next);
+    setAutoTimingUndo(null);
     setSourcePreference("auto");
     setDraftId(undefined);
     setSelectedTrack(null);
@@ -993,8 +1182,10 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
         playUri: (uri) => Spicetify.Player.playUri(uri),
       });
       if (requestId !== draftOpenRequestRef.current) return;
+      clearLocalTimingAudio();
       projectCheckpointRef.current = creatorProjectCheckpoint(loaded.project);
       setProject(loaded.project);
+      setAutoTimingUndo(null);
       setDraftId(loaded.record.id);
       setSelectedTrack(playback.track);
       programmaticSearchValueRef.current = "";
@@ -1402,7 +1593,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
             setImportText={setImportText}
             activeLine={activeLine}
             setActiveLine={setActiveLine}
-            positionMs={positionMs}
+            playbackClock={playbackClock}
           />
         )}
         {currentWorkflowStep !== 1 && mode === "time" && (
@@ -1417,7 +1608,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
               })[index];
               if (target) setActiveLine(target.lineIndex);
             }}
-            positionMs={positionMs}
+            playbackClock={playbackClock}
             options={timingOptions}
             onOptionsChange={(nextOptions) => {
               setTimingOptions(nextOptions);
@@ -1425,10 +1616,15 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
                 setTargetIndex(0);
               }
             }}
+            onAutoTime={openAutoTiming}
+            onUndoAutoTiming={autoTimingUndo ? undoLastAutoTiming : undefined}
+            onOpenLucida={() => void openLucida()}
+            lucidaDisabledReason={lucidaDisabledReason}
+            lucidaHandoff={lucidaHandoff}
           />
         )}
         {currentWorkflowStep !== 1 && mode === "preview" && (
-          <PreviewStage project={project} clock={getPlaybackPosition} />
+          <PreviewStage project={project} clock={playbackClock.getReading} />
         )}
         {currentWorkflowStep !== 1 && mode === "preview" && (
           <aside className="il-creator-inspector">
@@ -1540,10 +1736,31 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
         />
       )}
 
+      {autoTimingOpen && decodedAutoTimingAudio && (
+        <AutoTimingDialog
+          project={project}
+          audioName={localAudioName}
+          audio={decodedAutoTimingAudio}
+          expectedDurationMs={selectedTrack?.durationMs || durationMs || undefined}
+          onSeek={seekPlayback}
+          onTogglePlayback={togglePlayback}
+          onApply={(next, previous) => {
+            projectRef.current = next;
+            setProject(next);
+            setAutoTimingUndo({
+              previous,
+              appliedFingerprint: creatorProjectCheckpoint(next),
+            });
+            setActionStatus("Automatic timings applied. Review or edit them normally in Time mode.");
+          }}
+          onClose={() => setAutoTimingOpen(false)}
+        />
+      )}
+
       <footer className="il-creator-transport" aria-label="Playback transport">
         <button
           type="button"
-          onClick={() => seekPlayback(positionMs - 2000)}
+          onClick={() => seekPlayback(getPlaybackPosition() - 2000)}
           aria-label="Seek back two seconds"
         >
           −2s
@@ -1561,16 +1778,16 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
         </button>
         <button
           type="button"
-          onClick={() => seekPlayback(positionMs + 2000)}
+          onClick={() => seekPlayback(getPlaybackPosition() + 2000)}
           aria-label="Seek forward two seconds"
         >
           +2s
         </button>
-        <span className="il-creator-transport__time">{formatCreatorTime(positionMs)}</span>
-        <CreatorWaveformTimeline
+        <span className="il-creator-transport__time"><CreatorPlaybackTime clock={playbackClock} /></span>
+        <CreatorPlaybackTimeline
           waveform={waveform}
           durationMs={durationMs}
-          positionMs={positionMs}
+          clock={playbackClock}
           selectedLine={project.lines[activeLine] ?? null}
           selectedLineNumber={activeLine + 1}
           onSeek={seekPlayback}
@@ -1595,14 +1812,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
         {localAudioName && (
           <button
             type="button"
-            onClick={() => {
-              localAudioRef.current?.pause();
-              URL.revokeObjectURL(localAudioUrl);
-              setLocalAudioUrl("");
-              setLocalAudioName("");
-              setSpeed(1);
-              setSpeedMessage("Spotify music timing uses 1× playback.");
-            }}
+            onClick={clearLocalTimingAudio}
           >
             Use Spotify audio
           </button>
@@ -1616,40 +1826,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
             finishNativeDialog();
             const file = event.currentTarget.files?.[0];
             if (!file) return;
-            if (localAudioUrl) URL.revokeObjectURL(localAudioUrl);
-            const url = URL.createObjectURL(file);
-            Spicetify.Player.pause();
-            setLocalAudioUrl(url);
-            setLocalAudioName(file.name);
-            setSpeed(1);
-            setSpeedMessage("Local audio loaded. Variable speed is available.");
-            setActionStatus(`Loaded local timing audio: ${file.name}.`);
-            void (async () => {
-              try {
-                const AudioContextClass =
-                  window.AudioContext ??
-                  (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-                    .webkitAudioContext;
-                if (!AudioContextClass) return;
-                const context = new AudioContextClass();
-                try {
-                  const buffer = await context.decodeAudioData(await file.arrayBuffer());
-                  setWaveform(
-                    creatorWaveformFromPcmChannels(
-                      Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
-                        buffer.getChannelData(channel)
-                      ),
-                      buffer.duration * 1000
-                    )
-                  );
-                } finally {
-                  void context.close();
-                }
-              } catch (error) {
-                console.warn("Icy Lyrics could not decode the local timing waveform.", error);
-                setWaveform(creatorWaveformFromSpotifyAnalysis(null));
-              }
-            })();
+            void loadLocalAudioFile(file);
             event.currentTarget.value = "";
           }}
         />

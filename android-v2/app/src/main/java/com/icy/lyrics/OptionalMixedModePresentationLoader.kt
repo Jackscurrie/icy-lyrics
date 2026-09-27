@@ -10,19 +10,19 @@ private const val OPTIONAL_MIXED_MODE_PRESENTATION =
 /** Loads a distribution-owned renderer only when that distribution declares one. */
 internal fun loadOptionalMixedModePresentation(
   activity: ComponentActivity,
-): OptionalMixedModePresentation? {
-  if (!BuildConfig.PRIVATE_FEATURE_INCLUDED) return null
+): OptionalMixedModePresentation {
+  if (!BuildConfig.PRIVATE_FEATURE_INCLUDED) return CreatorSettingsPresentation(activity)
   val className = runCatching {
     activity.packageManager
       .getApplicationInfo(activity.packageName, PackageManager.GET_META_DATA)
       .metaData
       ?.getString(OPTIONAL_MIXED_MODE_PRESENTATION)
-  }.getOrNull()?.takeIf(String::isNotBlank) ?: return null
+  }.getOrNull()?.takeIf(String::isNotBlank) ?: return CreatorSettingsPresentation(activity)
 
   return runCatching {
     val constructor = Class.forName(className)
       .getDeclaredConstructor(ComponentActivity::class.java)
       .apply { isAccessible = true }
     constructor.newInstance(activity) as OptionalMixedModePresentation
-  }.getOrNull()
+  }.getOrNull() ?: CreatorSettingsPresentation(activity)
 }

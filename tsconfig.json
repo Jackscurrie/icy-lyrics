@@ -37,6 +37,8 @@
   "exclude": [
     "BACKUP",
     "dist",
-    "node_modules"
+    "node_modules",
+    "iOS/build",
+    "android-v2/**/build"
   ]
 }

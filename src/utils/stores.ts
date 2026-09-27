@@ -155,6 +155,12 @@ export const $fullscreenBackgroundBlurEnabled = persistAtom<boolean>(
   "fullscreenBackgroundBlurEnabled",
   true
 );
+// Lyric Creator's optional on-device timing model. Fast is the first-run
+// default; successful jobs update this to the module the user actually used.
+export const $creatorAutoTimingLastModel = persistAtom<"fast" | "accurate">(
+  "creatorAutoTimingLastModel",
+  "fast"
+);
 
 // Runtime (ephemeral) atoms
 export const $currentLyricsType = atom<string>("None");

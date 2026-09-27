@@ -71,6 +71,59 @@ class NowPlayingTest {
   }
 
   @Test
+  fun spotifyTvUsesMedia3PlaybackStateMediaIdInsteadOfContextMediaId() {
+    val contextId = "abcdefghijklmnopqrstuv"
+    val trackId = "5K1m4aaPCxwnm9SKlWW1vh"
+    val identity = snapshot(
+      packageName = "com.spotify.tv.android",
+      rawUri = null,
+      rawMediaId = contextId,
+      extras = mapOf(
+        "androidx.media.PlaybackStateCompat.Extras.KEY_MEDIA_ID" to trackId,
+      ),
+    ).identity
+
+    assertEquals("spotify:track:$trackId", identity.exactStorageKey)
+  }
+
+  @Test
+  fun spotifyTvBareMediaIdRemainsTheLegacyFallbackWhenCompatExtraIsAbsent() {
+    val id = "abcdefghijklmnopqrstuv"
+    val identity = snapshot(
+      packageName = "com.spotify.tv.android",
+      rawUri = null,
+      rawMediaId = id,
+    ).identity
+
+    assertEquals("spotify:track:$id", identity.exactStorageKey)
+  }
+
+  @Test
+  fun embeddedAndEncodedSpotifyUrisAreRecognized() {
+    val id = "5K1m4aaPCxwnm9SKlWW1vh"
+    assertEquals(
+      "spotify:track:$id",
+      snapshot(rawUri = null, extras = mapOf("state" to "item=spotify:track:$id;playing"))
+        .identity.exactStorageKey,
+    )
+    assertEquals(
+      "spotify:track:$id",
+      snapshot(rawUri = null, extras = mapOf("state" to "spotify%3Atrack%3A$id"))
+        .identity.exactStorageKey,
+    )
+  }
+
+  @Test
+  fun embeddedSpotifyUriDoesNotAcceptAValidPrefixOfALongerId() {
+    val identity = snapshot(
+      rawUri = null,
+      extras = mapOf("state" to "spotify:track:5K1m4aaPCxwnm9SKlWW1vhEXTRA"),
+    ).identity
+
+    assertTrue(identity.exactStorageKey.startsWith("metadata:"))
+  }
+
+  @Test
   fun metadataFallbackUsesStableFiveSecondDurationBucket() {
     val first = snapshot(rawUri = null, durationMs = 418_240L).identity
     val second = snapshot(rawUri = null, durationMs = 418_900L).identity
@@ -107,8 +160,9 @@ class NowPlayingTest {
     extras: Map<String, String> = emptyMap(),
     playbackState: Int = PlaybackState.STATE_PLAYING,
     artist: String = "Artist",
+    packageName: String = "com.spotify.music",
   ) = NowPlayingSnapshot(
-    packageName = "com.spotify.music",
+    packageName = packageName,
     title = "Song",
     artist = artist,
     album = "Album",

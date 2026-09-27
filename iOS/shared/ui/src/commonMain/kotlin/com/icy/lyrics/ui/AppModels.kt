@@ -18,6 +18,14 @@ enum class LandscapeMode(val label: String) {
   }
 }
 
+/** Transient five-way-remote commands used only by the Android TV player. */
+enum class LandscapeRemoteCommand {
+  PREVIOUS_LYRIC,
+  NEXT_LYRIC,
+  ACTIVATE,
+  CLEAR_SELECTION,
+}
+
 enum class MixedMediaSide(val label: String) {
   LEFT("Media on left"),
   RIGHT("Media on right"),
@@ -26,6 +34,51 @@ enum class MixedMediaSide(val label: String) {
 enum class BackgroundStyle(val label: String) {
   ANIMATED("Animated"),
   STATIC_BLURRED("Static blurred"),
+}
+
+/** TV-only rendering policy. Other app surfaces never receive this override. */
+enum class TvPerformanceMode(val label: String) {
+  OFF("Off"),
+  PERFORMANCE("Performance"),
+  ULTRA("Ultra"),
+}
+
+/** Static TV backdrops available while a performance mode is enabled. */
+enum class TvPerformanceBackground(val label: String) {
+  STATIC_BLURRED("Blurred artwork"),
+  SOLID_ALBUM_COLOR("Album colour"),
+  DIMMED_ARTWORK("Dim artwork"),
+  BLACK("Black"),
+}
+
+/** Platform-neutral backdrop treatment selected before either renderer runs. */
+internal enum class ArtworkBackgroundTreatment {
+  ANIMATED,
+  STATIC_BLURRED,
+  PREBLURRED_ARTWORK,
+  SOLID_ALBUM_COLOR,
+  DIMMED_ARTWORK,
+  BLACK,
+}
+
+internal fun artworkBackgroundTreatment(
+  enabled: Boolean,
+  style: BackgroundStyle,
+  reducedMotion: Boolean,
+  performanceBackground: TvPerformanceBackground?,
+): ArtworkBackgroundTreatment {
+  if (performanceBackground != null) return when (performanceBackground) {
+    TvPerformanceBackground.STATIC_BLURRED -> ArtworkBackgroundTreatment.PREBLURRED_ARTWORK
+    TvPerformanceBackground.SOLID_ALBUM_COLOR -> ArtworkBackgroundTreatment.SOLID_ALBUM_COLOR
+    TvPerformanceBackground.DIMMED_ARTWORK -> ArtworkBackgroundTreatment.DIMMED_ARTWORK
+    TvPerformanceBackground.BLACK -> ArtworkBackgroundTreatment.BLACK
+  }
+  if (!enabled) return ArtworkBackgroundTreatment.BLACK
+  return if (style == BackgroundStyle.ANIMATED && !reducedMotion) {
+    ArtworkBackgroundTreatment.ANIMATED
+  } else {
+    ArtworkBackgroundTreatment.STATIC_BLURRED
+  }
 }
 
 enum class SourceStrategy(val label: String) {

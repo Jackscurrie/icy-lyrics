@@ -26,19 +26,19 @@ data class IcyOnboardingCopy(
 
 /** Canonical Android wording used by Android and deterministic parity fixtures. */
 internal val androidIcyOnboardingCopy = IcyOnboardingCopy(
-  title = "Set up Now Playing access",
+  title = "Allow Notification Access",
   description =
-    "Icy Lyrics reads Spotify's Now Playing notification to show the song, playback time, artwork, and synced lyrics. It does not read your messages or control your Spotify account.",
-  stepsHeading = "On the Android screen that opens:",
+    "Icy Lyrics reads Android's \"media player\" notification for current song data. It does not collect or take control of any of your data.",
+  stepsHeading = "How do I do that?",
   steps = listOf(
-    "1. Find Icy Lyrics in the app list.",
-    "2. Tap the switch beside Icy Lyrics. If Android opens another page, turn on “Allow notification access.”",
-    "3. Tap “Allow” in the confirmation message.",
-    "4. Use Android's Back button to return here.",
+    "1. Tap the blue button below to open the settings screen",
+    "2. Tap on Icy Lyrics on the app list (you may need to scroll to find it)",
+    "3. Turn on the switch next to \"Allow Notification Access\"",
+    "4. Tap \"Allow\" on the confirmation window",
+    "5. Use Android's back button feature to return here",
   ),
-  actionLabel = "Open notification access",
-  footer =
-    "After you enable Icy Lyrics, use Android's Back button to return. The player will connect automatically.",
+  actionLabel = "Open Notification Access",
+  footer = "",
 )
 
 /** Native integration only. Layout, text, vectors and interactions stay in common code. */
@@ -67,7 +67,8 @@ interface IcyUiPlatform {
   @Composable fun ReducedMotionEnabled(): Boolean
   @Composable fun Background(
     artwork: ImageBitmap?, enabled: Boolean, style: BackgroundStyle, isPlaying: Boolean,
-    modifier: Modifier, content: @Composable () -> Unit,
+    performanceBackground: TvPerformanceBackground?, modifier: Modifier,
+    content: @Composable () -> Unit,
   )
 }
 
@@ -83,8 +84,17 @@ val LocalIcyUiPlatform = staticCompositionLocalOf<IcyUiPlatform> {
 
 @Composable fun ArtworkBackground(
   artwork: ImageBitmap?, enabled: Boolean, style: BackgroundStyle, isPlaying: Boolean,
+  performanceBackground: TvPerformanceBackground? = null,
   modifier: Modifier = Modifier, content: @Composable () -> Unit,
-) = LocalIcyUiPlatform.current.Background(artwork, enabled, style, isPlaying, modifier, content)
+) = LocalIcyUiPlatform.current.Background(
+  artwork,
+  enabled,
+  style,
+  isPlaying,
+  performanceBackground,
+  modifier,
+  content,
+)
 
 @Composable internal fun icyTypography(): Typography {
   val original = MaterialTheme.typography

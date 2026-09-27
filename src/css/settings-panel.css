@@ -713,6 +713,24 @@ icy-lyrics-modal.IcyLyricsModal .il-modal-overlay {
     }
   }
 
+  .il-sp-model-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .il-sp-model-status {
+    color: var(--spice-subtext);
+    font-size: 12px;
+    white-space: nowrap;
+
+    &.is-installed {
+      color: #77e4b0;
+    }
+  }
+
   .il-sp-legal-link {
     display: inline-flex;
     align-items: center;

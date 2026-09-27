@@ -40,7 +40,7 @@ import com.icy.lyrics.core.platform.network.Request
 data class LrclibConfig(
   val baseUrl: HttpUrl = "https://lrclib.net/api/".toHttpUrl(),
   val userAgent: String =
-    "IcyLyricsAndroid/1.1.0 (https://jackscurrie.com/icy-lyrics; jack@jackscurrie.com)",
+    "IcyLyricsAndroid/1.2.0 (https://jackscurrie.com/icy-lyrics; jack@jackscurrie.com)",
   val requestSpacingMs: Long = 300L,
   val maxResponseBytes: Long = 2L * 1_024L * 1_024L,
   val allowInsecureForTests: Boolean = false,

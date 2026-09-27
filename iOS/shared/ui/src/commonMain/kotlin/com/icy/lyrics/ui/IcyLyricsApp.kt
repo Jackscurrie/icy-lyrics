@@ -14,8 +14,10 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
@@ -90,23 +93,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -124,6 +139,8 @@ import androidx.compose.ui.window.PopupProperties
 import com.icy.lyrics.core.lyrics.model.LyricsSource
 import com.icy.lyrics.media.NowPlayingSnapshot
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlin.math.PI
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -165,8 +182,48 @@ fun IcyLyricsApp(
   onClearDiagnostics: () -> Unit,
   onDeleteSavedLyrics: (String) -> Unit,
   onDismissMessage: () -> Unit,
+  launchExperienceEnabled: Boolean = false,
+  landscapeRemoteCommands: Flow<LandscapeRemoteCommand> = emptyFlow(),
+  onLandscapeRemoteActivateWithoutSelection: (() -> Unit)? = null,
+  requestInitialSettingsFocus: Boolean = false,
+  tvSettingsRemoteNavigationEnabled: Boolean = false,
+  tvLandscapeChrome: TvLandscapeChrome? = null,
+  onTvPerformanceMode: ((TvPerformanceMode) -> Unit)? = null,
+  onTvPerformanceBackground: ((TvPerformanceBackground) -> Unit)? = null,
 ) {
   val snackbarHost = remember { SnackbarHostState() }
+  val reducedMotion = rememberReducedMotionEnabled()
+  var previousNotificationAccess by remember { mutableStateOf(state.notificationAccess) }
+  var initialAccessObserved by remember { mutableStateOf(false) }
+  var notificationSettingsRequestPending by rememberSaveable { mutableStateOf(false) }
+  var entryPhase by remember(launchExperienceEnabled) {
+    mutableStateOf(initialAppEntryExperiencePhase(state.notificationAccess, launchExperienceEnabled))
+  }
+  LaunchedEffect(state.notificationAccess, launchExperienceEnabled, reducedMotion) {
+    val showSuccess = shouldShowPermissionSuccess(
+      previousNotificationAccess = previousNotificationAccess,
+      notificationAccess = state.notificationAccess,
+      initialAccessObserved = initialAccessObserved,
+      notificationSettingsRequestPending = notificationSettingsRequestPending,
+    )
+    previousNotificationAccess = state.notificationAccess
+    initialAccessObserved = true
+    if (showSuccess) notificationSettingsRequestPending = false
+
+    when {
+      !launchExperienceEnabled -> entryPhase = AppEntryExperiencePhase.CONTENT
+      !state.notificationAccess -> entryPhase = AppEntryExperiencePhase.ONBOARDING
+      else -> {
+        if (showSuccess) {
+          entryPhase = AppEntryExperiencePhase.SUCCESS
+          delay(appEntryPhaseDurationMs(entryPhase, reducedMotion))
+        }
+        entryPhase = AppEntryExperiencePhase.STARTUP
+        delay(appEntryPhaseDurationMs(entryPhase, reducedMotion))
+        entryPhase = AppEntryExperiencePhase.CONTENT
+      }
+    }
+  }
   IcyBackHandler(enabled = state.destination != AppDestination.PLAYER) {
     onNavigate(
       if (
@@ -200,6 +257,7 @@ fun IcyLyricsApp(
             onBack = { onNavigate(AppDestination.PLAYER) },
             onNavigate = onNavigate,
             onPickTtml = onPickTtml,
+            onReload = onReload,
             onRequestBluetoothPermission = onRequestBluetoothPermission,
             onGlobalTimingOffset = onGlobalTimingOffset,
             onBluetoothTimingOffset = onBluetoothTimingOffset,
@@ -219,6 +277,12 @@ fun IcyLyricsApp(
             onCancelSpotifyAuthorization = onCancelSpotifyAuthorization,
             onDisconnectSpotify = onDisconnectSpotify,
             onLrclibEnabled = onLrclibEnabled,
+            requestInitialFocus = requestInitialSettingsFocus,
+            tvRemoteNavigationEnabled = tvSettingsRemoteNavigationEnabled,
+            tvPerformanceMode = tvLandscapeChrome?.performanceMode,
+            tvPerformanceBackground = tvLandscapeChrome?.performanceBackground,
+            onTvPerformanceMode = onTvPerformanceMode,
+            onTvPerformanceBackground = onTvPerformanceBackground,
           )
           AppDestination.LIBRARY -> LibraryScreen(
             items = state.library,
@@ -239,7 +303,12 @@ fun IcyLyricsApp(
           AppDestination.PLAYER -> PlayerHost(
             state = state,
             isLandscape = isLandscape,
-            onOpenNotificationAccess = onOpenNotificationAccess,
+            onOpenNotificationAccess = {
+              if (launchExperienceEnabled && !state.notificationAccess) {
+                notificationSettingsRequestPending = true
+              }
+              onOpenNotificationAccess()
+            },
             onSettings = { onNavigate(AppDestination.SETTINGS) },
             onPickTtml = onPickTtml,
             onStepLandscape = onStepLandscape,
@@ -249,6 +318,12 @@ fun IcyLyricsApp(
             onNext = onNext,
             onSeek = onSeek,
             onReload = onReload,
+            entryPhase = entryPhase,
+            reducedMotion = reducedMotion,
+            landscapeRemoteCommands = landscapeRemoteCommands,
+            onLandscapeRemoteActivateWithoutSelection =
+              onLandscapeRemoteActivateWithoutSelection,
+            tvLandscapeChrome = tvLandscapeChrome,
           )
         }
       }
@@ -270,55 +345,90 @@ private fun PlayerHost(
   onNext: () -> Unit,
   onSeek: (Long) -> Unit,
   onReload: () -> Unit,
+  entryPhase: AppEntryExperiencePhase,
+  reducedMotion: Boolean,
+  landscapeRemoteCommands: Flow<LandscapeRemoteCommand>,
+  onLandscapeRemoteActivateWithoutSelection: (() -> Unit)?,
+  tvLandscapeChrome: TvLandscapeChrome?,
 ) {
   if (!state.notificationAccess) {
     Onboarding(onOpenNotificationAccess)
     return
   }
-  val snapshot = state.nowPlaying
-  if (snapshot == null) {
-    EmptyPlayer(onSettings)
+  if (entryPhase == AppEntryExperiencePhase.SUCCESS) {
+    PermissionSuccessExperience(reducedMotion)
     return
   }
-  val playbackFrame by rememberPlaybackFrame(snapshot, state.settings.effectiveTimingOffsetMs)
-  // The lyric clock includes the single shared +100 ms perceptual lead and user timing.
-  // Transport remains on the raw media-session clock so seeking never inherits lyric offsets.
-  val playbackPosition = playbackFrame?.rawPositionMs ?: snapshot.currentPositionMs(LocalIcyUiPlatform.current.monotonicTimeMs())
-  val position = playbackFrame?.lyricsPositionMs ?: playbackPosition
-  ArtworkBackground(
-    artwork = snapshot.artwork,
-    enabled = state.settings.backgroundEnabled,
-    style = state.settings.backgroundStyle,
-    isPlaying = snapshot.isPlaying,
-  ) {
-    if (isLandscape) {
-      LandscapePlayer(
-        state = state,
-        snapshot = snapshot,
-        positionMs = position,
-        playbackPositionMs = playbackPosition,
-        onSettings = onSettings,
-        onStep = onStepLandscape,
-        onShowArtworkControls = onShowArtworkControls,
-        onPlayPause = onPlayPause,
-        onPrevious = onPrevious,
-        onNext = onNext,
-        onSeek = onSeek,
-      )
-    } else {
-      PortraitPlayer(
-        state = state,
-        snapshot = snapshot,
-        positionMs = position,
-        playbackPositionMs = playbackPosition,
-        onSettings = onSettings,
-        onPickTtml = onPickTtml,
-        onReload = onReload,
-        onPlayPause = onPlayPause,
-        onPrevious = onPrevious,
-        onNext = onNext,
-        onSeek = onSeek,
-      )
+
+  Box(Modifier.fillMaxSize()) {
+    Box(
+      Modifier
+        .fillMaxSize()
+        .then(
+          if (entryPhase == AppEntryExperiencePhase.STARTUP) {
+            Modifier.clearAndSetSemantics { }
+          } else {
+            Modifier
+          },
+        ),
+    ) {
+      val snapshot = state.nowPlaying
+      if (snapshot == null) {
+        EmptyPlayer(onSettings)
+      } else {
+        val playbackFrame by rememberPlaybackFrame(snapshot, state.settings.effectiveTimingOffsetMs)
+        // The lyric clock includes the single shared +100 ms perceptual lead and user timing.
+        // Transport remains on the raw media-session clock so seeking never inherits lyric offsets.
+        val playbackPosition = playbackFrame?.rawPositionMs
+          ?: snapshot.currentPositionMs(LocalIcyUiPlatform.current.monotonicTimeMs())
+        val position = playbackFrame?.lyricsPositionMs ?: playbackPosition
+        ArtworkBackground(
+          artwork = snapshot.artwork,
+          enabled = state.settings.backgroundEnabled,
+          style = state.settings.backgroundStyle,
+          isPlaying = snapshot.isPlaying,
+          performanceBackground = tvLandscapeChrome
+            ?.takeIf { it.performanceMode != TvPerformanceMode.OFF }
+            ?.performanceBackground,
+        ) {
+          if (isLandscape) {
+            LandscapePlayer(
+              state = state,
+              snapshot = snapshot,
+              positionMs = position,
+              playbackPositionMs = playbackPosition,
+              onSettings = onSettings,
+              onStep = onStepLandscape,
+              onShowArtworkControls = onShowArtworkControls,
+              onPlayPause = onPlayPause,
+              onPrevious = onPrevious,
+              onNext = onNext,
+              onSeek = onSeek,
+              remoteCommands = landscapeRemoteCommands,
+              onRemoteActivateWithoutSelection =
+                onLandscapeRemoteActivateWithoutSelection ?: onPlayPause,
+              tvLandscapeChrome = tvLandscapeChrome,
+            )
+          } else {
+            PortraitPlayer(
+              state = state,
+              snapshot = snapshot,
+              positionMs = position,
+              playbackPositionMs = playbackPosition,
+              onSettings = onSettings,
+              onPickTtml = onPickTtml,
+              onReload = onReload,
+              onPlayPause = onPlayPause,
+              onPrevious = onPrevious,
+              onNext = onNext,
+              onSeek = onSeek,
+            )
+          }
+        }
+      }
+    }
+    if (entryPhase == AppEntryExperiencePhase.STARTUP) {
+      StartupExperienceOverlay(reducedMotion)
     }
   }
 }
@@ -370,13 +480,15 @@ private fun Onboarding(onOpenNotificationAccess: () -> Unit) {
         ) {
           Text(copy.actionLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
-        Spacer(Modifier.height(12.dp))
-        Text(
-          copy.footer,
-          style = MaterialTheme.typography.bodyMedium,
-          color = Color.White.copy(alpha = 0.7f),
-          textAlign = TextAlign.Center,
-        )
+        if (copy.footer.isNotBlank()) {
+          Spacer(Modifier.height(12.dp))
+          Text(
+            copy.footer,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+          )
+        }
       }
     }
   }
@@ -615,6 +727,9 @@ private fun LandscapePlayer(
   onPrevious: () -> Unit,
   onNext: () -> Unit,
   onSeek: (Long) -> Unit,
+  remoteCommands: Flow<LandscapeRemoteCommand>,
+  onRemoteActivateWithoutSelection: () -> Unit,
+  tvLandscapeChrome: TvLandscapeChrome?,
 ) {
   val reducedMotion = rememberReducedMotionEnabled()
   val optionalMixedModePresentation = LocalOptionalMixedModePresentation.current
@@ -630,6 +745,7 @@ private fun LandscapePlayer(
       mediaSide = state.settings.mixedMediaSide,
       snapshot = snapshot,
       fontScale = LocalDensity.current.fontScale,
+      forceStackedTimeline = tvLandscapeChrome != null,
     )
     val lyricsContentWidth = (maxWidth - lyricsLayout.outerHorizontalInset * 2).coerceAtLeast(0.dp)
     val desiredLyricsX = if (state.landscapeMode == LandscapeMode.MIXED) {
@@ -738,12 +854,14 @@ private fun LandscapePlayer(
       modifier = Modifier.fillMaxSize(),
     ) { mode ->
       val controlsPolicy = landscapeMediaControlsPolicy(mode)
+      val centerTapRevealEnabled =
+        controlsPolicy.centerTapRevealEnabled && tvLandscapeChrome == null
       when (mode) {
         LandscapeMode.ARTWORK_ONLY -> ArtworkOnlyMode(
           snapshot = snapshot,
           positionMs = playbackPositionMs,
-          controlsVisible = state.artworkControlsVisible && controlsPolicy.centerTapRevealEnabled,
-          onCenterTap = onShowArtworkControls,
+          controlsVisible = state.artworkControlsVisible && centerTapRevealEnabled,
+          onCenterTap = onShowArtworkControls.takeIf { centerTapRevealEnabled },
           onPlayPause = onPlayPause,
           onPrevious = onPrevious,
           onNext = onNext,
@@ -752,8 +870,8 @@ private fun LandscapePlayer(
         LandscapeMode.ARTWORK_TITLES -> ArtworkTitlesMode(
           snapshot = snapshot,
           positionMs = playbackPositionMs,
-          controlsVisible = state.artworkControlsVisible && controlsPolicy.centerTapRevealEnabled,
-          onCenterTap = onShowArtworkControls,
+          controlsVisible = state.artworkControlsVisible && centerTapRevealEnabled,
+          onCenterTap = onShowArtworkControls.takeIf { centerTapRevealEnabled },
           onPlayPause = onPlayPause,
           onPrevious = onPrevious,
           onNext = onNext,
@@ -776,6 +894,8 @@ private fun LandscapePlayer(
             playbackPositionMs = playbackPositionMs,
             layout = desktopMixedLayout,
             showPersistentPlaybackButtons = controlsPolicy.persistentPlaybackButtons,
+            tvLandscapeChrome = tvLandscapeChrome,
+            onSettings = onSettings,
             onPlayPause = onPlayPause,
             onPrevious = onPrevious,
             onNext = onNext,
@@ -804,6 +924,7 @@ private fun LandscapePlayer(
         durationMs = snapshot.durationMs,
         reveal = state.settings.revealEnabled,
         focusPresentation = renderedFocusPresentation,
+        highlightOnly = tvLandscapeChrome?.performanceMode == TvPerformanceMode.ULTRA,
         modifier = Modifier
           .fillMaxSize()
           .graphicsLayer { alpha = presentationAlpha }
@@ -815,6 +936,8 @@ private fun LandscapePlayer(
             },
           ),
         onSeek = onSeek,
+        remoteCommands = remoteCommands,
+        onRemoteActivateWithoutSelection = onRemoteActivateWithoutSelection,
       )
     }
     LandscapeEdge(
@@ -836,10 +959,26 @@ private fun LandscapePlayer(
     )
     // Keep the settled mixed view visually identical to desktop. Settings stay
     // available in the other fullscreen modes and in portrait.
-    if (state.landscapeMode != LandscapeMode.MIXED) {
+    if (state.landscapeMode != LandscapeMode.MIXED && tvLandscapeChrome == null) {
       IconButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {
         Icon(Icons.Default.Settings, "Open settings")
       }
+    }
+    if (tvLandscapeChrome != null && state.landscapeMode != LandscapeMode.MIXED) {
+      TvNonMixedTransportOverlay(
+        snapshot = snapshot,
+        playbackPositionMs = playbackPositionMs,
+        chrome = tvLandscapeChrome,
+        onPlayPause = onPlayPause,
+        onPrevious = onPrevious,
+        onNext = onNext,
+        onSettings = onSettings,
+        onSeek = onSeek,
+        modifier = Modifier
+          .align(Alignment.BottomCenter)
+          .fillMaxWidth(0.52f)
+          .padding(bottom = 22.dp),
+      )
     }
   }
 }
@@ -849,7 +988,7 @@ private fun ArtworkOnlyMode(
   snapshot: NowPlayingSnapshot,
   positionMs: Long,
   controlsVisible: Boolean,
-  onCenterTap: () -> Unit,
+  onCenterTap: (() -> Unit)?,
   onPlayPause: () -> Unit,
   onPrevious: () -> Unit,
   onNext: () -> Unit,
@@ -857,13 +996,21 @@ private fun ArtworkOnlyMode(
 ) {
   val centerTapInteractions = remember { MutableInteractionSource() }
   Box(
-    Modifier.fillMaxSize().padding(horizontal = 100.dp, vertical = 18.dp)
-      .clickable(
-        interactionSource = centerTapInteractions,
-        indication = null,
-        role = Role.Button,
-        onClickLabel = "Show playback controls",
-        onClick = onCenterTap,
+    Modifier
+      .fillMaxSize()
+      .padding(horizontal = 100.dp, vertical = 18.dp)
+      .then(
+        if (onCenterTap != null) {
+          Modifier.clickable(
+            interactionSource = centerTapInteractions,
+            indication = null,
+            role = Role.Button,
+            onClickLabel = "Show playback controls",
+            onClick = onCenterTap,
+          )
+        } else {
+          Modifier
+        },
       ),
     contentAlignment = Alignment.Center,
   ) {
@@ -886,7 +1033,7 @@ private fun ArtworkTitlesMode(
   snapshot: NowPlayingSnapshot,
   positionMs: Long,
   controlsVisible: Boolean,
-  onCenterTap: () -> Unit,
+  onCenterTap: (() -> Unit)?,
   onPlayPause: () -> Unit,
   onPrevious: () -> Unit,
   onNext: () -> Unit,
@@ -896,12 +1043,18 @@ private fun ArtworkTitlesMode(
   Box(
     Modifier
       .fillMaxSize()
-      .clickable(
-        interactionSource = centerTapInteractions,
-        indication = null,
-        role = Role.Button,
-        onClickLabel = "Show playback controls",
-        onClick = onCenterTap,
+      .then(
+        if (onCenterTap != null) {
+          Modifier.clickable(
+            interactionSource = centerTapInteractions,
+            indication = null,
+            role = Role.Button,
+            onClickLabel = "Show playback controls",
+            onClick = onCenterTap,
+          )
+        } else {
+          Modifier
+        },
       ),
   ) {
     Column(
@@ -955,6 +1108,8 @@ private fun MixedMode(
   playbackPositionMs: Long,
   layout: DesktopMixedLayout,
   showPersistentPlaybackButtons: Boolean,
+  tvLandscapeChrome: TvLandscapeChrome?,
+  onSettings: () -> Unit,
   onPlayPause: () -> Unit,
   onPrevious: () -> Unit,
   onNext: () -> Unit,
@@ -968,40 +1123,236 @@ private fun MixedMode(
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Artwork(snapshot.artwork, Modifier.size(layout.artworkSize))
-      Spacer(Modifier.height(layout.artworkTitleSpacing))
-      TrackTitles(snapshot, centered = true, compact = true)
-      if (showPersistentPlaybackButtons) {
+      if (tvLandscapeChrome != null) {
+        Spacer(Modifier.height(layout.timelineTopPadding))
+        PlaybackTimeline(
+          snapshot = snapshot,
+          positionMs = tvLandscapeChrome.previewPositionMs
+            ?.takeIf { tvLandscapeChrome.overlayVisible && tvLandscapeChrome.scrubberFocused }
+            ?: playbackPositionMs,
+          onSeek = onSeek,
+          inlineTimeLabels = layout.inlineTimeLabels,
+          inlineTrackGap = layout.timelineTrackGap,
+          inlineLabelWidth = layout.timelineLabelWidth,
+          alwaysShowPlayhead = tvLandscapeChrome.showScrubberPlayhead,
+          focused = tvLandscapeChrome.scrubberFocused,
+          solidTrack = tvLandscapeChrome.useSolidTimeline,
+          modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(layout.artworkTitleSpacing))
+        TrackTitles(snapshot, centered = true, compact = true)
         Box(
           modifier = Modifier.fillMaxWidth().height(layout.playbackButtonsHeight),
           contentAlignment = Alignment.Center,
         ) {
-          // MIXED owns one permanent timeline below this row. Keep the transport
-          // visible without obscuring the art or adding a duplicate scrubber.
-          PlaybackButtons(
+          TvTransportControls(
             snapshot = snapshot,
-            compact = true,
+            chrome = tvLandscapeChrome,
             onPlayPause = onPlayPause,
             onPrevious = onPrevious,
             onNext = onNext,
+            onSettings = onSettings,
           )
         }
+      } else {
+        Spacer(Modifier.height(layout.artworkTitleSpacing))
+        TrackTitles(snapshot, centered = true, compact = true)
+        if (showPersistentPlaybackButtons) {
+          Box(
+            modifier = Modifier.fillMaxWidth().height(layout.playbackButtonsHeight),
+            contentAlignment = Alignment.Center,
+          ) {
+            // MIXED owns one permanent timeline below this row. Keep the transport
+            // visible without obscuring the art or adding a duplicate scrubber.
+            PlaybackButtons(
+              snapshot = snapshot,
+              compact = true,
+              onPlayPause = onPlayPause,
+              onPrevious = onPrevious,
+              onNext = onNext,
+            )
+          }
+        }
+        PlaybackTimeline(
+          snapshot = snapshot,
+          positionMs = playbackPositionMs,
+          onSeek = onSeek,
+          inlineTimeLabels = layout.inlineTimeLabels,
+          inlineTrackGap = layout.timelineTrackGap,
+          inlineLabelWidth = layout.timelineLabelWidth,
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+              start = layout.timelineHorizontalPadding,
+              top = layout.timelineTopPadding,
+              end = layout.timelineHorizontalPadding,
+            ),
+        )
       }
+    }
+  }
+}
+
+/**
+ * Optional TV-only chrome state. A null value keeps the existing phone and iOS
+ * landscape presentation byte-for-byte on its original layout path.
+ */
+data class TvLandscapeChrome(
+  val overlayVisible: Boolean,
+  val scrubberFocused: Boolean,
+  /** Previous, play/pause, next, then settings. */
+  val focusedControlIndex: Int,
+  /** Optimistic remote-seek position while the media session catches up. */
+  val previewPositionMs: Long? = null,
+  val performanceMode: TvPerformanceMode = TvPerformanceMode.OFF,
+  val performanceBackground: TvPerformanceBackground =
+    TvPerformanceBackground.STATIC_BLURRED,
+)
+
+internal fun TvLandscapeChrome.isControlSelected(controlIndex: Int): Boolean =
+  overlayVisible && !scrubberFocused && focusedControlIndex == controlIndex
+
+/** The TV playhead is a focus cue, not permanent decoration. */
+internal val TvLandscapeChrome.showScrubberPlayhead: Boolean
+  get() = overlayVisible && scrubberFocused
+
+/** Performance modes reserve animation work for lyrics instead of the timeline. */
+internal val TvLandscapeChrome.useSolidTimeline: Boolean
+  get() = performanceMode != TvPerformanceMode.OFF
+
+@Composable
+private fun TvTransportControls(
+  snapshot: NowPlayingSnapshot,
+  chrome: TvLandscapeChrome,
+  onPlayPause: () -> Unit,
+  onPrevious: () -> Unit,
+  onNext: () -> Unit,
+  onSettings: () -> Unit,
+) {
+  AnimatedVisibility(
+    visible = chrome.overlayVisible,
+    enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.96f, animationSpec = tween(150)),
+    exit = fadeOut(tween(110)) + scaleOut(targetScale = 0.98f, animationSpec = tween(110)),
+  ) {
+    Surface(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(18.dp),
+      color = Color.Black.copy(alpha = 0.58f),
+      border = BorderStroke(1.dp, Color.White.copy(alpha = 0.10f)),
+    ) {
+      Row(
+        modifier = Modifier.fillMaxWidth().height(46.dp).padding(horizontal = 6.dp, vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        TvMixedTransportButton(
+          icon = Icons.Default.SkipPrevious,
+          description = "Previous track",
+          selected = chrome.isControlSelected(0),
+          onClick = onPrevious,
+        )
+        TvMixedTransportButton(
+          icon = if (snapshot.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+          description = if (snapshot.isPlaying) "Pause" else "Play",
+          selected = chrome.isControlSelected(1),
+          onClick = onPlayPause,
+        )
+        TvMixedTransportButton(
+          icon = Icons.Default.SkipNext,
+          description = "Next track",
+          selected = chrome.isControlSelected(2),
+          onClick = onNext,
+        )
+        TvMixedTransportButton(
+          icon = Icons.Default.Settings,
+          description = "Open settings",
+          selected = chrome.isControlSelected(3),
+          onClick = onSettings,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun TvNonMixedTransportOverlay(
+  snapshot: NowPlayingSnapshot,
+  playbackPositionMs: Long,
+  chrome: TvLandscapeChrome,
+  onPlayPause: () -> Unit,
+  onPrevious: () -> Unit,
+  onNext: () -> Unit,
+  onSettings: () -> Unit,
+  onSeek: (Long) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  AnimatedVisibility(
+    visible = chrome.overlayVisible,
+    enter = fadeIn(tween(120)) + scaleIn(initialScale = 0.97f, animationSpec = tween(150)),
+    exit = fadeOut(tween(110)) + scaleOut(targetScale = 0.98f, animationSpec = tween(110)),
+    modifier = modifier,
+  ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
       PlaybackTimeline(
         snapshot = snapshot,
-        positionMs = playbackPositionMs,
+        positionMs = chrome.previewPositionMs
+          ?.takeIf { chrome.scrubberFocused }
+          ?: playbackPositionMs,
         onSeek = onSeek,
-        inlineTimeLabels = layout.inlineTimeLabels,
-        inlineTrackGap = layout.timelineTrackGap,
-        inlineLabelWidth = layout.timelineLabelWidth,
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(
-            start = layout.timelineHorizontalPadding,
-            top = layout.timelineTopPadding,
-            end = layout.timelineHorizontalPadding,
-          ),
+        inlineTimeLabels = false,
+        alwaysShowPlayhead = chrome.showScrubberPlayhead,
+        focused = chrome.scrubberFocused,
+        solidTrack = chrome.useSolidTimeline,
+        modifier = Modifier.fillMaxWidth(),
+      )
+      Spacer(Modifier.height(6.dp))
+      TvTransportControls(
+        snapshot = snapshot,
+        chrome = chrome,
+        onPlayPause = onPlayPause,
+        onPrevious = onPrevious,
+        onNext = onNext,
+        onSettings = onSettings,
       )
     }
+  }
+}
+
+@Composable
+private fun RowScope.TvMixedTransportButton(
+  icon: ImageVector,
+  description: String,
+  selected: Boolean,
+  onClick: () -> Unit,
+) {
+  val interactions = remember { MutableInteractionSource() }
+  Box(
+    modifier = Modifier
+      .weight(1f)
+      .fillMaxHeight()
+      .padding(horizontal = 3.dp)
+      .clip(RoundedCornerShape(14.dp))
+      .background(if (selected) Color.White.copy(alpha = 0.18f) else Color.Transparent)
+      .border(
+        width = 1.dp,
+        color = if (selected) Color.White.copy(alpha = 0.44f) else Color.Transparent,
+        shape = RoundedCornerShape(14.dp),
+      )
+      .clickable(
+        interactionSource = interactions,
+        indication = null,
+        role = Role.Button,
+        onClickLabel = description,
+        onClick = onClick,
+      ),
+    contentAlignment = Alignment.Center,
+  ) {
+    Icon(
+      imageVector = icon,
+      contentDescription = description,
+      modifier = Modifier.size(if (selected) 28.dp else 25.dp),
+      tint = Color.White.copy(alpha = if (selected) 1f else 0.82f),
+    )
   }
 }
 
@@ -1050,6 +1401,7 @@ internal fun desktopMixedLayout(
   mediaSide: MixedMediaSide,
   fontScale: Float = 1f,
   titleBlockHeight: androidx.compose.ui.unit.Dp? = null,
+  forceStackedTimeline: Boolean = false,
 ): DesktopMixedLayout {
   val safeFontScale = fontScale.coerceAtLeast(1f)
   val idealArtworkSize = (minOf(viewportWidth * 0.30f, viewportHeight * 0.52f) * 1.10f)
@@ -1063,7 +1415,7 @@ internal fun desktopMixedLayout(
     val trackWidth = artworkSize - horizontalPadding * 2 - labelWidth * 2 - gap * 2
     return trackWidth >= 64.dp
   }
-  var inlineTimeLabels = supportsInlineLabels(idealArtworkSize)
+  var inlineTimeLabels = !forceStackedTimeline && supportsInlineLabels(idealArtworkSize)
   fun timelineHeight(): androidx.compose.ui.unit.Dp = if (inlineTimeLabels) {
     48.dp
   } else {
@@ -1077,7 +1429,7 @@ internal fun desktopMixedLayout(
     )
   }
   var artworkSize = heightCappedArtwork()
-  val recomputedInline = supportsInlineLabels(artworkSize)
+  val recomputedInline = !forceStackedTimeline && supportsInlineLabels(artworkSize)
   if (recomputedInline != inlineTimeLabels) {
     inlineTimeLabels = recomputedInline
     artworkSize = heightCappedArtwork()
@@ -1139,6 +1491,7 @@ private fun rememberDesktopMixedLayout(
   mediaSide: MixedMediaSide,
   snapshot: NowPlayingSnapshot,
   fontScale: Float,
+  forceStackedTimeline: Boolean,
 ): DesktopMixedLayout {
   val density = LocalDensity.current
   val textMeasurer = rememberIcyTextMeasurer(cacheSize = 8)
@@ -1155,8 +1508,15 @@ private fun rememberDesktopMixedLayout(
     textMeasurer,
     titleStyle,
     artistStyle,
+    forceStackedTimeline,
   ) {
-    var layout = desktopMixedLayout(viewportWidth, viewportHeight, mediaSide, fontScale)
+    var layout = desktopMixedLayout(
+      viewportWidth,
+      viewportHeight,
+      mediaSide,
+      fontScale,
+      forceStackedTimeline = forceStackedTimeline,
+    )
     // Artwork width affects wrapping, while wrapped title height affects the
     // height-capped artwork. Re-measure a bounded number of times; this sequence
     // only shrinks at wrap thresholds and settles quickly in practice.
@@ -1177,6 +1537,7 @@ private fun rememberDesktopMixedLayout(
         mediaSide = mediaSide,
         fontScale = fontScale,
         titleBlockHeight = with(density) { titleHeightPx.toDp() },
+        forceStackedTimeline = forceStackedTimeline,
       )
     }
     layout
@@ -1481,6 +1842,8 @@ internal fun PlaybackTimeline(
   inlineTrackGap: androidx.compose.ui.unit.Dp = 0.dp,
   inlineLabelWidth: androidx.compose.ui.unit.Dp = 48.dp,
   alwaysShowPlayhead: Boolean = false,
+  focused: Boolean = false,
+  solidTrack: Boolean = false,
   modifier: Modifier = Modifier,
 ) {
   val duration = snapshot.durationMs?.takeIf { it > 0L } ?: return
@@ -1497,6 +1860,14 @@ internal fun PlaybackTimeline(
   val density = LocalDensity.current
   val fontScale = density.fontScale
   val popupOffsetPx = with(density) { scrubPopupVerticalOffset(fontScale).roundToPx() }
+  val timelineModifier = modifier
+    .clip(RoundedCornerShape(14.dp))
+    .background(if (focused) Color.Black.copy(alpha = 0.46f) else Color.Transparent)
+    .border(
+      width = 1.dp,
+      color = if (focused) Color.White.copy(alpha = 0.38f) else Color.Transparent,
+      shape = RoundedCornerShape(14.dp),
+    )
   val slider: @Composable (Modifier) -> Unit = { sliderModifier ->
     Slider(
       value = displayedPositionMs.toFloat(),
@@ -1551,19 +1922,27 @@ internal fun PlaybackTimeline(
         }
       },
       track = { sliderState ->
-        WavySliderTrack(
-          sliderState = sliderState,
-          isPlaying = snapshot.isPlaying,
-          activeColor = Color.White,
-          inactiveColor = Color.White.copy(alpha = 0.24f),
-        )
+        if (solidTrack) {
+          SolidSliderTrack(
+            sliderState = sliderState,
+            activeColor = Color.White,
+            inactiveColor = Color.White.copy(alpha = 0.24f),
+          )
+        } else {
+          WavySliderTrack(
+            sliderState = sliderState,
+            isPlaying = snapshot.isPlaying,
+            activeColor = Color.White,
+            inactiveColor = Color.White.copy(alpha = 0.24f),
+          )
+        }
       },
       modifier = sliderModifier,
     )
   }
 
   if (inlineTimeLabels) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(timelineModifier, verticalAlignment = Alignment.CenterVertically) {
       TimelineLabel(displayedPositionMs, TextAlign.End, inlineLabelWidth)
       Spacer(Modifier.width(inlineTrackGap))
       slider(Modifier.weight(1f))
@@ -1571,7 +1950,7 @@ internal fun PlaybackTimeline(
       TimelineLabel(duration, TextAlign.Start, inlineLabelWidth)
     }
   } else {
-    Column(modifier.fillMaxWidth()) {
+    Column(timelineModifier.fillMaxWidth()) {
       slider(Modifier.fillMaxWidth())
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
@@ -1604,6 +1983,39 @@ private fun TimelineLabel(
     textAlign = alignment,
     maxLines = 1,
   )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SolidSliderTrack(
+  sliderState: SliderState,
+  activeColor: Color,
+  inactiveColor: Color,
+) {
+  Canvas(Modifier.fillMaxWidth().height(28.dp)) {
+    val centerY = size.height / 2f
+    val activeStrokeWidthPx = 4.dp.toPx()
+    val inactiveStrokeWidthPx = 3.dp.toPx()
+    val fraction = sliderState.coercedValueAsFraction.coerceIn(0f, 1f)
+    val activeEndPx = size.width * fraction
+    drawLine(
+      color = inactiveColor,
+      start = Offset(0f, centerY),
+      end = Offset(size.width, centerY),
+      strokeWidth = inactiveStrokeWidthPx,
+      cap = StrokeCap.Round,
+    )
+    if (activeEndPx > 0f) {
+      val isRtl = layoutDirection == LayoutDirection.Rtl
+      drawLine(
+        color = activeColor,
+        start = Offset(if (isRtl) size.width else 0f, centerY),
+        end = Offset(if (isRtl) size.width - activeEndPx else activeEndPx, centerY),
+        strokeWidth = activeStrokeWidthPx,
+        cap = StrokeCap.Round,
+      )
+    }
+  }
 }
 
 @Composable
@@ -1792,19 +2204,25 @@ private fun LyricsStatusPane(
   durationMs: Long?,
   reveal: Boolean,
   focusPresentation: Boolean,
+  highlightOnly: Boolean = false,
   modifier: Modifier = Modifier,
   onSeek: (Long) -> Unit,
+  remoteCommands: Flow<LandscapeRemoteCommand> = emptyFlow(),
+  onRemoteActivateWithoutSelection: () -> Unit = {},
 ) {
   when (status) {
     is LyricsUiStatus.Ready -> LyricsCanvas(
-      status.document,
-      positionMs,
-      rawPositionMs,
-      durationMs,
-      reveal,
-      focusPresentation,
-      modifier,
-      onSeek,
+      document = status.document,
+      positionMs = positionMs,
+      rawPositionMs = rawPositionMs,
+      durationMs = durationMs,
+      reveal = reveal,
+      focusPresentation = focusPresentation,
+      highlightOnly = highlightOnly,
+      modifier = modifier,
+      onSeek = onSeek,
+      remoteCommands = remoteCommands,
+      onRemoteActivateWithoutSelection = onRemoteActivateWithoutSelection,
     )
     is LyricsUiStatus.Loading -> StatusMessage("Searching for lyrics…", modifier)
     is LyricsUiStatus.Empty -> StatusMessage(status.message, modifier)
@@ -1821,7 +2239,7 @@ private fun StatusMessage(message: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SourceBadge(state: IcyLyricsUiState) {
+internal fun SourceBadge(state: IcyLyricsUiState) {
   val ready = state.lyrics as? LyricsUiStatus.Ready
   val source = ready?.document?.metadata?.source
   AssistChip(
@@ -1838,6 +2256,7 @@ private fun SettingsScreen(
   onBack: () -> Unit,
   onNavigate: (AppDestination) -> Unit,
   onPickTtml: () -> Unit,
+  onReload: () -> Unit,
   onRequestBluetoothPermission: () -> Unit,
   onGlobalTimingOffset: (Int) -> Unit,
   onBluetoothTimingOffset: (Int?) -> Unit,
@@ -1857,12 +2276,27 @@ private fun SettingsScreen(
   onCancelSpotifyAuthorization: () -> Unit,
   onDisconnectSpotify: () -> Unit,
   onLrclibEnabled: (Boolean) -> Unit,
+  requestInitialFocus: Boolean,
+  tvRemoteNavigationEnabled: Boolean,
+  tvPerformanceMode: TvPerformanceMode?,
+  tvPerformanceBackground: TvPerformanceBackground?,
+  onTvPerformanceMode: ((TvPerformanceMode) -> Unit)?,
+  onTvPerformanceBackground: ((TvPerformanceBackground) -> Unit)?,
 ) {
   val settings = state.settings
   val uriHandler = LocalUriHandler.current
+  val optionalMixedModePresentation = LocalOptionalMixedModePresentation.current
   var showAppleMusicConsent by remember { mutableStateOf(false) }
+  val initialFocusRequester = remember { FocusRequester() }
+  LaunchedEffect(requestInitialFocus) {
+    if (requestInitialFocus) initialFocusRequester.requestFocus()
+  }
   Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 18.dp)) {
-    ScreenHeader("Settings", onBack)
+    ScreenHeader(
+      title = "Settings",
+      onBack = onBack,
+      backModifier = Modifier.focusRequester(initialFocusRequester),
+    )
     LazyColumn(
       modifier = Modifier.fillMaxSize(),
       verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -1880,9 +2314,21 @@ private fun SettingsScreen(
           }
         }
       }
+      optionalMixedModePresentation?.let { presentation ->
+        item {
+          presentation.SettingsEntry(
+            snapshot = state.nowPlaying,
+            onLyricsChanged = onReload,
+          )
+        }
+      }
       item {
         SettingsCard("Timing") {
-          TimingSlider(settings.globalTimingOffsetMs, onGlobalTimingOffset)
+          TimingSlider(
+            value = settings.globalTimingOffsetMs,
+            onChange = onGlobalTimingOffset,
+            tvRemoteNavigationEnabled = tvRemoteNavigationEnabled,
+          )
           TextButton(onClick = { onGlobalTimingOffset(0) }) { Text("Reset global timing") }
           ToggleRow(
             "Remember Bluetooth devices",
@@ -1898,8 +2344,9 @@ private fun SettingsScreen(
             val deviceOffset = settings.activeBluetoothTimingOffsetMs ?: settings.globalTimingOffsetMs
             Text("Connected: ${settings.activeBluetoothDeviceName}", fontWeight = FontWeight.SemiBold)
             TimingSlider(
-              deviceOffset,
-              { onBluetoothTimingOffset(it) },
+              value = deviceOffset,
+              onChange = { onBluetoothTimingOffset(it) },
+              tvRemoteNavigationEnabled = tvRemoteNavigationEnabled,
             )
             TextButton(onClick = { onBluetoothTimingOffset(null) }) { Text("Use global timing") }
           } else if (settings.activeBluetoothDeviceName != null) {
@@ -1928,6 +2375,56 @@ private fun SettingsScreen(
           Text("Mixed layout", style = MaterialTheme.typography.titleSmall)
           ChoiceRow(MixedMediaSide.entries, settings.mixedMediaSide, { it.label }, onMixedMediaSide)
           ToggleRow("Keep screen awake", "Prevent the display from sleeping while Icy Lyrics is open.", settings.keepScreenAwake, onKeepScreenAwake)
+        }
+      }
+      if (
+        tvPerformanceMode != null &&
+        tvPerformanceBackground != null &&
+        onTvPerformanceMode != null &&
+        onTvPerformanceBackground != null
+      ) {
+        item {
+          SettingsCard("TV performance") {
+            ToggleRow(
+              "Performance mode",
+              "Stops decorative animation so lyric rendering gets priority.",
+              tvPerformanceMode != TvPerformanceMode.OFF,
+            ) { enabled ->
+              onTvPerformanceMode(
+                if (enabled) TvPerformanceMode.PERFORMANCE else TvPerformanceMode.OFF,
+              )
+            }
+            if (tvPerformanceMode != TvPerformanceMode.OFF) {
+              Text("Lyric motion", style = MaterialTheme.typography.titleSmall)
+              ChoiceRow(
+                values = listOf(TvPerformanceMode.PERFORMANCE, TvPerformanceMode.ULTRA),
+                selected = tvPerformanceMode,
+                label = { it.label },
+                onSelected = onTvPerformanceMode,
+              )
+              Text(
+                if (tvPerformanceMode == TvPerformanceMode.ULTRA) {
+                  "Ultra highlights words in time without word movement."
+                } else {
+                  "Performance keeps the full animated lyric treatment."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.66f),
+              )
+              Text("Static background", style = MaterialTheme.typography.titleSmall)
+              ChoiceRow(
+                values = TvPerformanceBackground.entries,
+                selected = tvPerformanceBackground,
+                label = { it.label },
+                onSelected = onTvPerformanceBackground,
+              )
+              Text(
+                "The animated background and wavy scrubber are disabled in both performance modes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.66f),
+              )
+            }
+          }
         }
       }
       item {
@@ -2241,9 +2738,16 @@ private fun DebugScreen(
 }
 
 @Composable
-private fun ScreenHeader(title: String, onBack: () -> Unit, actions: @Composable () -> Unit = {}) {
+private fun ScreenHeader(
+  title: String,
+  onBack: () -> Unit,
+  backModifier: Modifier = Modifier,
+  actions: @Composable () -> Unit = {},
+) {
   Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
-    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+    IconButton(onClick = onBack, modifier = backModifier) {
+      Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+    }
     Text(
       title,
       style = MaterialTheme.typography.headlineSmall,
@@ -2288,11 +2792,32 @@ private fun <T> ChoiceRow(values: List<T>, selected: T, label: (T) -> String, on
 }
 
 @Composable
-private fun TimingSlider(value: Int, onChange: (Int) -> Unit) {
+private fun TimingSlider(
+  value: Int,
+  onChange: (Int) -> Unit,
+  tvRemoteNavigationEnabled: Boolean = false,
+) {
   var pendingValue by remember(value) { mutableFloatStateOf(value.coerceIn(-5_000, 5_000).toFloat()) }
+  val focusManager = LocalFocusManager.current
+  val remoteNavigationModifier = if (tvRemoteNavigationEnabled) {
+    Modifier.onPreviewKeyEvent { event ->
+      val direction = timingSliderVerticalFocusDirection(event.key)
+      if (direction == null) {
+        false
+      } else {
+        // Material Slider treats both axes as value input. On TV, vertical
+        // D-pad presses instead leave the slider so only Left/Right adjust it.
+        if (event.type == KeyEventType.KeyDown) focusManager.moveFocus(direction)
+        true
+      }
+    }
+  } else {
+    Modifier
+  }
   Column {
     Text(offsetLabel(pendingValue.roundToInt()), color = MaterialTheme.colorScheme.primary)
     Slider(
+      modifier = remoteNavigationModifier,
       value = pendingValue,
       valueRange = -5_000f..5_000f,
       steps = 999,
@@ -2319,8 +2844,14 @@ private fun CenteredPage(content: @Composable ColumnScope.() -> Unit) {
   }
 }
 
+internal fun timingSliderVerticalFocusDirection(key: Key): FocusDirection? = when (key) {
+  Key.DirectionUp -> FocusDirection.Up
+  Key.DirectionDown -> FocusDirection.Down
+  else -> null
+}
+
 @Composable
-private fun icyColors() = androidx.compose.material3.darkColorScheme(
+internal fun icyColors() = androidx.compose.material3.darkColorScheme(
   primary = Color(0xFF8FD7FF),
   secondary = Color(0xFFB7E9FF),
   background = Color.Black,

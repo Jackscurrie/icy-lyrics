@@ -26,6 +26,9 @@ class SpotifyMediaSessionTracker(context: Context) {
   private val controllerCallback = object : MediaController.Callback() {
     override fun onMetadataChanged(metadata: android.media.MediaMetadata?) = publish()
     override fun onPlaybackStateChanged(state: android.media.session.PlaybackState?) = publish()
+    override fun onQueueChanged(queue: MutableList<android.media.session.MediaSession.QueueItem>?) = publish()
+    override fun onExtrasChanged(extras: android.os.Bundle?) = publish()
+    override fun onSessionEvent(event: String, extras: android.os.Bundle?) = publish()
     override fun onSessionDestroyed() {
       setController(null)
       // Spotify can replace its MediaSession token during route or process
@@ -91,7 +94,7 @@ class SpotifyMediaSessionTracker(context: Context) {
     activeController?.transportControls?.seekTo(positionMs.coerceAtLeast(0L)) ?: Unit
 
   private fun chooseController(controllers: List<MediaController>) {
-    val spotify = controllers.filter { it.packageName == SPOTIFY_PACKAGE }
+    val spotify = controllers.filter { SpotifyPackages.contains(it.packageName) }
       .sortedWith(
         compareByDescending<MediaController> {
           it.playbackState?.state == android.media.session.PlaybackState.STATE_PLAYING
@@ -124,8 +127,4 @@ class SpotifyMediaSessionTracker(context: Context) {
 
   private fun listenerComponent() =
     ComponentName(appContext, IcyNotificationListenerService::class.java)
-
-  private companion object {
-    const val SPOTIFY_PACKAGE = "com.spotify.music"
-  }
 }

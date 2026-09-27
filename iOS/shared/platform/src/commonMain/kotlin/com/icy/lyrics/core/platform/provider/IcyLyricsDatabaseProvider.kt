@@ -33,7 +33,7 @@ import kotlinx.serialization.json.Json
 data class IcyLyricsDatabaseConfig(
   val endpoint: HttpUrl = "https://jackscurrie.com/api/ttml".toHttpUrl(),
   val userAgent: String =
-    "IcyLyricsAndroid/1.1.0 (+https://jackscurrie.com/icy-lyrics)",
+    "IcyLyricsAndroid/1.2.0 (+https://jackscurrie.com/icy-lyrics)",
   val maxResponseBytes: Long = 2L * 1_024L * 1_024L,
   val requestTimeoutMs: Long = 15_000L,
   val positiveCacheTtlMs: Long = 30L * 24L * 60L * 60L * 1_000L,
@@ -293,7 +293,9 @@ class IcyLyricsDatabaseProvider(
     const val TTML_MEDIA_TYPE = "application/ttml+xml"
     const val JSON_MEDIA_TYPE = "application/json"
     const val RAW_FORMAT = "ttml"
-    const val CACHE_FORMAT = "icy-ttml-v1"
+    // v2 invalidates normalized v1 rows produced before the desktop-generator
+    // timing/word-boundary fixes in Android 1.2.0.
+    const val CACHE_FORMAT = "icy-ttml-v2"
     const val DEFAULT_RETRY_AFTER_MS = 60_000L
     val SPOTIFY_TRACK_URI = Regex("^spotify:track:[A-Za-z0-9]{22}$", RegexOption.IGNORE_CASE)
   }

@@ -84,6 +84,7 @@ class AppServices private constructor(
         aliases = aliases,
         config = spotifyCatalogConfig,
         diagnostics = diagnostics,
+        icyCatalogEnabled = { settings.current().icyDatabaseEnabled },
       )
       val deviceTimings = DeviceTimingRepository(database.deviceTimingDao())
       val routeMonitor = BluetoothRouteMonitor(appContext)

@@ -15,7 +15,9 @@ describe("desktop Settings legal attribution", () => {
     expect(markup).toContain("provided without warranty");
     expect(markup).toContain("independent");
     expect(markup).toContain("not affiliated with or endorsed by");
-    expect(markup).toContain("Spotify, Apple, LRCLIB, or their respective owners");
+    expect(markup).toContain("Optional Auto-time modules run locally");
+    expect(markup).toContain("audio is not uploaded");
+    expect(markup).toContain("Spotify, Apple, LRCLIB, Hugging Face, OpenAI, Microsoft");
     expect(markup).toContain("Spicy Lyrics by Spikerko");
     expect(markup).toContain("Copyright © 2026 Spikerko");
     expect(markup).toContain(`href="${ICY_LYRICS_LEGAL_URL}"`);

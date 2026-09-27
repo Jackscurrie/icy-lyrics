@@ -64,6 +64,48 @@ class LandscapeModeTest {
   }
 
   @Test
+  fun tvChromeSelectsOnlyOneTransportIconOutsideScrubberFocus() {
+    val transport = TvLandscapeChrome(
+      overlayVisible = true,
+      scrubberFocused = false,
+      focusedControlIndex = 1,
+    )
+
+    assertFalse(transport.isControlSelected(0))
+    assertTrue(transport.isControlSelected(1))
+    assertFalse(transport.isControlSelected(2))
+    assertFalse(transport.isControlSelected(3))
+    assertFalse(transport.copy(scrubberFocused = true).isControlSelected(1))
+    assertFalse(transport.copy(overlayVisible = false).isControlSelected(1))
+  }
+
+  @Test
+  fun tvPlayheadIsVisibleOnlyWhileTheOpenOverlayScrubberIsFocused() {
+    val chrome = TvLandscapeChrome(
+      overlayVisible = true,
+      scrubberFocused = true,
+      focusedControlIndex = 1,
+    )
+
+    assertTrue(chrome.showScrubberPlayhead)
+    assertFalse(chrome.copy(scrubberFocused = false).showScrubberPlayhead)
+    assertFalse(chrome.copy(overlayVisible = false).showScrubberPlayhead)
+  }
+
+  @Test
+  fun tvPerformanceModesUseTheStaticSolidTimeline() {
+    val chrome = TvLandscapeChrome(
+      overlayVisible = false,
+      scrubberFocused = false,
+      focusedControlIndex = 1,
+    )
+
+    assertFalse(chrome.useSolidTimeline)
+    assertTrue(chrome.copy(performanceMode = TvPerformanceMode.PERFORMANCE).useSolidTimeline)
+    assertTrue(chrome.copy(performanceMode = TvPerformanceMode.ULTRA).useSolidTimeline)
+  }
+
+  @Test
   fun desktopMixedGeometryScalesFromTheViewport() {
     val layout = desktopMixedLayout(1_920.dp, 1_080.dp, MixedMediaSide.LEFT)
 
@@ -127,6 +169,20 @@ class LandscapeModeTest {
 
     assertTrue(wrapped.artworkSize < ordinary.artworkSize)
     assertTrue(wrapped.estimatedMediaBottom <= 352.dp)
+  }
+
+  @Test
+  fun tvMixedGeometryGivesTheWaveTheFullArtworkWidth() {
+    val layout = desktopMixedLayout(
+      viewportWidth = 1_920.dp,
+      viewportHeight = 1_080.dp,
+      mediaSide = MixedMediaSide.LEFT,
+      forceStackedTimeline = true,
+    )
+
+    assertFalse(layout.inlineTimeLabels)
+    assertTrue(layout.artworkSize > 0.dp)
+    assertTrue(layout.estimatedMediaBottom <= 1_072.dp)
   }
 
   @Test

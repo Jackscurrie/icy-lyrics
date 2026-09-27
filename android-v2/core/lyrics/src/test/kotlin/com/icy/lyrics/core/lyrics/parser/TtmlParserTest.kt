@@ -34,6 +34,22 @@ class TtmlParserTest {
   }
 
   @Test
+  fun `current AMLL internal dialect treats integer seconds as clock time`() {
+    val raw = """
+      <tt xmlns:amll="http://www.example.com/ns/amll"
+          xmlns:itunes="http://music.apple.com/lyric-ttml-internal"
+          itunes:timing="Word">
+        <body><p begin="42" end="43"><span begin="42" end="43">Signal</span></p></body>
+      </tt>
+    """.trimIndent()
+
+    val lyrics = TtmlParser.parse(raw, LOCAL_URI) as SyllableLyrics
+
+    assertEquals(42_000L, lyrics.lines.single().lead.startMs)
+    assertEquals(43_000L, lyrics.lines.single().lead.endMs)
+  }
+
+  @Test
   fun `word trailing space drives IsPartOfWord and text joining`() {
     val lyrics = TtmlParser.parse(fixture("apple-word.ttml"), LOCAL_URI) as SyllableLyrics
     val tokens = lyrics.lines.single().lead.tokens
@@ -41,6 +57,91 @@ class TtmlParserTest {
     assertFalse(tokens[0].isPartOfWord)
     assertTrue(tokens[1].isPartOfWord)
     assertEquals("こんにちは 世界", lyrics.lines.single().lead.text)
+  }
+
+  @Test
+  fun `whitespace between timed spans separates desktop generated words`() {
+    val raw = """
+      <tt xmlns:itunes="http://music.apple.com/lyric-ttml-internal" itunes:timing="Word">
+        <body><p begin="0s" end="1.2s">
+          <span begin="0s" end="0.4s">sing</span><span begin="0.4s" end="0.8s">ing</span> <span begin="0.8s" end="1.2s">shine</span>
+        </p></body>
+      </tt>
+    """.trimIndent()
+
+    val lyrics = TtmlParser.parse(raw, LOCAL_URI) as SyllableLyrics
+
+    assertEquals(listOf("sing", "ing", "shine"), lyrics.lines.single().lead.tokens.map { it.text })
+    assertEquals(listOf(true, false, true), lyrics.lines.single().lead.tokens.map { it.isPartOfWord })
+    assertEquals("singing shine", lyrics.lines.single().lead.text)
+  }
+
+  @Test
+  fun `macOS creator timing separators and zero width markers parse correctly`() {
+    val boundaryMarker = '\u200B'
+    val raw = """
+      <tt xmlns="http://www.w3.org/ns/ttml"
+          xmlns:amll="http://www.example.com/ns/amll"
+          xmlns:itunes="http://music.apple.com/lyric-ttml-internal"
+          itunes:timing="Word">
+        <head xmlns=""><metadata><amll:meta key="musicName" value="Invented Fixture"/></metadata></head>
+        <body xmlns="" dur="4:02.402"><div begin="1.006" end="4:02.402">
+          <p begin="42.898" end="46.873" itunes:key="L7">
+            <span begin="42.898" end="43.644">Silver</span> <span begin="43.644" end="46.873">${boundaryMarker}moon</span>
+          </p><p begin="57.788" end="1:04.431" itunes:key="L8">
+            <span begin="57.788" end="58.200">Glit</span><span begin="58.200" end="58.869">ters</span> <span begin="58.869" end="1:04.431">${boundaryMarker}now</span>
+          </p>
+        </div></body>
+      </tt>
+    """.trimIndent()
+
+    val lyrics = TtmlParser.parse(raw, LOCAL_URI) as SyllableLyrics
+
+    assertEquals(42_898L, lyrics.lines[0].lead.startMs)
+    assertEquals(46_873L, lyrics.lines[0].lead.endMs)
+    assertEquals("Silver moon", lyrics.lines[0].lead.text)
+    assertEquals(listOf("Silver", "moon"), lyrics.lines[0].lead.tokens.map { it.text })
+    assertEquals(64_431L, lyrics.lines[1].lead.endMs)
+    assertEquals("Glitters now", lyrics.lines[1].lead.text)
+    assertEquals(listOf(true, false, true), lyrics.lines[1].lead.tokens.map { it.isPartOfWord })
+  }
+
+  @Test
+  fun `pretty printing whitespace does not split syllables`() {
+    val raw = """
+      <tt xmlns:itunes="http://music.apple.com/lyric-ttml-internal" itunes:timing="Word">
+        <body><p begin="0.000" end="1.000">
+          <span begin="0.000" end="0.500">star</span>
+          <span begin="0.500" end="1.000">light</span>
+        </p></body>
+      </tt>
+    """.trimIndent()
+
+    val lyrics = TtmlParser.parse(raw, LOCAL_URI) as SyllableLyrics
+
+    assertEquals("starlight", lyrics.lines.single().lead.text)
+    assertEquals(listOf(true, true), lyrics.lines.single().lead.tokens.map { it.isPartOfWord })
+  }
+
+  @Test
+  fun `all clock macOS creator timing and in-span spaces remain compatible`() {
+    val raw = """
+      <tt xmlns:amll="http://www.example.com/ns/amll"
+          xmlns:itunes="http://music.apple.com/lyric-ttml-internal"
+          itunes:timing="Word">
+        <body dur="03:46.786"><div begin="00:01.000" end="03:46.786">
+          <p begin="02:37.000" end="02:40.250" itunes:key="L1">
+            <span begin="02:37.000" end="02:38.100">Northern</span><span begin="02:38.100" end="02:39.200"> lights</span><span begin="02:39.200" end="02:40.250"> glow</span>
+          </p>
+        </div></body>
+      </tt>
+    """.trimIndent()
+
+    val lyrics = TtmlParser.parse(raw, LOCAL_URI) as SyllableLyrics
+
+    assertEquals(157_000L, lyrics.lines.single().lead.startMs)
+    assertEquals(160_250L, lyrics.lines.single().lead.endMs)
+    assertEquals("Northern lights glow", lyrics.lines.single().lead.text)
   }
 
   @Test

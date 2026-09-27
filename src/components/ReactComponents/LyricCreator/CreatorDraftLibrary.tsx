@@ -1,6 +1,40 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { CreatorDraftRecord } from "../../../utils/db.ts";
 import type { CreatorDraftSongGroup } from "./drafts.ts";
+import { persistCreatorDraftArtwork } from "./drafts.ts";
+import { createCreatorDraftArtworkResolver, normalizeCreatorArtworkUrl } from "./draftArtwork.ts";
+import { getSpotifyTrack } from "./data.ts";
+
+const recoverDraftArtwork = createCreatorDraftArtworkResolver({
+  resolveTrack: (uri) => getSpotifyTrack(uri, undefined, undefined, { refreshArtwork: true }),
+  persist: persistCreatorDraftArtwork,
+});
+
+function DraftSongArtwork({ group }: { group: CreatorDraftSongGroup }) {
+  const initial = normalizeCreatorArtworkUrl(group.coverUrl);
+  const [coverUrl, setCoverUrl] = useState(initial);
+  const [failedUrl, setFailedUrl] = useState("");
+  useEffect(() => {
+    setCoverUrl(initial);
+    setFailedUrl("");
+  }, [group.uri, initial]);
+  useEffect(() => {
+    if (initial && !failedUrl) return;
+    let cancelled = false;
+    void recoverDraftArtwork(group.uri, failedUrl).then((cover) => {
+      if (!cancelled) setCoverUrl(cover);
+    }).catch(() => {
+      if (!cancelled) setCoverUrl("");
+    });
+    return () => { cancelled = true; };
+  }, [group.uri, initial, failedUrl]);
+
+  return coverUrl ? <img src={coverUrl} alt="" onError={() => {
+    setCoverUrl("");
+    // One fresh lookup per displayed URL, without retrying a failed cached URL.
+    setFailedUrl(coverUrl);
+  }} /> : <span className="il-creator-cover-placeholder" aria-hidden="true" />;
+}
 
 interface CreatorDraftLibraryProps {
   groups: CreatorDraftSongGroup[];
@@ -82,11 +116,7 @@ export default function CreatorDraftLibrary({
                   onClick={() => setSelectedGroupId(group.id)}
                   key={group.id}
                 >
-                  {group.coverUrl ? (
-                    <img src={group.coverUrl} alt="" />
-                  ) : (
-                    <span className="il-creator-cover-placeholder" aria-hidden="true" />
-                  )}
+                  <DraftSongArtwork group={group} />
                   <span>
                     <strong>{group.name}</strong>
                     <small>{group.artists.join(", ") || group.album || "Unknown song"}</small>

@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 
 plugins {
@@ -40,8 +41,8 @@ android {
     applicationId = "com.icy.lyrics"
     minSdk = 33
     targetSdk = 36
-    versionCode = 4
-    versionName = "1.1.0"
+    versionCode = 8
+    versionName = "1.2.2"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     buildConfigField(
@@ -66,6 +67,14 @@ android {
   productFlavors {
     create("play") {
       dimension = "distribution"
+      uploadSigningConfig?.let { signingConfig = it }
+      buildConfigField("boolean", "PRIVATE_FEATURE_INCLUDED", "false")
+    }
+    create("tv") {
+      dimension = "distribution"
+      minSdk = 30
+      versionCode = 10
+      versionName = "1.2.3"
       uploadSigningConfig?.let { signingConfig = it }
       buildConfigField("boolean", "PRIVATE_FEATURE_INCLUDED", "false")
     }
@@ -148,34 +157,62 @@ dependencies {
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }
 
-val verifyPlayDistributionBoundary by tasks.registering {
+fun registerPublicDistributionBoundary(
+  taskName: String,
+  distributionName: String,
+  runtimeConfigurations: List<String>,
+) = tasks.register(taskName) {
   group = "verification"
   description =
-    "Verifies that public Play variants cannot package :local-private-feature."
+    "Verifies that public $distributionName variants contain neither the private feature nor Android for Cars."
 
   doLast {
-    val leakedConfigurations = listOf(
-      "playDebugRuntimeClasspath",
-      "playReleaseRuntimeClasspath",
-    ).filter { configurationName ->
+    val leaks = runtimeConfigurations.flatMap { configurationName ->
       configurations.getByName(configurationName)
         .incoming
         .resolutionResult
         .allComponents
-        .any { component ->
+        .mapNotNull { component ->
           val identifier = component.id
-          identifier is ProjectComponentIdentifier &&
-            identifier.projectPath == ":local-private-feature"
+          val isPrivateFeature =
+            identifier is ProjectComponentIdentifier &&
+              identifier.projectPath == ":local-private-feature"
+          val isAndroidForCars =
+            identifier is ModuleComponentIdentifier &&
+              (identifier.group == "androidx.car" || identifier.group.startsWith("androidx.car."))
+          if (isPrivateFeature || isAndroidForCars) {
+            "$configurationName -> ${identifier.displayName}"
+          } else {
+            null
+          }
         }
     }
 
-    check(leakedConfigurations.isEmpty()) {
-      ":local-private-feature leaked into public Play configurations: " +
-        leakedConfigurations.joinToString()
+    check(leaks.isEmpty()) {
+      "Private or Android for Cars components leaked into public $distributionName configurations: " +
+        leaks.joinToString()
     }
   }
 }
 
+val verifyPlayDistributionBoundary = registerPublicDistributionBoundary(
+  taskName = "verifyPlayDistributionBoundary",
+  distributionName = "Play",
+  runtimeConfigurations = listOf(
+    "playDebugRuntimeClasspath",
+    "playReleaseRuntimeClasspath",
+  ),
+)
+
+val verifyTvDistributionBoundary = registerPublicDistributionBoundary(
+  taskName = "verifyTvDistributionBoundary",
+  distributionName = "TV",
+  runtimeConfigurations = listOf(
+    "tvDebugRuntimeClasspath",
+    "tvReleaseRuntimeClasspath",
+  ),
+)
+
 tasks.named("check").configure {
-  dependsOn(verifyPlayDistributionBoundary)
+  dependsOn(verifyPlayDistributionBoundary, verifyTvDistributionBoundary)
 }

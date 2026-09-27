@@ -316,9 +316,28 @@ object TtmlParser {
   ): List<LyricToken> {
     if (elements.isEmpty()) return emptyList()
     val rawTexts = elements.map { textExcludingRoles(it, NON_TEXT_ROLES, normalize = false) }
+    val siblingIndexes = elements.mapNotNull(Element::parentNode).distinct().associateWith { parent ->
+      parent.childNodes.values.withIndex().associate { (index, child) -> child to index }
+    }
+    val hasInlineSiblingSeparatorAfter = elements.mapIndexed { index, element ->
+      val next = elements.getOrNull(index + 1) ?: return@mapIndexed false
+      val parent = element.parentNode ?: return@mapIndexed false
+      if (next.parentNode !== parent) return@mapIndexed false
+      val indexes = siblingIndexes[parent] ?: return@mapIndexed false
+      val start = indexes[element] ?: return@mapIndexed false
+      val end = indexes[next] ?: return@mapIndexed false
+      if (end <= start) return@mapIndexed false
+      parent.childNodes.values.subList(start + 1, end).any { node ->
+        (node.nodeType == Node.TEXT_NODE || node.nodeType == Node.CDATA_SECTION_NODE) &&
+          node.nodeValue.orEmpty().let { value ->
+            value.isNotEmpty() && '\n' !in value && '\r' !in value && value.all(Char::isWhitespace)
+          }
+      }
+    }
     return elements.mapIndexedNotNull { index, element ->
       val rawText = rawTexts[index]
-      val cleanText = normalizeText(rawText)
+      val nextRawText = rawTexts.getOrNull(index + 1)
+      val cleanText = normalizeTimedText(rawText)
       if (cleanText.isBlank()) return@mapIndexedNotNull null
       val start = element.timeAttribute("begin", timing)
         ?: element.timeAttribute("start", timing)
@@ -334,7 +353,10 @@ object TtmlParser {
         startMs = start,
         endMs = end.coerceAtLeast(start + MIN_DURATION_MS),
         isPartOfWord = !rawText.endsWithWhitespace() &&
-          rawTexts.getOrNull(index + 1)?.startsWithWhitespace() != true,
+          !rawText.endsWith(TTML_WORD_BOUNDARY_MARKER) &&
+          nextRawText?.startsWithWhitespace() != true &&
+          nextRawText?.startsWith(TTML_WORD_BOUNDARY_MARKER) != true &&
+          !hasInlineSiblingSeparatorAfter[index],
         transliteratedText = directRoman ?: romanTokens.getOrNull(index)?.takeIf(String::isNotBlank),
       )
     }
@@ -428,8 +450,19 @@ object TtmlParser {
 
   private fun normalizeText(value: String): String = value.trim().replace(whitespace, " ")
 
+  /**
+   * AMLL's browser serializer can retain a zero-width space at the start of a
+   * word while writing the visible separator as a sibling XML text node. The
+   * marker is structural, not lyric content, so keep it out of measurement and
+   * per-token animation ranges.
+   */
+  private fun normalizeTimedText(value: String): String = value
+    .trim { character -> character.isWhitespace() || character.isTtmlBoundaryMarker() }
+    .replace(whitespace, " ")
+
   private fun String.endsWithWhitespace(): Boolean = lastOrNull()?.isWhitespace() == true
   private fun String.startsWithWhitespace(): Boolean = firstOrNull()?.isWhitespace() == true
+  private fun Char.isTtmlBoundaryMarker(): Boolean = this == TTML_WORD_BOUNDARY_MARKER || this == '\uFEFF'
 
   private fun Element.hasOwnTiming(): Boolean =
     listOf("begin", "start", "end", "dur").any { hasAttribute(it) }
@@ -532,11 +565,30 @@ object TtmlParser {
         val isAppleOrAmll = namespaceValues.any {
           "music.apple.com" in it || "apple.com/lyric" in it || "amll" in it
         }
+        val isCurrentAmllDialect = namespaceValues.any {
+          "lyric-ttml-internal" in it || "example.com/ns/amll" in it
+        }
         val mode = timingMode(document, root)
+        val timingExpressions = (listOf(root) + root.descendantElements()).flatMap { element ->
+          TIMING_ATTRIBUTES.mapNotNull { attribute ->
+            element.getAttribute(attribute).takeIf(String::isNotBlank)
+          }
+        }
+        // AMLL clock time permits seconds without the MM: prefix, so the
+        // current desktop generator emits values such as 42.898 and switches
+        // to 1:04.431 after one minute. A legacy Apple dialect used bare
+        // integer milliseconds (for example 680); retain that compatibility
+        // only outside the current AMLL/internal namespace family.
+        val hasGeneratorSecondDecimals = timingExpressions.any { expression ->
+          FRACTIONAL_UNITLESS_TIME.matches(expression.trim())
+        }
         return TimingContext(
           frameRate = root.firstAttribute("frameRate")?.toDoubleOrNull()?.takeIf { it > 0 } ?: 30.0,
           tickRate = root.firstAttribute("tickRate")?.toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0,
-          unitlessIsMilliseconds = isAppleOrAmll && mode.equals("word", ignoreCase = true),
+          unitlessIsMilliseconds = isAppleOrAmll &&
+            mode.equals("word", ignoreCase = true) &&
+            !isCurrentAmllDialect &&
+            !hasGeneratorSecondDecimals,
         )
       }
     }
@@ -572,6 +624,9 @@ object TtmlParser {
 
   private val OFFSET_TIME = Regex("([+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+))(h|m|s|ms|f|t)", RegexOption.IGNORE_CASE)
   private val UNITLESS_TIME = Regex("[+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)")
+  private val FRACTIONAL_UNITLESS_TIME = Regex("[+]?(?:[0-9]+\\.[0-9]*|\\.[0-9]+)")
+  private val TIMING_ATTRIBUTES = listOf("begin", "start", "end", "dur")
+  private const val TTML_WORD_BOUNDARY_MARKER = '\u200B'
   private val NON_LEAD_ROLES = setOf("x-bg", "x-roman", "x-translation")
   private val NON_TEXT_ROLES = setOf("x-roman", "x-translation")
 }

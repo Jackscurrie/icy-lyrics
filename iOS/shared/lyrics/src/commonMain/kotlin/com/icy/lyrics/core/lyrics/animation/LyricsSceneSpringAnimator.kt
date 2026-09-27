@@ -38,6 +38,13 @@ class LyricsSceneSpringAnimator {
   fun animate(scene: LyricsScene, frameTimeNanos: Long, snap: Boolean = false): LyricsScene {
     require(frameTimeNanos >= 0L) { "Frame time must not be negative" }
 
+    if (scene.highlightOnly) {
+      // Ultra Performance scenes already contain their final discrete paint
+      // values. Avoid allocating or stepping any retained spring channels.
+      reset()
+      return scene
+    }
+
     val currentTopologyHash = scene.topologyHash()
     if (topologyHash != null && topologyHash != currentTopologyHash) reset()
     topologyHash = currentTopologyHash

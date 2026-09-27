@@ -34,12 +34,15 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -83,8 +86,11 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.isActive
 
 /**
@@ -147,6 +153,9 @@ fun LyricsCanvas(
   focusPresentation: Boolean,
   modifier: Modifier = Modifier,
   onSeek: (Long) -> Unit = {},
+  remoteCommands: Flow<LandscapeRemoteCommand> = emptyFlow(),
+  onRemoteActivateWithoutSelection: () -> Unit = {},
+  highlightOnly: Boolean = false,
 ) {
   if (document is StaticLyrics) {
     StaticLyricsList(document, modifier)
@@ -154,17 +163,23 @@ fun LyricsCanvas(
   }
 
   val reducedMotion = rememberReducedMotionEnabled()
+  var remoteSelectedRenderIndex by remember(document) { mutableStateOf<Int?>(null) }
+  var remoteInteractionRevision by remember(document) { mutableLongStateOf(0L) }
+  var remoteResnapPending by remember(document) { mutableStateOf(false) }
+  val remoteSelectionActive = remoteSelectedRenderIndex != null
+  val effectiveFocusPresentation = focusPresentation && !remoteSelectionActive
   val engine = remember(document) { LyricsSceneEngine() }
   val targetScene = engine.frame(
     document = document,
     lyricsPositionMs = positionMs.coerceAtLeast(0L),
     rawPositionMs = rawPositionMs.coerceAtLeast(0L),
     options = LyricsSceneOptions(
-      fullscreenFocus = focusPresentation,
+      fullscreenFocus = effectiveFocusPresentation,
       reveal = reveal,
-      outroEnabled = focusPresentation,
+      outroEnabled = effectiveFocusPresentation,
       durationMs = durationMs,
       reducedMotion = reducedMotion,
+      highlightOnly = highlightOnly,
     ),
   )
   val scene = rememberAnimatedLyricsScene(document, targetScene, reducedMotion)
@@ -174,8 +189,8 @@ fun LyricsCanvas(
   val scrollViewport = remember(document) { TimedLyricsScrollViewportState() }
   val visibleLines = visibleLyricsForPresentation(
     scene = scene,
-    focusPresentation = focusPresentation,
-    preserveUserViewport = userHasScrolled,
+    focusPresentation = effectiveFocusPresentation,
+    preserveUserViewport = userHasScrolled || remoteSelectionActive,
   )
   if (visibleLines.isEmpty()) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -185,49 +200,158 @@ fun LyricsCanvas(
   }
 
   val activeText = scene.lines
-    .getOrNull(scene.anchorRenderIndex ?: -1)
+    .getOrNull(remoteSelectedRenderIndex ?: scene.anchorRenderIndex ?: -1)
     ?.accessibilityText
     .orEmpty()
   val textMeasurer = rememberIcyTextMeasurer(cacheSize = 48)
-  val hitRegions = remember(document, focusPresentation) { LyricHitRegions() }
+  val hitRegions = remember(document, effectiveFocusPresentation) { LyricHitRegions() }
   val currentOnSeek = rememberUpdatedState(onSeek)
-  val layoutCache = remember(document, focusPresentation, textMeasurer) { LyricLayoutCache() }
-  val scrollAnchorIndex = scene.playbackAnchorIndex()
+  val currentRemoteActivateWithoutSelection = rememberUpdatedState(onRemoteActivateWithoutSelection)
+  val currentScene = rememberUpdatedState(scene)
+  val layoutCache = remember(document, effectiveFocusPresentation, textMeasurer) { LyricLayoutCache() }
+  val scrollAnchorIndex = remoteSelectedRenderIndex ?: scene.playbackAnchorIndex()
   val scrollAnchor = remember(document) { Animatable(scrollAnchorIndex.toFloat()) }
   val currentScrollAnchorIndex = rememberUpdatedState(scrollAnchorIndex)
   var previousRawPositionMs by remember(document) { mutableLongStateOf(rawPositionMs) }
   val drasticPositionChange = abs(rawPositionMs - previousRawPositionMs) > 1_000L
   SideEffect { previousRawPositionMs = rawPositionMs }
+
+  val clearRemoteSelection: () -> Unit = {
+    if (remoteSelectedRenderIndex != null) remoteResnapPending = true
+    remoteSelectedRenderIndex = null
+    isUserDragging = false
+    userHasScrolled = false
+    userScrollOffsetPx = 0f
+  }
+
+  LaunchedEffect(remoteCommands, document) {
+    remoteCommands.collect { command ->
+      val latestScene = currentScene.value
+      when (command) {
+        LandscapeRemoteCommand.PREVIOUS_LYRIC,
+        LandscapeRemoteCommand.NEXT_LYRIC,
+        -> {
+          val direction = if (command == LandscapeRemoteCommand.PREVIOUS_LYRIC) -1 else 1
+          remoteLyricSelectionTarget(
+            scene = latestScene,
+            selectedRenderIndex = remoteSelectedRenderIndex,
+            direction = direction,
+          )?.let { candidate ->
+            remoteInteractionRevision += 1L
+            val candidateLine = latestScene.lines.getOrNull(candidate)
+            if (candidateLine?.status == TimedElementStatus.ACTIVE) {
+              clearRemoteSelection()
+            } else {
+              remoteSelectedRenderIndex = candidate
+              isUserDragging = false
+              userHasScrolled = false
+              userScrollOffsetPx = 0f
+            }
+          }
+        }
+        LandscapeRemoteCommand.ACTIVATE -> {
+          val startMs = remoteSelectedRenderIndex
+            ?.let(latestScene.lines::getOrNull)
+            ?.startMs
+          if (startMs != null) {
+            currentOnSeek.value(startMs)
+            // Keep the pill anchored until the asynchronous media-session seek
+            // makes this row active. The timeout remains a fallback if playback
+            // never acknowledges the seek.
+            remoteInteractionRevision += 1L
+          } else {
+            currentRemoteActivateWithoutSelection.value()
+          }
+        }
+        LandscapeRemoteCommand.CLEAR_SELECTION -> clearRemoteSelection()
+      }
+    }
+  }
+
+  LaunchedEffect(remoteSelectedRenderIndex, remoteInteractionRevision) {
+    if (remoteSelectedRenderIndex != null) {
+      delay(TV_REMOTE_SELECTION_TIMEOUT_MS)
+      clearRemoteSelection()
+    }
+  }
+
+  val selectedLineStatus = remoteSelectedRenderIndex
+    ?.let(scene.lines::getOrNull)
+    ?.status
+  LaunchedEffect(remoteSelectedRenderIndex, selectedLineStatus) {
+    if (remoteSelectedRenderIndex != null && selectedLineStatus == TimedElementStatus.ACTIVE) {
+      clearRemoteSelection()
+    }
+  }
+
   LaunchedEffect(focusPresentation) {
+    clearRemoteSelection()
     if (focusPresentation) {
       isUserDragging = false
       userHasScrolled = false
       userScrollOffsetPx = 0f
     }
   }
-  LaunchedEffect(scrollAnchorIndex, focusPresentation, reducedMotion, userHasScrolled) {
-    if (userHasScrolled && !focusPresentation) return@LaunchedEffect
+  LaunchedEffect(
+    scrollAnchorIndex,
+    effectiveFocusPresentation,
+    remoteSelectionActive,
+    reducedMotion,
+    highlightOnly,
+    userHasScrolled,
+  ) {
+    if (userHasScrolled && !effectiveFocusPresentation && !remoteSelectionActive) return@LaunchedEffect
     val target = scrollAnchorIndex.toFloat()
-    if (focusPresentation || reducedMotion || drasticPositionChange) {
+    if (shouldSnapLyricsLineMovement(
+        remoteResnapPending = remoteResnapPending,
+        focusPresentation = effectiveFocusPresentation,
+        reducedMotion = reducedMotion,
+        highlightOnly = highlightOnly,
+        drasticPositionChange = drasticPositionChange,
+      )
+    ) {
       scrollAnchor.snapTo(target)
+      remoteResnapPending = false
     } else {
       scrollAnchor.animateTo(
         targetValue = target,
-        animationSpec = tween(durationMillis = 800, easing = DesktopScrollEasing),
+        animationSpec = tween(
+          durationMillis = if (remoteSelectionActive) TV_REMOTE_SCROLL_MS else 800,
+          easing = DesktopScrollEasing,
+        ),
       )
     }
   }
-  LaunchedEffect(focusPresentation, userHasScrolled, isUserDragging, reducedMotion) {
-    if (!shouldScheduleLyricsAutoFollow(userHasScrolled, isUserDragging, true, focusPresentation)) {
+  LaunchedEffect(
+    effectiveFocusPresentation,
+    remoteSelectionActive,
+    userHasScrolled,
+    isUserDragging,
+    reducedMotion,
+    highlightOnly,
+  ) {
+    if (remoteSelectionActive || !shouldScheduleLyricsAutoFollow(
+        userHasScrolled,
+        isUserDragging,
+        true,
+        effectiveFocusPresentation,
+      )
+    ) {
       return@LaunchedEffect
     }
     scrollViewport.activeLineVisible.collectLatest { activeLineVisible ->
-      if (!shouldScheduleLyricsAutoFollow(userHasScrolled, isUserDragging, activeLineVisible, focusPresentation)) {
+      if (!shouldScheduleLyricsAutoFollow(
+          userHasScrolled,
+          isUserDragging,
+          activeLineVisible,
+          effectiveFocusPresentation,
+        )
+      ) {
         return@collectLatest
       }
       delay(AUTO_FOLLOW_DELAY_MS)
       val targetOffset = scrollViewport.recenterOffsetPx
-      if (reducedMotion) {
+      if (shouldSnapLyricsAutoFollow(reducedMotion, highlightOnly)) {
         userScrollOffsetPx = targetOffset
       } else {
         animate(
@@ -251,8 +375,8 @@ fun LyricsCanvas(
     modifier = modifier
       .fillMaxSize()
       .padding(
-        top = lyricsViewportPadding(focusPresentation).topDp.dp,
-        bottom = lyricsViewportPadding(focusPresentation).bottomDp.dp,
+        top = lyricsViewportPadding(effectiveFocusPresentation).topDp.dp,
+        bottom = lyricsViewportPadding(effectiveFocusPresentation).bottomDp.dp,
       )
       // Keep large glyphs and spring glow inside the lyric viewport; this is
       // intentionally inside padding so portrait lyrics cannot paint over transport.
@@ -264,7 +388,7 @@ fun LyricsCanvas(
       .draggable(
         state = dragState,
         orientation = Orientation.Vertical,
-        enabled = !focusPresentation,
+        enabled = !focusPresentation && !remoteSelectionActive,
         onDragStarted = {
           isUserDragging = true
           userHasScrolled = true
@@ -273,7 +397,7 @@ fun LyricsCanvas(
           isUserDragging = false
         },
       )
-      .pointerInput(document, focusPresentation) {
+      .pointerInput(document, effectiveFocusPresentation) {
         detectTapGestures { offset ->
           hitRegions.startMsAt(offset)?.let(currentOnSeek.value)
         }
@@ -281,8 +405,8 @@ fun LyricsCanvas(
   ) {
     val measuredHitRegions = mutableListOf<LyricHitRegion>()
     val viewportWidthDp = size.width / density
-    val normalHeights = if (focusPresentation) null else FloatArray(scene.lines.size)
-    val normalCenters = if (focusPresentation) {
+    val normalHeights = if (effectiveFocusPresentation) null else FloatArray(scene.lines.size)
+    val normalCenters = if (effectiveFocusPresentation) {
       null
     } else {
       FloatArray(scene.lines.size).also { centers ->
@@ -310,7 +434,7 @@ fun LyricsCanvas(
         }
       }
     }
-    val focusLayouts = if (focusPresentation) {
+    val focusLayouts = if (effectiveFocusPresentation) {
       visibleLines.associate { line ->
         line.renderIndex to measureCanvasLine(
           line = line,
@@ -324,7 +448,7 @@ fun LyricsCanvas(
     } else {
       emptyMap()
     }
-    val focusPlacements = if (focusPresentation) {
+    val focusPlacements = if (effectiveFocusPresentation) {
       dynamicFocusLinePlacements(
         metrics = visibleLines.mapNotNull { line ->
           focusLayouts[line.renderIndex]?.let { layout ->
@@ -375,7 +499,7 @@ fun LyricsCanvas(
         line = line,
         scene = scene,
         height = size.height,
-        focusPresentation = focusPresentation,
+        focusPresentation = effectiveFocusPresentation,
         normalCenters = normalCenters,
         animatedAnchorIndex = scrollAnchor.value,
         focusCenters = focusCenters,
@@ -406,6 +530,32 @@ fun LyricsCanvas(
       val topLeft = Offset(x, lineCenterY - measured.size.height / 2f)
       val lineScale = lineLayout.lineScale *
         (focusPlacements?.get(line.renderIndex)?.fitScale ?: 1f)
+      if (line.renderIndex == remoteSelectedRenderIndex) {
+        val selectionBounds = lyricHitBounds(
+          centerX = x + measured.size.width / 2f,
+          centerY = lineCenterY,
+          contentWidth = measured.size.width.toFloat(),
+          contentHeight = measured.size.height.toFloat(),
+          scale = lineScale,
+          minimumTargetSize = 56.dp.toPx(),
+          horizontalPadding = 18.dp.toPx(),
+          viewportWidth = size.width,
+        )
+        val selectionRadius = selectionBounds.height / 2f
+        drawRoundRect(
+          color = Color(0xFF64CFFF).copy(alpha = 0.20f),
+          topLeft = Offset(selectionBounds.left, selectionBounds.top),
+          size = Size(selectionBounds.width, selectionBounds.height),
+          cornerRadius = CornerRadius(selectionRadius, selectionRadius),
+        )
+        drawRoundRect(
+          color = Color.White.copy(alpha = 0.30f),
+          topLeft = Offset(selectionBounds.left, selectionBounds.top),
+          size = Size(selectionBounds.width, selectionBounds.height),
+          cornerRadius = CornerRadius(selectionRadius, selectionRadius),
+          style = Stroke(width = 1.25.dp.toPx()),
+        )
+      }
       withTransform({
         scale(lineScale, lineScale, pivot = Offset(x + measured.size.width / 2f, lineCenterY))
       }) {
@@ -471,6 +621,42 @@ internal fun LyricsScene.playbackAnchorIndex(): Int = anchorRenderIndex
   ?: lines.indexOfLast { it.status == TimedElementStatus.SUNG }.takeIf { it >= 0 }
   ?: 0
 
+/**
+ * Finds the next remote-browsable lyric without treating background vocals or
+ * instrumental interludes as separate seek targets. The first Up/Down press
+ * starts immediately above/below playback; subsequent presses clamp at the
+ * first or last lyric instead of wrapping unexpectedly.
+ */
+internal fun remoteLyricSelectionTarget(
+  scene: LyricsScene,
+  selectedRenderIndex: Int?,
+  direction: Int,
+): Int? {
+  val candidates = scene.lines
+    .asSequence()
+    .filter { line ->
+      line.startMs != null &&
+        (line.kind == LyricSceneLineKind.VOCAL || line.kind == LyricSceneLineKind.STATIC)
+    }
+    .map(LyricLineScene::renderIndex)
+    .toList()
+  if (candidates.isEmpty()) return null
+
+  val step = direction.coerceIn(-1, 1)
+  if (step == 0) return selectedRenderIndex?.takeIf(candidates::contains)
+  val selectedPosition = selectedRenderIndex?.let(candidates::indexOf)?.takeIf { it >= 0 }
+  if (selectedPosition != null) {
+    return candidates[(selectedPosition + step).coerceIn(candidates.indices)]
+  }
+
+  val playbackAnchor = scene.playbackAnchorIndex()
+  return if (step < 0) {
+    candidates.lastOrNull { it < playbackAnchor } ?: candidates.first()
+  } else {
+    candidates.firstOrNull { it > playbackAnchor } ?: candidates.last()
+  }
+}
+
 internal fun isInsideLyricRenderWindow(centerY: Float, viewportHeight: Float): Boolean =
   viewportHeight > 0f && centerY in -viewportHeight * 0.25f..viewportHeight * 1.25f
 
@@ -479,6 +665,17 @@ internal data class LyricsViewportPadding(val topDp: Int, val bottomDp: Int)
 internal fun lyricsViewportPadding(focusPresentation: Boolean): LyricsViewportPadding =
   if (focusPresentation) LyricsViewportPadding(topDp = 12, bottomDp = 12)
   else LyricsViewportPadding(topDp = 16, bottomDp = 8)
+
+internal fun shouldSnapLyricsLineMovement(
+  remoteResnapPending: Boolean,
+  focusPresentation: Boolean,
+  reducedMotion: Boolean,
+  highlightOnly: Boolean,
+  drasticPositionChange: Boolean,
+): Boolean = remoteResnapPending || focusPresentation || reducedMotion || highlightOnly || drasticPositionChange
+
+internal fun shouldSnapLyricsAutoFollow(reducedMotion: Boolean, highlightOnly: Boolean): Boolean =
+  reducedMotion || highlightOnly
 
 private data class CanvasLineLayout(
   val baseFontSize: TextUnit,
@@ -542,6 +739,8 @@ private fun rememberAnimatedLyricsScene(
   target: LyricsScene,
   reducedMotion: Boolean,
 ): LyricsScene {
+  if (target.highlightOnly) return target
+
   val animator = remember(document) { LyricsSceneSpringAnimator() }
   val latestTarget = rememberUpdatedState(target)
   val wakeups = remember(document) { Channel<Unit>(capacity = Channel.CONFLATED) }
@@ -1333,6 +1532,8 @@ private const val NORMAL_RENDER_WINDOW_RADIUS = 6
 private const val NORMAL_RENDER_WINDOW_SIZE = NORMAL_RENDER_WINDOW_RADIUS * 2 + 1
 private const val AUTO_FOLLOW_DELAY_MS = 2_000L
 private const val AUTO_FOLLOW_RECENTER_MS = 440
+internal const val TV_REMOTE_SELECTION_TIMEOUT_MS = 3_000L
+private const val TV_REMOTE_SCROLL_MS = 220
 private const val FOCUS_CURRENT_Y_FRACTION = 0.035f
 private const val FOCUS_SECONDARY_Y_FRACTION = 0.35f
 private const val FOCUS_CURRENT_HEIGHT_CAP_FRACTION = 0.44f

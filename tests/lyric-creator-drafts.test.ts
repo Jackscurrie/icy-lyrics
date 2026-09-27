@@ -148,4 +148,43 @@ describe.sequential("Lyric Creator draft persistence", () => {
     });
     await removeCreatorDraft(saved.id);
   });
+
+  it("recovers artwork for every version of one song without changing saved edits or ordering", async () => {
+    const { createEmptyProject } = await import("../src/components/ReactComponents/LyricCreator/model.ts");
+    const { getCreatorDraft, saveCreatorDraft, removeCreatorDraft, persistCreatorDraftArtwork } = await import("../src/components/ReactComponents/LyricCreator/drafts.ts");
+    const project = createEmptyProject("spotify:track:dddddddddddddddddddddd");
+    project.metadata.name = "Recovered art";
+    project.metadata.artists = ["Artist"];
+    const first = await saveCreatorDraft(project);
+    project.lines[0].tokens[0].fragments[0].text = "An edited draft";
+    const second = await saveCreatorDraft(project);
+    const differentProject = createEmptyProject("spotify:track:eeeeeeeeeeeeeeeeeeeeee");
+    const other = await saveCreatorDraft(differentProject);
+    await persistCreatorDraftArtwork(project.uri, "spotify:image:0123abcdef");
+    expect(await getCreatorDraft(first.id)).toMatchObject({ updatedAt: first.updatedAt, project: first.project, song: { uri: project.uri, coverUrl: "https://i.scdn.co/image/0123abcdef" } });
+    expect(await getCreatorDraft(second.id)).toMatchObject({ updatedAt: second.updatedAt, project: second.project, song: { coverUrl: "https://i.scdn.co/image/0123abcdef" } });
+    expect((await getCreatorDraft(other.id))?.song).toBeUndefined();
+    await Promise.all([first, second, other].map((record) => removeCreatorDraft(record.id)));
+  });
+
+  it("does not carry a previous song's artwork into a reused draft ID", async () => {
+    const { createEmptyProject } = await import("../src/components/ReactComponents/LyricCreator/model.ts");
+    const { saveCreatorDraft, removeCreatorDraft } = await import("../src/components/ReactComponents/LyricCreator/drafts.ts");
+    const oldProject = createEmptyProject("spotify:track:ffffffffffffffffffffff");
+    const saved = await saveCreatorDraft(oldProject, undefined, { uri: oldProject.uri, coverUrl: "https://images.test/old.jpg" });
+    const newProject = createEmptyProject("spotify:track:gggggggggggggggggggggg");
+    const changed = await saveCreatorDraft(newProject, saved.id, { uri: oldProject.uri, coverUrl: "https://images.test/old.jpg" });
+    expect(changed.uri).toBe(newProject.uri);
+    expect(changed.song).toBeUndefined();
+    await removeCreatorDraft(saved.id);
+  });
+
+  it("keeps complete local Spotify URIs distinct in the draft library", async () => {
+    const { createEmptyProject } = await import("../src/components/ReactComponents/LyricCreator/model.ts");
+    const { groupCreatorDraftsBySong } = await import("../src/components/ReactComponents/LyricCreator/drafts.ts");
+    const records = ["spotify:local:Artist:Album:Song:180", "spotify:local:Artist:Album:Song:181"].map((uri, index) => ({
+      id: `local-${index}`, uri, name: "Song", createdAt: 1, updatedAt: 2, project: createEmptyProject(uri),
+    }));
+    expect(groupCreatorDraftsBySong(records).map((group) => group.uri).sort()).toEqual(records.map((record) => record.uri).sort());
+  });
 });

@@ -321,6 +321,37 @@ body:not(.IcyLyrics_StaticBackground)
   border: 1px solid hsla(0, 0%, 100%, 0.5);
 }
 
+/* Own the button shell: Spotify's generated button classes can disappear or
+   change between client releases. Never copy a sibling's active/disabled state. */
+button.IcyLyricsPlaybarButton {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--text-subdued, #b3b3b3);
+  padding: 0;
+  margin: 0;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+button.IcyLyricsPlaybarButton > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.IcyLyricsPlaybarButton:hover:not(:disabled) { color: var(--text-base, #fff); }
+button.IcyLyricsPlaybarButton:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+button.IcyLyricsPlaybarButton:disabled { opacity: 0.4; cursor: default; }
+button.IcyLyricsPlaybarButton[aria-pressed="true"] { color: var(--spice-button, #1db954); }
+
 #IcyLyricsPageSvg {
   fill: currentColor;
   transform: translateY(2px);

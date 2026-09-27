@@ -32,7 +32,7 @@ function foundPayload(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Icy Lyrics Database API client", () => {
-  it("sends the exact URI and Icy 1.1.0 identity without touching the Spicy version", async () => {
+  it("sends the exact URI and Icy 1.3.0 identity without touching the Spicy version", async () => {
     const fetchImpl = fetchReturning(
       Response.json(foundPayload(), { status: 200 })
     );
@@ -53,7 +53,7 @@ describe("Icy Lyrics Database API client", () => {
     });
     expect(JSON.parse(String(init?.body))).toEqual(buildIcyDatabaseLookupBody(TRACK_URI));
     expect(buildIcyDatabaseLookupBody(TRACK_URI).client.version).toBe(ProjectVersion);
-    expect(ProjectVersion).toBe("1.1.0");
+    expect(ProjectVersion).toBe("1.3.0");
   });
 
   it("treats a missing Icy record as a normal fallback miss", async () => {

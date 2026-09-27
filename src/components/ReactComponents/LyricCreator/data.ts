@@ -9,6 +9,7 @@ import { decodeLyricsPayload } from "../../../utils/Lyrics/payload.ts";
 import { ProcessLyrics } from "../../../utils/Lyrics/ProcessLyrics.ts";
 import { isLyricsObject, normalizeLyricsSchema } from "../../../utils/Lyrics/schema.ts";
 import type { CreatorMetadata, CreatorSourceProvenance } from "./model.ts";
+import { normalizeCreatorArtworkUrl } from "./draftArtwork.ts";
 
 export interface CreatorTrack {
   uri: string;
@@ -131,7 +132,12 @@ function defaultSpotifyInternalApi(): CreatorSpotifyInternalApi {
 
 function artistNames(track: UnknownRecord): string[] {
   const artistValue = track.artists;
-  const artists = Array.isArray(artistValue) ? artistValue : asArray(asRecord(artistValue)?.items);
+  const standardArtists = Array.isArray(artistValue) ? artistValue : asArray(asRecord(artistValue)?.items);
+  // Full-track detail splits the primary and featured artists, unlike search.
+  const artists = standardArtists.length ? standardArtists : [
+    ...asArray(nestedRecord(track, "firstArtist")?.items),
+    ...asArray(nestedRecord(track, "otherArtists")?.items),
+  ];
   return artists
     .map((artist) => {
       const item = asRecord(artist);
@@ -143,18 +149,25 @@ function artistNames(track: UnknownRecord): string[] {
 function bestCoverUrl(track: UnknownRecord): string {
   const album = nestedRecord(track, "albumOfTrack") ?? nestedRecord(track, "album");
   const coverArt = nestedRecord(album, "coverArt") ?? nestedRecord(track, "coverArt");
+  const squareCover = nestedRecord(nestedRecord(track, "visualIdentity"), "squareCoverImage");
   const sources = [
     ...asArray(coverArt?.sources),
+    ...asArray(squareCover?.sources),
     ...asArray(album?.images),
     ...asArray(track.images),
   ];
+  const metadata = asRecord(track.metadata);
+  for (const [label, key] of [["xlarge", "image_xlarge_url"], ["large", "image_large_url"], ["standard", "image_url"], ["small", "image_small_url"]]) {
+    if (metadata?.[key]) sources.push({ url: metadata[key], label });
+  }
   let best = "";
   let bestArea = -1;
   for (const sourceValue of sources) {
     const source = asRecord(sourceValue);
-    const url = stringValue(source?.url);
+    const url = normalizeCreatorArtworkUrl(source?.url);
     if (!url) continue;
-    const width = finiteNumber(source?.width) ?? 0;
+    const labelSize: Record<string, number> = { xlarge: 640, large: 300, standard: 160, small: 64 };
+    const width = finiteNumber(source?.width) ?? labelSize[stringValue(source?.label)] ?? 0;
     const height = finiteNumber(source?.height) ?? width;
     const area = width * height;
     if (area > bestArea) {
@@ -322,22 +335,51 @@ export async function searchSpotifyTracks(
 export async function getSpotifyTrack(
   uri: string,
   signal?: AbortSignal,
-  api?: CreatorSpotifyInternalApi
+  api?: CreatorSpotifyInternalApi,
+  options: { refreshArtwork?: boolean } = {}
 ): Promise<CreatorTrack | null> {
   const normalized = normalizeSpotifyTrackUri(uri);
   if (!normalized) return null;
-  const internalApi = api ?? defaultSpotifyInternalApi();
   abortCreatorRequest(signal);
-  if (typeof Spicetify !== "undefined") {
-    const current = currentSpotifyTrack();
-    if (current?.uri === normalized) return current;
+  const playerTrack = currentSpotifyTrack();
+  const current = playerTrack?.uri === normalized ? playerTrack : null;
+  if (current?.coverUrl && !options.refreshArtwork) return current;
+  let internalApi: CreatorSpotifyInternalApi;
+  try { internalApi = api ?? defaultSpotifyInternalApi(); } catch (error) {
+    if (current) return current;
+    throw error;
   }
 
+  let matchedTrack = current;
   let searchError: unknown = null;
+  // URI search can legitimately return nothing, and getTrackName/Artists do
+  // not request cover art. Use the same exact-ID full-track definition as the
+  // installed Spotify track page instead of fuzzy searching a draft's title.
+  const fullTrackDefinition = internalApi.definitions.getTrack;
+  if (fullTrackDefinition) {
+    try {
+      const response = await requestInternalSpotifyDetail(internalApi, fullTrackDefinition, {
+        uri: normalized,
+        includeVideoAssociationItems: false,
+      });
+      abortCreatorRequest(signal);
+      const data = nestedRecord(dataRoot(response), "trackUnion");
+      const track = data ? creatorTrackFromInternalData(data) : null;
+      if (track?.uri === normalized) {
+        if (track.coverUrl) return track;
+        matchedTrack = track;
+      }
+    } catch (error) {
+      abortCreatorRequest(signal);
+      if ((error as Error)?.name === "AbortError") throw error;
+      searchError = error;
+    }
+  }
   try {
     const results = await requestInternalSpotifySearch(normalized, signal, internalApi);
     const exact = results.find((track) => track.uri === normalized);
-    if (exact) return exact;
+    if (exact?.coverUrl) return exact;
+    if (exact && !matchedTrack) matchedTrack = exact;
   } catch (error) {
     if ((error as Error)?.name === "AbortError") throw error;
     searchError = error;
@@ -346,6 +388,7 @@ export async function getSpotifyTrack(
   const nameDefinition = internalApi.definitions.getTrackName;
   const artistsDefinition = internalApi.definitions.queryTrackArtists;
   if (!nameDefinition && !artistsDefinition) {
+    if (matchedTrack) return matchedTrack;
     if (searchError) throw friendlySpotifySearchError(searchError);
     return null;
   }
@@ -375,35 +418,35 @@ export async function getSpotifyTrack(
       )?.reason;
       if (detailError) throw detailError;
       if (searchError) throw searchError;
-      return null;
+      return matchedTrack;
     }
     return {
       uri: normalized,
-      name: name || "Unknown track",
-      artists,
+      name: name || matchedTrack?.name || "Unknown track",
+      artists: artists.length ? artists : matchedTrack?.artists ?? [],
       album:
         stringValue(nestedRecord(nameTrack, "albumOfTrack")?.name) ||
-        stringValue(nestedRecord(artistsTrack, "albumOfTrack")?.name),
-      coverUrl: bestCoverUrl(nameTrack ?? {}) || bestCoverUrl(artistsTrack ?? {}),
-      durationMs: trackDurationMs(nameTrack ?? {}) || trackDurationMs(artistsTrack ?? {}),
-      isrc: trackIsrc(nameTrack ?? {}) || trackIsrc(artistsTrack ?? {}),
+        stringValue(nestedRecord(artistsTrack, "albumOfTrack")?.name) || matchedTrack?.album || "",
+      coverUrl: bestCoverUrl(nameTrack ?? {}) || bestCoverUrl(artistsTrack ?? {}) || matchedTrack?.coverUrl || "",
+      durationMs: trackDurationMs(nameTrack ?? {}) || trackDurationMs(artistsTrack ?? {}) || matchedTrack?.durationMs || 0,
+      isrc: trackIsrc(nameTrack ?? {}) || trackIsrc(artistsTrack ?? {}) || matchedTrack?.isrc || "",
     };
   } catch (error) {
     abortCreatorRequest(signal);
+    if (matchedTrack) return matchedTrack;
     throw friendlySpotifySearchError(error);
   }
 }
 
 export function currentSpotifyTrack(): CreatorTrack | null {
-  const item = Spicetify?.Player?.data?.item;
+  const item = typeof Spicetify === "undefined" ? null : Spicetify.Player?.data?.item;
   if (!item?.uri?.startsWith("spotify:track:")) return null;
-  const images = [...(item.images ?? [])];
   return {
     uri: item.uri,
     name: item.name ?? "Unknown track",
     artists: (item.artists ?? []).map((artist) => artist.name).filter(Boolean),
     album: item.album?.name ?? item.metadata?.album_title ?? "",
-    coverUrl: images.find((image) => image.label === "xlarge")?.url ?? images[0]?.url ?? "",
+    coverUrl: bestCoverUrl(item as unknown as UnknownRecord),
     durationMs: item.duration?.milliseconds ?? 0,
     isrc: item.metadata?.isrc ?? "",
   };

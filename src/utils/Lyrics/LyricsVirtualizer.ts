@@ -281,6 +281,7 @@ class LyricsVirtualizer {
       const carrier = this._getOrCreateCarrier(index);
       if (element) {
         delete element.dataset.fullscreenFocusIndex;
+        carrier.classList.remove("FullscreenLyricsFocusCarrier");
         carrier.appendChild(element);
         wrapper.appendChild(carrier);
       }
@@ -406,6 +407,9 @@ class LyricsVirtualizer {
   // after the first acting branch to keep steady state at one reflow per tick.
   private _selfHealCheck = (): void => {
     if (this._presentationRemeasureGate.isPending) return;
+    // The hidden list is deliberately pinned while animator nodes belong to
+    // the focus stage. Exit/resize performs the necessary reconciliation.
+    if (this.isPresentationMode()) return;
     const v = this._virtualizer;
     const el = this._scrollEl;
     if (!v || !el) return;

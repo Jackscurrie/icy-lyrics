@@ -9,15 +9,21 @@ import {
   type CreatorTimingOptions,
 } from "./timing.ts";
 import type { CreatorProject } from "./model.ts";
-import { creatorPlaybackActivity } from "./activeWord.ts";
+import { CreatorPlaybackTime, useCreatorPlaybackActivity, type CreatorPlaybackClock } from "./useCreatorPlayback.tsx";
+import { CREATOR_LUCIDA_URL, type CreatorAudioHandoffResult } from "./localAudioHandoff.ts";
 
 interface CreatorTimeWorkspaceProps {
   project: CreatorProject;
   targetIndex: number;
   onTargetIndex: (index: number) => void;
-  positionMs: number;
+  playbackClock: CreatorPlaybackClock;
   options: CreatorTimingOptions;
   onOptionsChange: (options: CreatorTimingOptions) => void;
+  onAutoTime: () => void;
+  onUndoAutoTiming?: () => void;
+  onOpenLucida: () => void;
+  lucidaDisabledReason?: string;
+  lucidaHandoff: CreatorAudioHandoffResult | null;
 }
 
 function displayTime(timeMs: number | null): string {
@@ -50,9 +56,14 @@ export default function CreatorTimeWorkspace({
   project,
   targetIndex,
   onTargetIndex,
-  positionMs,
+  playbackClock,
   options,
   onOptionsChange,
+  onAutoTime,
+  onUndoAutoTiming,
+  onOpenLucida,
+  lucidaDisabledReason,
+  lucidaHandoff,
 }: CreatorTimeWorkspaceProps) {
   const targets = useMemo(
     () => creatorTimingTargets(project, { ignoreBackground: options.ignoreBackground }),
@@ -64,10 +75,7 @@ export default function CreatorTimeWorkspace({
     () => new Map(targets.map((target, index) => [target.fragment.id, index])),
     [targets]
   );
-  const playbackActivity = useMemo(
-    () => creatorPlaybackActivity(project, positionMs),
-    [positionMs, project]
-  );
+  const playbackActivity = useCreatorPlaybackActivity(project, playbackClock);
   const timedCount = targets.filter(
     ({ fragment }) => fragment.startTimeMs !== null && fragment.endTimeMs !== null
   ).length;
@@ -116,6 +124,50 @@ export default function CreatorTimeWorkspace({
               ? `${errorIndexes.size} timing error${errorIndexes.size === 1 ? "" : "s"}`
               : "No timing errors"}
           </small>
+          <div className="il-creator-autotime-actions">
+            <button type="button" className="il-creator-primary-button" onClick={onAutoTime}>
+              Auto-time lyrics
+            </button>
+            <button
+              type="button"
+              disabled={Boolean(lucidaDisabledReason)}
+              title={lucidaDisabledReason || "Copy this song's Spotify link and open Lucida in your browser"}
+              onClick={onOpenLucida}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.stopPropagation();
+              }}
+              onKeyUp={(event) => {
+                if (event.key === "Enter") event.stopPropagation();
+              }}
+            >
+              Open in Lucida
+            </button>
+            {onUndoAutoTiming && (
+              <button type="button" onClick={onUndoAutoTiming}>
+                Undo Auto-time
+              </button>
+            )}
+          </div>
+          {lucidaHandoff && (
+            <div className="il-creator-lucida-help" role="status">
+              <p>
+                {lucidaHandoff.copied ? "Song link copied. " : "Copy the song link below. "}
+                Paste it into <a href={CREATOR_LUCIDA_URL} target="_blank" rel="noopener noreferrer">Lucida</a>,
+                then download the audio there manually. Choose your preferred folder in your browser&apos;s
+                Save As dialog, then use Load local audio below.
+              </p>
+              {!lucidaHandoff.openRequested && <p>The browser could not be opened. Use the Lucida link above.</p>}
+              {!lucidaHandoff.copied && (
+                <input
+                  type="text"
+                  readOnly
+                  value={lucidaHandoff.trackUrl}
+                  aria-label="Spotify song link to copy into Lucida"
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         <div className="il-creator-timing-toolbar__group il-creator-timing-adjustment">
@@ -180,8 +232,11 @@ export default function CreatorTimeWorkspace({
             <span>
               <kbd>H</kbd> Mark end
             </span>
+            <span>
+              <kbd>Space</kbd><span>or</span><kbd>J</kbd> Next word
+            </span>
           </div>
-          <small>Playhead {formatCreatorTime(positionMs)}</small>
+          <small>Playhead <CreatorPlaybackTime clock={playbackClock} /></small>
         </div>
       </section>
 
@@ -201,7 +256,7 @@ export default function CreatorTimeWorkspace({
 
           return (
             <section
-              className={`il-creator-timing-line${lineIsActive ? " is-active" : ""}${line.isBackground ? " is-background" : ""}`}
+              className={`il-creator-timing-line${lineIsActive ? " is-active" : ""}${line.isBackground ? " is-background" : ""}${line.isSecondSpeaker ? " is-second-speaker" : ""}`}
               aria-label={`Line ${lineIndex + 1}`}
               key={line.id}
             >

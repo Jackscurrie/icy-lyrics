@@ -3,6 +3,8 @@ package com.icy.lyrics
 import android.app.Application
 import android.content.Context
 import com.icy.lyrics.core.platform.AppServices
+import com.icy.lyrics.core.platform.provider.IcyLyricsDatabaseConfig
+import com.icy.lyrics.core.platform.provider.SpotifyCatalogConfig
 import com.icy.lyrics.media.SpotifyMediaSessionTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,10 +27,21 @@ class IcyLyricsApplication : Application() {
 }
 
 class AppContainer(context: Context) {
+  private val icyDatabaseConfig = IcyLyricsDatabaseConfig()
   val services: AppServices = AppServices.create(
     context = context,
     spotifyClientId = BuildConfig.SPOTIFY_CLIENT_ID,
     spotifyScopes = setOf("user-read-currently-playing"),
+    icyDatabaseConfig = icyDatabaseConfig,
+    spotifyCatalogConfig = SpotifyCatalogConfig(
+      icyCatalogEndpoint = if (BuildConfig.FLAVOR == "tv") {
+        icyDatabaseConfig.endpoint
+      } else {
+        null
+      },
+      icyCatalogUserAgent =
+        "IcyLyricsAndroidTV/${BuildConfig.VERSION_NAME} (+https://jackscurrie.com/icy-lyrics)",
+    ),
   )
   val mediaTracker = SpotifyMediaSessionTracker(context)
 }

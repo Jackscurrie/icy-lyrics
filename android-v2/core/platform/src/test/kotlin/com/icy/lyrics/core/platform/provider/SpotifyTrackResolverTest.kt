@@ -45,6 +45,196 @@ class SpotifyTrackResolverTest {
   }
 
   @Test
+  fun icyCatalogResolvesTvMetadataWithoutSpotifyTokenAndPersistsAlias() = runTest {
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        icyCatalogJson(
+          uri = "spotify:track:$TRACK_ID",
+          title = "Test Song",
+          artist = "Test Artist",
+          album = "Test Album",
+        ),
+      ),
+    )
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    val first = resolver.resolve(TRACK)
+    val cached = resolver.resolve(TRACK)
+
+    assertEquals("spotify:track:$TRACK_ID", first)
+    assertEquals(first, cached)
+    assertEquals(first, TrackAliasRepository(aliasDao).resolve(TRACK))
+    assertEquals(1, server.requestCount)
+    val request = server.takeRequest()
+    assertEquals("GET", request.method)
+    assertEquals("/api/ttml", request.requestUrl?.encodedPath)
+    assertEquals("Test Song", request.requestUrl?.queryParameter("q"))
+    assertEquals("100", request.requestUrl?.queryParameter("limit"))
+    assertNull(request.getHeader("Authorization"))
+    assertEquals(
+      "IcyLyricsAndroidTV (+https://jackscurrie.com/icy-lyrics)",
+      request.getHeader("User-Agent"),
+    )
+  }
+
+  @Test
+  fun icyCatalogRejectsWrongAlbumBeforeSpotifyFallback() = runTest {
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        icyCatalogJson(
+          uri = "spotify:track:$TRACK_ID",
+          title = "Test Song",
+          artist = "Test Artist",
+          album = "A Different Release",
+        ),
+      ),
+    )
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    assertNull(resolver.resolve(TRACK))
+    assertNull(TrackAliasRepository(aliasDao).resolve(TRACK))
+    assertEquals(1, server.requestCount)
+  }
+
+  @Test
+  fun icyCatalogAcceptsOneExactTitleArtistWhenTvOmitsVersionMetadata() = runTest {
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        icyCatalogJson(
+          uri = "spotify:track:$TRACK_ID",
+          title = "Test Song",
+          artist = "Test Artist",
+          album = "Test Album",
+        ),
+      ),
+    )
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    assertEquals(
+      "spotify:track:$TRACK_ID",
+      resolver.resolve(TRACK.copy(album = "", durationMs = null, isrc = null)),
+    )
+  }
+
+  @Test
+  fun icyCatalogRejectsTwoIndistinguishableExactTitleArtistMatches() = runTest {
+    val first = icyCatalogItem("spotify:track:$TRACK_ID", "Test Song", "Test Artist", "")
+    val second = icyCatalogItem("spotify:track:$SECOND_TRACK_ID", "Test Song", "Test Artist", "")
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        """{"apiVersion":1,"items":[$first,$second]}""",
+      ),
+    )
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    assertNull(resolver.resolve(TRACK.copy(album = "", durationMs = null, isrc = null)))
+    assertNull(TrackAliasRepository(aliasDao).resolve(TRACK.copy(album = "", durationMs = null)))
+  }
+
+  @Test
+  fun icyCatalogMissIsCoalescedUntilExplicitReload() = runTest {
+    server.enqueue(MockResponse().setResponseCode(200).setBody("""{"apiVersion":1,"items":[]}"""))
+    server.enqueue(
+      MockResponse().setResponseCode(200).setBody(
+        icyCatalogJson(
+          uri = "spotify:track:$TRACK_ID",
+          title = "Test Song",
+          artist = "Test Artist",
+          album = "Test Album",
+        ),
+      ),
+    )
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    assertNull(resolver.resolve(TRACK))
+    assertNull(resolver.resolve(TRACK))
+    assertEquals("spotify:track:$TRACK_ID", resolver.resolve(TRACK, allowCached = false))
+    assertEquals(2, server.requestCount)
+  }
+
+  @Test
+  fun disabledIcySourceNeverSendsMetadataToCatalog() = runTest {
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+      icyCatalogEnabled = { false },
+    )
+
+    assertNull(resolver.resolve(TRACK))
+    assertEquals(0, server.requestCount)
+  }
+
+  @Test
+  fun malformedIcyCatalogResponseDoesNotCreateAlias() = runTest {
+    server.enqueue(MockResponse().setResponseCode(200).setBody("not-json"))
+    val resolver = SpotifyTrackResolver(
+      client = OkHttpClient(),
+      tokenSource = SpotifyAccessTokenSource { null },
+      aliases = TrackAliasRepository(aliasDao),
+      config = SpotifyCatalogConfig(
+        baseUrl = server.url("/v1/"),
+        icyCatalogEndpoint = server.url("/api/ttml"),
+        allowInsecureForTests = true,
+      ),
+    )
+
+    assertNull(resolver.resolve(TRACK))
+    assertNull(TrackAliasRepository(aliasDao).resolve(TRACK))
+    assertEquals(1, server.requestCount)
+  }
+
+  @Test
   fun currentlyPlayingCorrelationCanResolveWhenVersionMetadataIsMissing() = runTest {
     server.enqueue(MockResponse().setResponseCode(200).setBody(currentJson(trackJson(TRACK_ID))))
 
@@ -133,6 +323,7 @@ class SpotifyTrackResolverTest {
       config = SpotifyCatalogConfig(
         baseUrl = server.url("/v1/"),
         allowInsecureForTests = true,
+        icyCatalogEndpoint = null,
       ),
     )
 
@@ -155,6 +346,7 @@ class SpotifyTrackResolverTest {
     config = SpotifyCatalogConfig(
       baseUrl = server.url("/v1/"),
       allowInsecureForTests = true,
+      icyCatalogEndpoint = null,
     ),
   )
 
@@ -172,6 +364,33 @@ class SpotifyTrackResolverTest {
       "artists": [{"name": "Test Artist"}],
       "external_ids": {"isrc": "USAAA0000001"}
     }
+  """.trimIndent()
+
+  private fun icyCatalogJson(
+    uri: String,
+    title: String,
+    artist: String,
+    album: String,
+  ) = """{"apiVersion":1,"items":[${icyCatalogItem(uri, title, artist, album)}]}"""
+
+  private fun icyCatalogItem(
+    uri: String,
+    title: String,
+    artist: String,
+    album: String,
+  ) = """
+      {
+        "recordId": "record-1",
+        "track": {
+          "uri": "$uri",
+          "title": "$title",
+          "artists": ["$artist"],
+          "artist": "$artist",
+          "album": "$album",
+          "durationMs": null,
+          "isrc": "USAAA0000001"
+        }
+      }
   """.trimIndent()
 
   private companion object {

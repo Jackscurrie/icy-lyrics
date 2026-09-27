@@ -65,3 +65,36 @@ export function creatorPlaybackActivity(
 
   return { fragmentIds, tokenIds, lineIds };
 }
+
+/** Reuse the same snapshot between timing boundaries, including pauses. */
+export function createCreatorPlaybackActivityReader(project: Pick<CreatorProject, "lines">) {
+  const boundaries = [...new Set(project.lines.flatMap((line) => line.tokens.flatMap((token) =>
+    token.fragments.flatMap((fragment) =>
+      fragment.startTimeMs !== null && fragment.endTimeMs !== null &&
+      Number.isFinite(fragment.startTimeMs) && Number.isFinite(fragment.endTimeMs) &&
+      fragment.endTimeMs > fragment.startTimeMs
+        ? [fragment.startTimeMs, fragment.endTimeMs] : []
+    )
+  )))].sort((left, right) => left - right);
+  let previousBucket: number | null = null;
+  let activity = creatorPlaybackActivity(project, -1);
+
+  return (positionMs: number): CreatorPlaybackActivity => {
+    let bucket = -1;
+    if (Number.isFinite(positionMs) && positionMs >= 0) {
+      let low = 0;
+      let high = boundaries.length;
+      while (low < high) {
+        const middle = (low + high) >>> 1;
+        if (boundaries[middle] <= positionMs) low = middle + 1;
+        else high = middle;
+      }
+      bucket = low;
+    }
+    if (bucket !== previousBucket) {
+      activity = creatorPlaybackActivity(project, positionMs);
+      previousBucket = bucket;
+    }
+    return activity;
+  };
+}

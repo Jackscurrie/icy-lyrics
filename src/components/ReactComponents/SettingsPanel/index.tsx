@@ -6,6 +6,7 @@ import CacheSection from "./CacheSection.tsx";
 import DeveloperSection from "./DeveloperSection.tsx";
 import ExperimentsSection from "./ExperimentsSection.tsx";
 import InterfaceSection from "./InterfaceSection.tsx";
+import LyricCreatorSection from "./LyricCreatorSection.tsx";
 import LyricsSection from "./LyricsSection.tsx";
 import PlaybackSection from "./PlaybackSection.tsx";
 import { FilterDropdown, SearchBar } from "./components.tsx";
@@ -16,6 +17,7 @@ const SECTIONS = [
   "Playback",
   "Appearance",
   "Interface",
+  "Lyric Creator",
   "Experiments",
   "Developer",
   "Cache",
@@ -38,6 +40,7 @@ export default function SettingsPanel({ onOpenExperiments }: { onOpenExperiments
       <PlaybackSection query={query} sectionFilter={sectionFilter} />
       <AppearanceSection query={query} sectionFilter={sectionFilter} />
       <InterfaceSection query={query} sectionFilter={sectionFilter} />
+      <LyricCreatorSection query={query} sectionFilter={sectionFilter} />
       <ExperimentsSection query={query} sectionFilter={sectionFilter} onOpen={onOpenExperiments} />
       <DeveloperSection query={query} sectionFilter={sectionFilter} />
       <CacheSection query={query} sectionFilter={sectionFilter} />

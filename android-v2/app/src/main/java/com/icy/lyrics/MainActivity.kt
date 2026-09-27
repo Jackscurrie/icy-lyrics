@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -72,7 +73,13 @@ class MainActivity : ComponentActivity() {
             startActivity((application as IcyLyricsApplication).container.mediaTracker.notificationAccessIntent())
           },
           onRequestBluetoothPermission = {
-            bluetoothPermission.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              bluetoothPermission.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            } else {
+              // BLUETOOTH is an install-time permission through Android 11, so
+              // there is no runtime dialog to launch on these devices.
+              viewModel.refreshPermissions(hasBluetoothPermission())
+            }
           },
           onPickTtml = {
             if (viewModel.prepareTtmlImport()) {
@@ -109,6 +116,7 @@ class MainActivity : ComponentActivity() {
           onClearDiagnostics = viewModel::clearDiagnostics,
           onDeleteSavedLyrics = viewModel::deleteSavedLyrics,
           onDismissMessage = viewModel::clearTransientMessage,
+          launchExperienceEnabled = true,
         )
       }
     }
@@ -124,9 +132,14 @@ class MainActivity : ComponentActivity() {
     applySystemBars(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
   }
 
-  private fun hasBluetoothPermission(): Boolean =
-    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) ==
-      PackageManager.PERMISSION_GRANTED
+  private fun hasBluetoothPermission(): Boolean {
+    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      Manifest.permission.BLUETOOTH_CONNECT
+    } else {
+      Manifest.permission.BLUETOOTH
+    }
+    return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+  }
 
   private fun connectSpotify() {
     if (spotifyAuthorizationJob?.isActive == true) return

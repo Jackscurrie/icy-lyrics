@@ -66,6 +66,16 @@ export function creatorTimingTargets(
   return result;
 }
 
+/** Selection-only navigation skips remaining fragments, never writing a time. */
+export function nextCreatorTimingWordIndex(targets: TimingTarget[], targetIndex: number): number {
+  if (!targets.length) return 0;
+  const currentIndex = Math.max(0, Math.min(Math.trunc(targetIndex) || 0, targets.length - 1));
+  const current = targets[currentIndex];
+  const nextIndex = targets.findIndex((target, index) => index > currentIndex &&
+    (target.lineIndex !== current.lineIndex || target.tokenIndex !== current.tokenIndex));
+  return nextIndex === -1 ? currentIndex : nextIndex;
+}
+
 function updateFragment(
   project: CreatorProject,
   target: TimingTarget,

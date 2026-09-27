@@ -50,6 +50,15 @@ class AndroidIcyUiPlatform(private val context: Context) : IcyUiPlatform {
   @Composable override fun ReducedMotionEnabled(): Boolean = rememberAndroidReducedMotionEnabled()
   @Composable override fun Background(
     artwork: ImageBitmap?, enabled: Boolean, style: BackgroundStyle, isPlaying: Boolean,
-    modifier: Modifier, content: @Composable () -> Unit,
-  ) = AndroidArtworkBackground(artwork?.asAndroidBitmap(), enabled, style, isPlaying, modifier, content)
+    performanceBackground: TvPerformanceBackground?, modifier: Modifier,
+    content: @Composable () -> Unit,
+  ) = AndroidArtworkBackground(
+    artwork?.asAndroidBitmap(),
+    enabled,
+    style,
+    isPlaying,
+    performanceBackground,
+    modifier,
+    content,
+  )
 }

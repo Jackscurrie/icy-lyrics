@@ -142,6 +142,8 @@ data class LyricsScene(
   val positionMs: Long,
   val rawPositionMs: Long,
   val syncKind: LyricsSyncKind,
+  /** True when the renderer should paint discrete highlights without motion. */
+  val highlightOnly: Boolean = false,
   val anchorRenderIndex: Int? = null,
   val lines: List<LyricLineScene>,
   val transition: FullscreenLineTransition = FullscreenLineTransition(),
@@ -158,6 +160,8 @@ data class LyricsSceneOptions(
   val reveal: Boolean = false,
   val simpleLyricsMode: Boolean = false,
   val minimalLyricsMode: Boolean = false,
+  /** Discrete word/line highlighting with no emphasis, glow, or handoff motion. */
+  val highlightOnly: Boolean = false,
   val synthesizeInterludes: Boolean = true,
   val outroEnabled: Boolean = false,
   val durationMs: Long? = null,
@@ -203,6 +207,7 @@ class LyricsSceneEngine {
         positionMs = lyricsPositionMs,
         rawPositionMs = rawPositionMs,
         syncKind = document.syncKind,
+        highlightOnly = options.highlightOnly,
         lines = staticScenes,
         hasDuetLines = staticScenes.any(LyricLineScene::oppositeAligned),
         hasRtlLines = staticScenes.any { it.textDirection == LyricTextDirection.RIGHT_TO_LEFT },
@@ -228,12 +233,21 @@ class LyricsSceneEngine {
         }
       }
     }
+    if (options.highlightOnly && transition.anchorIndex != null) {
+      // Retain the focus anchor through gaps, but collapse the 450 ms conveyor
+      // into its destination frame so Ultra Performance never animates rows.
+      transition = FullscreenLineTransition(
+        anchorIndex = transition.anchorIndex,
+        toIndex = transition.anchorIndex,
+      )
+    }
     val anchor = directAnchor ?: transition.anchorIndex
     val assignments = if (options.fullscreenFocus) {
       focusAssignments(prepared, anchor, transition, effectivePosition, options)
     } else emptyMap()
 
-    val activeForBlur = getScrollLine(prepared, effectivePosition, includeInterludes = true)
+    val activeForBlur = if (options.highlightOnly) null
+    else getScrollLine(prepared, effectivePosition, includeInterludes = true)
     val hasDuetLines = prepared.any(PreparedLine::oppositeAligned)
     val scenes = prepared.mapIndexed { index, line ->
       val assignment = assignments[index]
@@ -245,7 +259,13 @@ class LyricsSceneEngine {
         tokenScene(token, effectivePosition, options, textDirection, isBackground)
       }
       val isLineTimed = line.tokens.isEmpty()
-      val revealOpacity = if (isLineTimed) (progress * 5).coerceIn(0.0, 1.0) else 1.0
+      val revealOpacity = if (!isLineTimed) {
+        1.0
+      } else if (options.highlightOnly) {
+        if (status == TimedElementStatus.NOT_SUNG) 0.0 else 1.0
+      } else {
+        (progress * 5).coerceIn(0.0, 1.0)
+      }
       val baseTransform = assignment?.let {
         focusTransform(
           role = it.role,
@@ -263,6 +283,15 @@ class LyricsSceneEngine {
       } else transformed
       val blur = if (activeForBlur == null || status == TimedElementStatus.ACTIVE || activeForBlur == index) 0.0
       else min(BLUR_MAX_PX, BLUR_MULTIPLIER * abs(index - activeForBlur))
+      val lineGradientPercent = if (options.highlightOnly) {
+        highlightOnlyGradientPercent(status)
+      } else {
+        when (status) {
+          TimedElementStatus.NOT_SUNG -> -20.0
+          TimedElementStatus.ACTIVE -> if (options.reveal) -20 + 120 * progress else 100 * progress
+          TimedElementStatus.SUNG -> 100.0
+        }
+      }
       LyricLineScene(
         key = line.key,
         renderIndex = index,
@@ -287,12 +316,8 @@ class LyricsSceneEngine {
         },
         status = status,
         progress = progress,
-        lineGradientPercent = when (status) {
-          TimedElementStatus.NOT_SUNG -> -20.0
-          TimedElementStatus.ACTIVE -> if (options.reveal) -20 + 120 * progress else 100 * progress
-          TimedElementStatus.SUNG -> 100.0
-        },
-        lineGlowGoal = LINE_GLOW.at(progressForStatus(status, progress)),
+        lineGradientPercent = lineGradientPercent,
+        lineGlowGoal = if (options.highlightOnly) 0.0 else LINE_GLOW.at(progressForStatus(status, progress)),
         contentOpacity = (when (status) {
           TimedElementStatus.NOT_SUNG -> NOT_SUNG_LINE_OPACITY
           TimedElementStatus.ACTIVE -> ACTIVE_LINE_OPACITY
@@ -300,15 +325,15 @@ class LyricsSceneEngine {
         }) * if (options.reveal && isLineTimed) revealOpacity else 1.0,
         gradient = LyricGradientFrame(
           angleDegrees = 180.0,
-          positionPercent = when (status) {
-            TimedElementStatus.NOT_SUNG -> -20.0
-            TimedElementStatus.ACTIVE -> if (options.reveal) -20 + 120 * progress else 100 * progress
-            TimedElementStatus.SUNG -> 100.0
+          positionPercent = lineGradientPercent,
+          leadingAlpha = when {
+            isBackground -> BACKGROUND_LEADING_ALPHA
+            options.highlightOnly -> HIGHLIGHT_ONLY_LEADING_ALPHA
+            else -> DEFAULT_LEADING_ALPHA
           },
-          leadingAlpha = if (isBackground) BACKGROUND_LEADING_ALPHA else DEFAULT_LEADING_ALPHA,
           trailingAlpha = if (isBackground) BACKGROUND_TRAILING_ALPHA else LINE_TRAILING_ALPHA,
         ),
-        blurRadiusPx = blur,
+        blurRadiusPx = if (options.highlightOnly) 0.0 else blur,
         tokens = tokenScenes,
         visible = !options.fullscreenFocus || assignment != null,
         focusRole = assignment?.role ?: FocusRole.NONE,
@@ -322,7 +347,13 @@ class LyricsSceneEngine {
     val transitionKind = transitionKind(prepared, transition)
     var outro = FullscreenOutroFrame()
     var finalScenes = scenes
-    if (options.fullscreenFocus && options.outroEnabled && options.durationMs != null && prepared.isNotEmpty()) {
+    if (
+      options.fullscreenFocus &&
+      options.outroEnabled &&
+      !options.highlightOnly &&
+      options.durationMs != null &&
+      prepared.isNotEmpty()
+    ) {
       val finalLeadIndex = prepared.indexOfLast { it.kind == LyricSceneLineKind.VOCAL }
       if (finalLeadIndex >= 0) {
         val finalGroupEnd = audibleGroupEnd(prepared, finalLeadIndex)
@@ -354,6 +385,7 @@ class LyricsSceneEngine {
       positionMs = lyricsPositionMs,
       rawPositionMs = rawPositionMs,
       syncKind = document.syncKind,
+      highlightOnly = options.highlightOnly,
       anchorRenderIndex = anchor,
       lines = finalScenes,
       transition = if (outro.active) FullscreenLineTransition(anchorIndex = anchor, toIndex = anchor) else transition,
@@ -367,7 +399,8 @@ class LyricsSceneEngine {
   private var preparedOptionsKey: Int? = null
 
   private fun LyricsSceneOptions.preparationKey(): Int =
-    31 * minimalLyricsMode.hashCode() + synthesizeInterludes.hashCode()
+    31 * (31 * minimalLyricsMode.hashCode() + synthesizeInterludes.hashCode()) +
+      highlightOnly.hashCode()
 
   private fun LyricsSceneOptions.minimumInterludeMs(): Long = if (minimalLyricsMode) 5_000L else 3_000L
 
@@ -536,19 +569,22 @@ class LyricsSceneEngine {
     isBackground: Boolean,
   ): LyricTokenScene {
     val isDot = token.text == "•"
-    val emphasisUnits = if (isDot) emptyList() else token.text.emphasisUnits()
-    val letterCapable = isLetterCapable(
+    val emphasisUnits = if (isDot || options.highlightOnly) emptyList() else token.text.emphasisUnits()
+    val letterCapable = !options.highlightOnly && isLetterCapable(
       text = token.text,
       letterCount = emphasisUnits.size,
       durationMs = token.endMs - token.startMs,
       simpleLyricsMode = options.simpleLyricsMode,
     )
-    val animationStartMs = if (letterCapable && options.simpleLyricsMode) {
+    val animationStartMs = if (options.highlightOnly) {
+      token.startMs
+    } else if (letterCapable && options.simpleLyricsMode) {
       token.startMs + SIMPLE_EMPHASIS_START_SHIFT_MS
     } else {
       token.startMs
     }
     val animationEndMs = when {
+      options.highlightOnly -> token.endMs
       !letterCapable -> token.endMs
       options.simpleLyricsMode -> token.endMs + SIMPLE_EMPHASIS_END_SHIFT_MS
       else -> token.endMs - EMPHASIS_END_ADVANCE_MS
@@ -556,18 +592,23 @@ class LyricsSceneEngine {
     val status = status(position, animationStartMs.toDouble(), animationEndMs.toDouble())
     val progress = progress(position, animationStartMs.toDouble(), animationEndMs.toDouble())
     val curveProgress = progressForStatus(status, progress)
-    val scale = if (isDot) DOT_SCALE.at(curveProgress) else WORD_SCALE.at(curveProgress)
-    val yOffset = if (isDot) DOT_Y_OFFSET.at(curveProgress) else {
+    val scale = if (options.highlightOnly) 1.0
+    else if (isDot) DOT_SCALE.at(curveProgress) else WORD_SCALE.at(curveProgress)
+    val yOffset = if (options.highlightOnly) 0.0
+    else if (isDot) DOT_Y_OFFSET.at(curveProgress) else {
       (if (options.simpleLyricsMode) SIMPLE_WORD_Y_OFFSET else WORD_Y_OFFSET).at(curveProgress)
     }
-    val glow = if (isDot) DOT_GLOW.at(curveProgress) else WORD_GLOW.at(curveProgress)
-    val opacity = if (isDot) {
+    val glow = if (options.highlightOnly) 0.0
+    else if (isDot) DOT_GLOW.at(curveProgress) else WORD_GLOW.at(curveProgress)
+    val opacity = if (options.highlightOnly) 1.0 else if (isDot) {
       (if (options.simpleLyricsMode) SIMPLE_DOT_OPACITY else DOT_OPACITY).at(curveProgress)
     } else 1.0
-    val gradient = when (status) {
-      TimedElementStatus.NOT_SUNG -> if (options.simpleLyricsMode) -50.0 else -20.0
-      TimedElementStatus.SUNG -> 100.0
-      TimedElementStatus.ACTIVE -> (if (options.simpleLyricsMode) -50.0 else -20.0) + 120 * progress
+    val gradient = if (options.highlightOnly) highlightOnlyGradientPercent(status) else {
+      when (status) {
+        TimedElementStatus.NOT_SUNG -> if (options.simpleLyricsMode) -50.0 else -20.0
+        TimedElementStatus.SUNG -> 100.0
+        TimedElementStatus.ACTIVE -> (if (options.simpleLyricsMode) -50.0 else -20.0) + 120 * progress
+      }
     }
     val letters = if (letterCapable) {
       letterScenes(
@@ -593,7 +634,11 @@ class LyricsSceneEngine {
       gradient = LyricGradientFrame(
         angleDegrees = if (textDirection == LyricTextDirection.RIGHT_TO_LEFT) -90.0 else 90.0,
         positionPercent = gradient,
-        leadingAlpha = if (isBackground) BACKGROUND_LEADING_ALPHA else DEFAULT_LEADING_ALPHA,
+        leadingAlpha = when {
+          isBackground -> BACKGROUND_LEADING_ALPHA
+          options.highlightOnly -> HIGHLIGHT_ONLY_LEADING_ALPHA
+          else -> DEFAULT_LEADING_ALPHA
+        },
         trailingAlpha = if (isBackground) BACKGROUND_TRAILING_ALPHA else DEFAULT_TRAILING_ALPHA,
       ),
       animation = TimedAnimationFrame(
@@ -605,11 +650,16 @@ class LyricsSceneEngine {
         glowGoal = glow,
         opacityGoal = opacity,
         revealVisible = !options.reveal || status != TimedElementStatus.NOT_SUNG,
-        revealOpacity = if (options.reveal) (progress * 5).coerceIn(0.0, 1.0) else 1.0,
+        revealOpacity = if (!options.reveal) 1.0
+        else if (options.highlightOnly) if (status == TimedElementStatus.NOT_SUNG) 0.0 else 1.0
+        else (progress * 5).coerceIn(0.0, 1.0),
       ),
       letters = letters,
     )
   }
+
+  private fun highlightOnlyGradientPercent(status: TimedElementStatus): Double =
+    if (status == TimedElementStatus.NOT_SUNG) -20.0 else 100.0
 
   /** Port of desktop IsLetterCapable + Emphasize + the proximity section of LyricsAnimator. */
   private fun letterScenes(
@@ -1088,6 +1138,7 @@ class LyricsSceneEngine {
     const val LINE_TRAILING_ALPHA = 0.35
     const val BACKGROUND_LEADING_ALPHA = 0.6
     const val BACKGROUND_TRAILING_ALPHA = 0.3
+    private const val HIGHLIGHT_ONLY_LEADING_ALPHA = 1.0
     private const val DEFAULT_GRADIENT_WIDTH_PERCENT = 20.0
     private const val SIMPLE_GRADIENT_WIDTH_PERCENT = 50.0
     private const val SIMPLE_LEADING_ALPHA = 1.0

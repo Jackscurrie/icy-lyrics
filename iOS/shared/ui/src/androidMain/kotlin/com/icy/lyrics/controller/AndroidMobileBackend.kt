@@ -28,7 +28,7 @@ class AndroidMobileBackend(private val services: AppServices) : MobileBackend {
           source = local.document.metadata.source, syncKind = local.document.syncKind.name, message = "Saved local TTML"),
       ))
     }
-    val alias = services.spotifyTrackResolver.resolve(track)
+    val alias = services.spotifyTrackResolver.resolve(track, allowCached = allowCached)
     val resolved = alias?.takeIf(String::isNotBlank)?.let { track.copy(uri = it) } ?: track
     return services.lyricsResolver.resolve(LyricsRequest(resolved, allowCached = allowCached, requestId = requestId))
   }

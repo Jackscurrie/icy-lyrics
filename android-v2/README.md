@@ -1,6 +1,6 @@
 # Icy Lyrics Android v2
 
-A clean Android 13+ rewrite of Icy Lyrics. It lives beside the original `android/` prototype, which remains untouched. The public Google Play flavor retains the existing application id: `com.icy.lyrics`.
+A clean Android rewrite of Icy Lyrics for Android 13+ phones and Android 11+ Google TV devices. It lives beside the original `android/` prototype, which remains untouched. Public Google Play phone and TV flavors retain the existing application id: `com.icy.lyrics`.
 
 ## What is implemented
 
@@ -10,6 +10,7 @@ A clean Android 13+ rewrite of Icy Lyrics. It lives beside the original `android
 - Desktop lyric behavior for static, line-synced, and syllable-synced lyrics: timing gradients, analytic word/letter springs, held-word letter emphasis, Reveal, interludes, background vocals, duet lanes, RTL text, transliterations, focus transitions, and tap-to-seek.
 - Desktop-style Kawarp artwork background using an Android runtime shader. The background can be animated, held as a static blurred image with no scheduled frames, or turned off for plain black.
 - Durable per-track TTML import and a local library for viewing/removing saved lyrics. Full `spotify:local:` URIs are preserved as keys.
+- A built-in mobile Lyric Creator in both Play and personal builds for editing, word timing with **Start**, **Commit**, and **End**, safe unfinished previews, local saves, recoverable drafts, and TTML export.
 - Global lyric timing from -5000 ms through +5000 ms in 10 ms increments, plus an overriding remembered value for each active Bluetooth output device.
 - Privacy-safe diagnostics with provider attempts, selected source/sync type, errors, copy/share/clear actions, a 200-event limit, and seven-day retention.
 
@@ -24,7 +25,7 @@ Strict priority (the default) uses:
 
 Each source has its own settings toggle. The optional **Prefer better sync** policy keeps local TTML absolute, then checks enabled remote sources sequentially and chooses the highest timing resolution returned. It stops as soon as a source supplies syllable timing.
 
-The Icy Lyrics Database adapter anonymously sends only the complete Spotify track URI in an exact-match POST. It parses the returned TTML locally so word timing is preserved. The app performs that request only when a different song is loaded or the user explicitly reloads lyrics. Concurrent app/personal-car surfaces share a serialized cache lookup, successful results remain in the on-device cache for 30 days, and misses remain cached for one hour. Rate limits and server errors fall through without automatic Icy retries.
+The Icy Lyrics Database adapter anonymously sends only the complete Spotify track URI in an exact-match POST. It parses the returned TTML locally so word timing is preserved. The app performs that request only when a different song is loaded or the user explicitly reloads lyrics. Concurrent app/personal-car surfaces share a serialized cache lookup, successful results remain in the on-device cache for 30 days, and misses remain cached for one hour. Rate limits and server errors fall through without automatic Icy retries. The dedicated TV build has one additional fallback: if Spotify TV omits its track ID, it sends the displayed song title to the public Icy catalog and accepts a URI only for one unambiguous exact title/artist match. Album, duration, and ISRC must also agree whenever both sides provide them. This fallback is disabled with the Icy source switch and is not enabled in the Play phone, personal, or iOS builds.
 
 LRCLIB removes known Spotify quality badges from artist metadata, validates exact responses, tries album/artist/broad/title-only searches, handles reordered or featured artist credits with album/duration corroboration, prefers synchronized representations at equal match confidence, and versions away cache rows written by the older matching policy. Static hits are rechecked for newly available timing, and rejected identities are not negative-cached.
 
@@ -99,6 +100,7 @@ Installing v2 over the old prototype deliberately performs a fresh start: the le
 ## Project layout
 
 - `app/` — Android UI, MediaSession tracking, fullscreen/player behavior, and app integration.
+- `app/src/main/java/com/icy/lyrics/creator/` — the shared mobile Lyric Creator used by both Play and personal builds.
 - `core/lyrics/` — normalized models, parsers, provider orchestration, playback clock, and desktop animation/focus math.
 - `core/platform/` — Room/DataStore persistence, providers, PKCE, Bluetooth timing, and diagnostics.
 

@@ -22,7 +22,7 @@ fun SpicyLyricsConfig(
 
 fun LrclibConfig(
   baseUrl: HttpUrl,
-  userAgent: String = "IcyLyricsAndroidV2/1.0",
+  userAgent: String = "IcyLyricsAndroid/1.2.0 (https://jackscurrie.com/icy-lyrics; jack@jackscurrie.com)",
   requestSpacingMs: Long = 300L,
   maxResponseBytes: Long = 2L * 1_024L * 1_024L,
   allowInsecureForTests: Boolean = false,
@@ -30,7 +30,7 @@ fun LrclibConfig(
 
 fun IcyLyricsDatabaseConfig(
   endpoint: HttpUrl,
-  userAgent: String = "IcyLyricsAndroid/1.1.0 (+https://jackscurrie.com/icy-lyrics)",
+  userAgent: String = "IcyLyricsAndroid/1.2.0 (+https://jackscurrie.com/icy-lyrics)",
   maxResponseBytes: Long = 2L * 1_024L * 1_024L,
   requestTimeoutMs: Long = 15_000L,
   positiveCacheTtlMs: Long = 30L * 24L * 60L * 60L * 1_000L,
@@ -52,7 +52,20 @@ fun SpotifyCatalogConfig(
   searchLimit: Int = 8,
   requestTimeoutMs: Long = 8_000L,
   allowInsecureForTests: Boolean = false,
-): SpotifyCatalogConfig = SpotifyCatalogConfig(baseUrl.toString().toHttpUrl(), maxResponseBytes, searchLimit, requestTimeoutMs, allowInsecureForTests)
+  icyCatalogEndpoint: HttpUrl? = null,
+  icyCatalogSearchLimit: Int = 100,
+  icyCatalogUserAgent: String =
+    "IcyLyricsAndroidTV (+https://jackscurrie.com/icy-lyrics)",
+): SpotifyCatalogConfig = SpotifyCatalogConfig(
+  baseUrl = baseUrl.toString().toHttpUrl(),
+  maxResponseBytes = maxResponseBytes,
+  searchLimit = searchLimit,
+  requestTimeoutMs = requestTimeoutMs,
+  allowInsecureForTests = allowInsecureForTests,
+  icyCatalogEndpoint = icyCatalogEndpoint?.toString()?.toHttpUrl(),
+  icyCatalogSearchLimit = icyCatalogSearchLimit,
+  icyCatalogUserAgent = icyCatalogUserAgent,
+)
 
 fun SpicyLyricsProvider(
   id: LyricsProviderId = LyricsProviderId.SPICY,
@@ -99,4 +112,12 @@ fun SpotifyTrackResolver(
   aliases: TrackAliasRepository,
   config: SpotifyCatalogConfig = SpotifyCatalogConfig(),
   diagnostics: DiagnosticSink = DiagnosticSink.NONE,
-): SpotifyTrackResolver = SpotifyTrackResolver(OkHttpTransport(client), tokenSource, aliases, config, diagnostics)
+  icyCatalogEnabled: suspend () -> Boolean = { true },
+): SpotifyTrackResolver = SpotifyTrackResolver(
+  OkHttpTransport(client),
+  tokenSource,
+  aliases,
+  config,
+  diagnostics,
+  icyCatalogEnabled,
+)

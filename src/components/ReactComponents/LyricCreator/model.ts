@@ -132,17 +132,16 @@ export function createEmptyProject(uri = ""): CreatorProject {
 }
 
 function tokensFromPlainLine(line: string): CreatorToken[] {
-  const parts = line.split("\\");
-  return parts
-    .map((part, index) => {
-      const trailing = part.match(/\s+$/u)?.[0] ?? "";
-      const text = trailing ? part.slice(0, -trailing.length) : part;
-      if (!text && !trailing) return null;
-      const token = createToken(text);
-      token.boundaryAfter = trailing || (index < parts.length - 1 ? " " : "");
-      return token;
-    })
-    .filter((token): token is CreatorToken => token !== null);
+  const tokens: CreatorToken[] = [];
+  for (const match of line.matchAll(/(\S+)(\s*)/gu)) {
+    const fragments = match[1].split("\\").filter(Boolean).map(createFragment);
+    if (!fragments.length) continue;
+    const token = createToken();
+    token.fragments = fragments;
+    token.boundaryAfter = match[2];
+    tokens.push(token);
+  }
+  return tokens;
 }
 
 export function importPlainText(text: string): CreatorLine[] {

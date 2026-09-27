@@ -1,5 +1,6 @@
 import {
   $fullscreenBackgroundBlurEnabled,
+  $showNpvDynamicBg,
   $staticBackgroundBlur,
   $staticBackgroundMode,
 } from "../../utils/stores.ts";
@@ -8,7 +9,8 @@ import Global from "../Global/Global.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import ArtistVisuals from "./ArtistVisuals/Main.ts";
 import { PageContainer } from "../Pages/PageView.ts";
-import Kawarp, { type KawarpOptions } from "@kawarp/core";
+import type { KawarpOptions } from "@kawarp/core";
+import { KawarpRegistry, ManagedKawarp, type KawarpSource } from "./ManagedKawarp.ts";
 import { BackgroundAnimationController, type AudioAnalysisData } from "./BackgroundAnimationController.ts";
 import { getDynamicAudioAnalysis } from "../../utils/audioAnalysis.ts";
 import Logger from "../../utils/Logger.ts";
@@ -41,9 +43,22 @@ const getPageKawarpOptions = (): KawarpOptions => ({
 
 const COLOR_BG_FALLBACK_RGB = "18, 18, 18, 1";
 let cachedColorBackgroundEl: HTMLElement | null = null;
+let npvBackgroundElement: HTMLElement | null = null;
+const backgroundModes = new WeakMap<HTMLElement, string>();
 
-export const KawarpMap = new Map<HTMLElement | string, Kawarp>();
+export const KawarpMap = new KawarpRegistry();
 const animSpeedController = new BackgroundAnimationController();
+
+const clearBackground = (element: HTMLElement, key: HTMLElement | string) => {
+  const canvas = KawarpMap.get(key)?.canvas;
+  KawarpMap.delete(key); // Invalidates pending work even before an instance exists.
+  canvas?.remove();
+  element.querySelectorAll<HTMLElement>(":scope > .icy-dynamic-bg").forEach((background) => background.remove());
+};
+
+const npvBackgroundAllowed = (element: HTMLElement) => $showNpvDynamicBg.get() &&
+  !element.closest("[inert]") && !PageContainer?.classList.contains("Fullscreen") &&
+  !document.querySelector(".Root__cinema-view");
 
 interface ApplyDynamicBackgroundOpts {
   doTransitionDurationAppendWithPromise?: boolean;
@@ -51,14 +66,6 @@ interface ApplyDynamicBackgroundOpts {
 
 /** How long to wait for a local cover to decode before giving up on the dynamic background. */
 const LOCAL_COVER_DECODE_TIMEOUT_MS = 8000;
-
-/**
- * A source Kawarp can ingest: a fetchable URL (remote covers) or a decoded Blob
- * (local-file art, which can't be fetched).
- */
-type KawarpSource =
-  | { kind: "url"; value: string }
-  | { kind: "blob"; value: Blob };
 
 /**
  * Rasterize Spotify local-file artwork into a Blob.
@@ -128,21 +135,25 @@ async function resolveKawarpSource(coverUrl: string, isLocalCover: boolean): Pro
   return blob ? { kind: "blob", value: blob } : null;
 }
 
-/** Load a previously-resolved source into a Kawarp instance. */
-async function loadKawarpSource(kawarp: Kawarp, source: KawarpSource): Promise<void> {
-  if (source.kind === "blob") {
-    await kawarp.loadBlob(source.value);
-  } else {
-    await kawarp.loadImage(source.value);
-  }
-}
-
 export default async function ApplyDynamicBackground(element: HTMLElement, tag?: string, opts: ApplyDynamicBackgroundOpts = {}) {
   if (!element) return;
+  const key = tag ?? (element.closest("#IcyLyricsPage") ? "lpagebg" : element);
   // The NPV lyrics card must stay transparent (the NPV's own background shows
   // through) — covers every caller that re-applies the page bg (songchange,
   // static-bg mode changes, etc.).
-  if (element.closest("#IcyLyricsPage.CardMode")) return;
+  if (element.closest("#IcyLyricsPage.CardMode") || (key === "npvbg" && !npvBackgroundAllowed(element))) {
+    clearBackground(element, key);
+    return;
+  }
+  if (key === "npvbg") npvBackgroundElement = element;
+  const staticBgMode = $staticBackgroundMode.get();
+  const previousMode = backgroundModes.get(element);
+  if ((previousMode !== undefined && previousMode !== staticBgMode) ||
+    (staticBgMode !== "off" && KawarpMap.has(key))) {
+    clearBackground(element, key);
+  }
+  backgroundModes.set(element, staticBgMode);
+  const ownsRequest = KawarpMap.begin(key);
   dynamicBgLogger.debug("Applying dynamic background", { tag });
   const preCurrentImgCover = SpotifyPlayer.GetCover("large") ?? "";
   // Local-file art is served via the `spotify:local:` scheme and isn't on scdn,
@@ -164,7 +175,10 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
   const TrackUri = SpotifyPlayer.GetUri();
   const IsLocal = TrackUri?.startsWith("spotify:local:") ?? false;
 
-  const staticBgMode = $staticBackgroundMode.get();
+  const isCurrent = () => ownsRequest() && element.isConnected &&
+    $staticBackgroundMode.get() === staticBgMode && SpotifyPlayer.GetUri() === TrackUri &&
+    (SpotifyPlayer.GetCover("large") ?? "") === preCurrentImgCover &&
+    (key !== "npvbg" || npvBackgroundAllowed(element));
   if (staticBgMode !== "off") {
     if (staticBgMode === "color") {
       // First, create/init the background with black as a fallback
@@ -197,6 +211,7 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
             imageUris: [SpotifyPlayer.GetCover("large") ?? ""]
           }
         );
+        if (!isCurrent()) return;
 
         const colorResponse = colorQuery.data.dynamicColors[0];
         const colorBestFit = colorResponse.bestFit === "DARK" ? "dark" : colorResponse.bestFit === "LIGHT" ? "light" : "dark";
@@ -225,7 +240,7 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
     }
     const currentImgCover = await GetStaticBackground(TrackArtist, TrackId);
 
-    if (IsEpisode || !currentImgCover) return;
+    if (!isCurrent() || IsEpisode || !currentImgCover) return;
     const prevBg = element.querySelector<HTMLElement>(".icy-dynamic-bg.StaticBackground");
 
     if (prevBg && prevBg.getAttribute("data-cover-id") === currentImgCover) {
@@ -245,6 +260,7 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
       : await BlobURLMaker(finalUrl)
           .then((blobUrl) => blobUrl ?? currentImgCover)
           .catch(() => currentImgCover);
+    if (!isCurrent()) return;
 
     const dynamicBg = document.createElement("div");
 
@@ -270,7 +286,8 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
     if (existingElement) {
       const existingBgData = existingElement.getAttribute("data-cover-id") ?? null;
 
-      if (existingBgData === currentImgCover) {
+      if (existingBgData === currentImgCover && KawarpMap.get(key)?.canvas === existingElement &&
+        !KawarpMap.get(key)?.isDisposed) {
         return;
       }
     }
@@ -278,6 +295,7 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
     // Resolve a Kawarp-loadable source up front (rasterizing local art if needed)
     // so we can bail before touching any instance when there's nothing to show.
     const kawarpSource = await resolveKawarpSource(currentImgCover, isLocalCover);
+    if (!isCurrent()) return;
     if (!kawarpSource) {
       dynamicBgLogger.warn("No loadable cover for dynamic background; skipping", { currentImgCover });
       return;
@@ -297,43 +315,57 @@ export default async function ApplyDynamicBackground(element: HTMLElement, tag?:
     // invocation may have disposed or replaced this tag's canvas while we were resolving.
     const liveElement = element.querySelector<HTMLElement>(".icy-dynamic-bg");
     if (liveElement) {
-      const kawarpInstance = KawarpMap.get(
-        tag ?
-          tag :
-          liveElement
-      )
+      const kawarpInstance = KawarpMap.get(key);
 
-      if (kawarpInstance) {
-        liveElement.setAttribute("data-cover-id", currentImgCover ?? "");
-        await loadKawarpSource(kawarpInstance, kawarpSource);
-        kawarpInstance.start();
+      if (kawarpInstance && kawarpInstance.canvas === liveElement && !kawarpInstance.isDisposed) {
+        const hadImage = kawarpInstance.hasImage;
+        try {
+          if (await kawarpInstance.load(kawarpSource, isCurrent)) {
+            liveElement.setAttribute("data-cover-id", currentImgCover ?? "");
+            kawarpInstance.start();
+            // A concurrent apply can take over an instance before its first
+            // image finishes. The winning first image owns this timer too.
+            if (!hadImage) {
+              const optionsUpdate = kawarpInstance.setOptionsAfter(
+                { transitionDuration: KawarpTransitionDuration }, KawarpOptionsStatic.transitionDuration * 2
+              );
+              if (opts?.doTransitionDurationAppendWithPromise) await optionsUpdate;
+            }
+          }
+        } catch (error) {
+          dynamicBgLogger.error("Unable to update background artwork", error);
+        }
         return;
       }
     }
 
     const canvas = document.createElement("canvas");
     canvas.classList.add("icy-dynamic-bg");
-    canvas.setAttribute("data-cover-id", currentImgCover ?? "");
-
-    const kawarpInstance = new Kawarp(canvas, getPageKawarpOptions())
-    KawarpMap.set(
-      tag ?
-        tag :
-        canvas,
-      kawarpInstance
-    )
-    element.appendChild(canvas);
-    await loadKawarpSource(kawarpInstance, kawarpSource);
-    kawarpInstance.start();
-    const msDelay = KawarpOptionsStatic.transitionDuration * 2;
-
-    if (opts?.doTransitionDurationAppendWithPromise) {
-      await new Promise(r => setTimeout(r, msDelay));
-      kawarpInstance?.setOptions({ transitionDuration: KawarpTransitionDuration });
-    } else {
-      setTimeout(() => {
-        kawarpInstance?.setOptions({ transitionDuration: KawarpTransitionDuration });
-      }, msDelay);
+    let kawarpInstance: ManagedKawarp | null = null;
+    try {
+      kawarpInstance = new ManagedKawarp(canvas, getPageKawarpOptions());
+      KawarpMap.set(key, kawarpInstance);
+      liveElement?.remove();
+      element.appendChild(canvas);
+      if (!await kawarpInstance.load(kawarpSource, isCurrent)) {
+        if (ownsRequest() && KawarpMap.get(key) === kawarpInstance && !kawarpInstance.hasImage) {
+          KawarpMap.delete(key);
+          canvas.remove();
+        }
+        return;
+      }
+      canvas.setAttribute("data-cover-id", currentImgCover ?? "");
+      kawarpInstance.start();
+      const optionsUpdate = kawarpInstance.setOptionsAfter(
+        { transitionDuration: KawarpTransitionDuration }, KawarpOptionsStatic.transitionDuration * 2
+      );
+      if (opts?.doTransitionDurationAppendWithPromise) await optionsUpdate;
+    } catch (error) {
+      if (isCurrent() && KawarpMap.get(key) === kawarpInstance && !kawarpInstance?.hasImage) {
+        KawarpMap.delete(key);
+        canvas.remove();
+      }
+      dynamicBgLogger.error("Unable to initialize animated background", error);
     }
   }
 }
@@ -388,7 +420,7 @@ Global.Event.listen("playback:songchange", () => {
 
     staticColorBgTransitionTimeout = setTimeout(() => {
       const contentBox = PageContainer.querySelector<HTMLElement>(".ContentBox");
-      if (contentBox) ApplyDynamicBackground(contentBox);
+      if (contentBox) void ApplyDynamicBackground(contentBox, "lpagebg");
 
       clearTimeout(staticColorBgTransitionTimeout);
       staticColorBgTransitionTimeout = null;
@@ -462,20 +494,27 @@ Global.Event.listen("playback:playpause", (e: { data?: { isPaused?: boolean } })
   applyPlayPauseAnimationSpeed(!!e?.data?.isPaused);
 });
 
-// TODO: Make this also remove the NPV dynamic bg when we switch to staticBackground mode, as that should be removed.
 const reapplyPageBackground = () => {
   const contentBox = PageContainer?.querySelector<HTMLElement>(".ContentBox");
-  if (!contentBox) return;
-  const kawarp = KawarpMap.get("lpagebg");
-  if (kawarp) {
-    kawarp.dispose();
+  if (!contentBox) {
     KawarpMap.delete("lpagebg");
+    return;
   }
-  contentBox.querySelectorAll<HTMLElement>(".icy-dynamic-bg").forEach((el) => el.remove());
+  clearBackground(contentBox, "lpagebg");
   void ApplyDynamicBackground(contentBox, "lpagebg");
 };
 
-$staticBackgroundMode.listen(reapplyPageBackground);
+$staticBackgroundMode.listen(() => {
+  reapplyPageBackground();
+  const npv = npvBackgroundElement;
+  if (!npv) {
+    KawarpMap.delete("npvbg");
+    return;
+  }
+  clearBackground(npv, "npvbg");
+  if (!npv.isConnected) npvBackgroundElement = null;
+  else if (npvBackgroundAllowed(npv)) void ApplyDynamicBackground(npv, "npvbg");
+});
 
 // Kawarp builds its blur passes into the render pipeline. Recreate only the
 // page instance when the fullscreen-only option or fullscreen host changes;
@@ -483,6 +522,8 @@ $staticBackgroundMode.listen(reapplyPageBackground);
 const reapplyFullscreenPageBackground = () => {
   if ($staticBackgroundMode.get() !== "off") return;
   if (!PageContainer?.classList.contains("Fullscreen")) return;
+  const current = KawarpMap.get("lpagebg");
+  if (current && !current.isDisposed && current.getOptions().blurPasses === getPageKawarpOptions().blurPasses) return;
   reapplyPageBackground();
 };
 
@@ -490,6 +531,8 @@ $fullscreenBackgroundBlurEnabled.listen(reapplyFullscreenPageBackground);
 Global.Event.listen("fullscreen:open", reapplyFullscreenPageBackground);
 Global.Event.listen("fullscreen:exit", () => {
   if ($staticBackgroundMode.get() !== "off") return;
+  const current = KawarpMap.get("lpagebg");
+  if (current && !current.isDisposed && current.getOptions().blurPasses === getPageKawarpOptions().blurPasses) return;
   // The Fullscreen class has been removed before this event. Rebuilding now
   // restores the normal eight-pass page background without touching NPV.
   reapplyPageBackground();

@@ -19,8 +19,8 @@ import {
 } from "../src/components/ReactComponents/LyricCreator/timing.ts";
 
 describe("Lyric Creator plain-text model", () => {
-  it("splits words only on backslashes and keeps exact boundary whitespace", () => {
-    const [line] = importPlainText(String.raw`Hello  \world`);
+  it("splits words on whitespace and keeps exact boundary whitespace", () => {
+    const [line] = importPlainText("Hello  world");
 
     expect(line.tokens).toHaveLength(2);
     expect(line.tokens[0].fragments[0].text).toBe("Hello");
@@ -28,14 +28,15 @@ describe("Lyric Creator plain-text model", () => {
     expect(line.tokens[1].fragments[0].text).toBe("world");
     expect(lineText(line)).toBe("Hello  world");
 
-    const [unsplit] = importPlainText("Hello world");
-    expect(unsplit.tokens).toHaveLength(1);
-    expect(unsplit.tokens[0].fragments[0].text).toBe("Hello world");
+    const [fragmented] = importPlainText(String.raw`Hel\lo world`);
+    expect(fragmented.tokens).toHaveLength(2);
+    expect(fragmented.tokens[0].fragments.map((fragment) => fragment.text)).toEqual(["Hel", "lo"]);
+    expect(lineText(fragmented)).toBe("Hello world");
   });
 
   it("uses each input line as a lyric line and starts timing as null", () => {
-    const lines = importPlainText(String.raw`First\line
-Second\line`);
+    const lines = importPlainText(`First line
+Second line`);
 
     expect(lines).toHaveLength(2);
     expect(lines.map(lineText)).toEqual(["First line", "Second line"]);
@@ -57,7 +58,7 @@ Second\line`);
   });
 
   it("moves complete words within a line without losing fragments or separators", () => {
-    const [line] = importPlainText(String.raw`one \two \three`);
+    const [line] = importPlainText("one two three");
     const movedId = line.tokens[0].id;
 
     expect(moveCreatorTokenWithinLine(line, 0, 2)).toBe(true);

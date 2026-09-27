@@ -26,12 +26,18 @@ const WordBlurs = {
 const getLyricsAnimationPosition = (positionMs: number, simpleLyricsMode: boolean) =>
   positionMs + timeOffset - (simpleLyricsMode ? SIMPLE_LYRICS_ANIMATION_DELAY_MS : 0);
 
+// Timing previews need exact audio time after the renderer applies its normal
+// listening-mode adjustment. Do not modify saved timings or the raw playhead.
+const getLyricsInputPositionForAnimation = (positionMs: number, simpleLyricsMode: boolean) =>
+  positionMs - getLyricsAnimationPosition(0, simpleLyricsMode);
+
 export {
   IdleLyricsScale,
   IdleEmphasisLyricsScale,
   timeOffset,
   SIMPLE_LYRICS_ANIMATION_DELAY_MS,
   getLyricsAnimationPosition,
+  getLyricsInputPositionForAnimation,
   DurationTimeOffset,
   BlurMultiplier,
   WordBlurs,

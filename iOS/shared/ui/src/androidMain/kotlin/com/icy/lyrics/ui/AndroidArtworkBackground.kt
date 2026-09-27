@@ -1,11 +1,8 @@
 package com.icy.lyrics.ui
 
 import android.graphics.Bitmap
-import android.graphics.BitmapShader
-import android.graphics.Paint
-import android.graphics.RuntimeShader
-import android.graphics.Shader
 import android.database.ContentObserver
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -16,30 +13,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlin.math.floor
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
 /**
@@ -53,16 +42,26 @@ fun AndroidArtworkBackground(
   enabled: Boolean,
   style: BackgroundStyle,
   isPlaying: Boolean,
+  performanceBackground: TvPerformanceBackground? = null,
   modifier: Modifier = Modifier,
   content: @Composable () -> Unit,
 ) {
   val reducedMotion = rememberReducedMotionEnabled()
-  val animated = enabled && style == BackgroundStyle.ANIMATED && !reducedMotion
+  val treatment = artworkBackgroundTreatment(enabled, style, reducedMotion, performanceBackground)
   Box(modifier.fillMaxSize().background(Color.Black)) {
-    if (animated && artwork != null) {
-      KawarpBackground(artwork, isPlaying)
-    } else if (enabled) {
-      StaticArtworkBackground(artwork)
+    when (treatment) {
+      ArtworkBackgroundTreatment.ANIMATED -> if (artwork != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          KawarpBackgroundApi33(artwork, isPlaying)
+        } else {
+          KawarpBackgroundApi30(artwork, isPlaying)
+        }
+      }
+      ArtworkBackgroundTreatment.STATIC_BLURRED -> StaticArtworkBackground(artwork)
+      ArtworkBackgroundTreatment.PREBLURRED_ARTWORK -> PreblurredArtworkBackground(artwork)
+      ArtworkBackgroundTreatment.SOLID_ALBUM_COLOR -> SolidAlbumColorBackground(artwork)
+      ArtworkBackgroundTreatment.DIMMED_ARTWORK -> DimmedArtworkBackground(artwork)
+      ArtworkBackgroundTreatment.BLACK -> Unit
     }
     Canvas(Modifier.fillMaxSize()) {
       drawRect(
@@ -76,16 +75,20 @@ fun AndroidArtworkBackground(
 }
 
 @Composable
-private fun StaticArtworkBackground(artwork: Bitmap?) {
+internal fun StaticArtworkBackground(artwork: Bitmap?) {
   val colors = remember(artwork) { artwork.palette() }
   if (artwork != null) {
-    Image(
-      bitmap = artwork.asImageBitmap(),
-      contentDescription = null,
-      contentScale = ContentScale.Crop,
-      modifier = Modifier.fillMaxSize().blur(54.dp),
-      alpha = 0.52f,
-    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      Image(
+        bitmap = artwork.asImageBitmap(),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize().blur(54.dp),
+        alpha = 0.52f,
+      )
+    } else {
+      CpuPreblurredArtwork(artwork)
+    }
   }
   Canvas(Modifier.fillMaxSize()) {
     drawRect(
@@ -96,94 +99,72 @@ private fun StaticArtworkBackground(artwork: Bitmap?) {
   }
 }
 
+/** One CPU pass per artwork; subsequent lyric frames only composite this small texture. */
 @Composable
-private fun KawarpBackground(artwork: Bitmap, isPlaying: Boolean) {
-  val platform = LocalIcyUiPlatform.current
-  val fixedFrame = platform.fixedFrameTimeNanos
+private fun PreblurredArtworkBackground(artwork: Bitmap?) {
+  if (artwork == null) return
+  CpuPreblurredArtwork(artwork)
+}
+
+@Composable
+private fun SolidAlbumColorBackground(artwork: Bitmap?) {
+  val fallback = Color(0xFF102E3F)
+  val color by produceState(initialValue = fallback, key1 = artwork) {
+    value = withContext(Dispatchers.Default) {
+      artwork.palette().primary.performanceSolidColor()
+    }
+  }
+  Canvas(Modifier.fillMaxSize()) { drawRect(color) }
+}
+
+@Composable
+private fun DimmedArtworkBackground(artwork: Bitmap?) {
+  if (artwork == null) return
+  Image(
+    bitmap = artwork.asImageBitmap(),
+    contentDescription = null,
+    contentScale = ContentScale.Crop,
+    modifier = Modifier.fillMaxSize(),
+    alpha = 0.34f,
+  )
+}
+
+@Composable
+private fun CpuPreblurredArtwork(artwork: Bitmap) {
   val processed by produceState<Bitmap?>(initialValue = null, key1 = artwork) {
     value = withContext(Dispatchers.Default) { preprocessArtwork(artwork) }
   }
-  val black = remember {
-    Bitmap.createBitmap(BLUR_SIZE, BLUR_SIZE, Bitmap.Config.ARGB_8888).apply {
-      eraseColor(android.graphics.Color.BLACK)
-    }
-  }
-  var from by remember { mutableStateOf(black) }
-  var to by remember { mutableStateOf(black) }
-  var transitionStartedAt by remember { mutableLongStateOf(0L) }
-  var transitionDurationNanos by remember { mutableLongStateOf(FIRST_CROSSFADE_NANOS) }
-  var hasShownArtwork by remember { mutableStateOf(false) }
-  var frameNanos by remember { mutableLongStateOf(platform.monotonicTimeNanos()) }
-  var lastAnimationFrameNanos by remember { mutableLongStateOf(0L) }
-  var animationTimeSeconds by remember { mutableFloatStateOf(0f) }
-  val currentIsPlaying = rememberUpdatedState(isPlaying)
-  val runtimeShader = remember { runCatching { RuntimeShader(KAWARP_SHADER) }.getOrNull() }
-  val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG) }
-  val fromShader = remember(from) { BitmapShader(from, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
-  val toShader = remember(to) { BitmapShader(to, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
-
-  LaunchedEffect(processed) {
-    val next = processed ?: return@LaunchedEffect
-    from = if (hasShownArtwork) to else black
-    to = next
-    transitionDurationNanos = if (hasShownArtwork) {
-      SUBSEQUENT_CROSSFADE_NANOS
-    } else {
-      FIRST_CROSSFADE_NANOS
-    }
-    transitionStartedAt = platform.monotonicTimeNanos()
-    hasShownArtwork = true
-  }
-  LaunchedEffect(runtimeShader, processed) {
-    if (runtimeShader == null || processed == null || fixedFrame != null) return@LaunchedEffect
-    lastAnimationFrameNanos = 0L
-    while (isActive) {
-      withFrameNanos { nextFrameNanos ->
-        if (lastAnimationFrameNanos != 0L) {
-          animationTimeSeconds = advanceKawarpPhase(
-            animationTimeSeconds,
-            nextFrameNanos - lastAnimationFrameNanos,
-            currentIsPlaying.value,
-          )
-        }
-        lastAnimationFrameNanos = nextFrameNanos
-        frameNanos = nextFrameNanos
-      }
-    }
-  }
-
-  if (runtimeShader == null) {
-    StaticArtworkBackground(artwork)
-    return
-  }
-  val blend = if (fixedFrame != null && processed != null) 1f else if (!hasShownArtwork || transitionStartedAt == 0L) {
-    0f
-  } else {
-    ((frameNanos - transitionStartedAt).toDouble() / transitionDurationNanos)
-      .coerceIn(0.0, 1.0)
-      .toFloat()
-  }
-  val time = fixedFrame?.let { it / 1_000_000_000f } ?: animationTimeSeconds
-
-  Canvas(Modifier.fillMaxSize()) {
-    runtimeShader.setInputShader("fromImage", fromShader)
-    runtimeShader.setInputShader("toImage", toShader)
-    runtimeShader.setFloatUniform("resolution", size.width, size.height)
-    runtimeShader.setFloatUniform("time", time)
-    runtimeShader.setFloatUniform("blend", blend)
-    runtimeShader.setFloatUniform("intensity", WARP_INTENSITY)
-    runtimeShader.setFloatUniform("saturation", SATURATION)
-    runtimeShader.setFloatUniform("dithering", DITHERING)
-    paint.shader = runtimeShader
-    drawIntoCanvas { canvas ->
-      canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint)
-    }
+  processed?.let { blurred ->
+    Image(
+      bitmap = blurred.asImageBitmap(),
+      contentDescription = null,
+      contentScale = ContentScale.Crop,
+      modifier = Modifier.fillMaxSize(),
+      alpha = 0.52f,
+    )
   }
 }
 
 /** CPU Kawase preprocessing with exactly eight four-corner passes. */
-private fun preprocessArtwork(source: Bitmap): Bitmap {
-  val scaled = Bitmap.createScaledBitmap(source, BLUR_SIZE, BLUR_SIZE, true)
+internal fun preprocessArtwork(source: Bitmap): Bitmap {
+  // MediaSession artwork may be backed by an immutable GPU-only HARDWARE
+  // bitmap. Bitmap.getPixels() rejects that config, so make the smallest
+  // possible readable copy before the one-time 128 px preprocessing pass.
+  val readableSource = if (source.config == Bitmap.Config.HARDWARE) {
+    requireNotNull(source.copy(Bitmap.Config.ARGB_8888, false)) {
+      "Artwork could not be copied into a readable bitmap."
+    }
+  } else {
+    source
+  }
+  val scaledCandidate = Bitmap.createScaledBitmap(readableSource, BLUR_SIZE, BLUR_SIZE, true)
+  val scaled = if (scaledCandidate.config == Bitmap.Config.HARDWARE) {
+    requireNotNull(scaledCandidate.copy(Bitmap.Config.ARGB_8888, false)) {
+      "Scaled artwork could not be copied into a readable bitmap."
+    }
+  } else {
+    scaledCandidate
+  }
   var read = IntArray(BLUR_SIZE * BLUR_SIZE)
   var write = IntArray(read.size)
   scaled.getPixels(read, 0, BLUR_SIZE, 0, 0, BLUR_SIZE, BLUR_SIZE)
@@ -204,6 +185,14 @@ private fun preprocessArtwork(source: Bitmap): Bitmap {
   }
   val processed = Bitmap.createBitmap(read, BLUR_SIZE, BLUR_SIZE, Bitmap.Config.ARGB_8888)
   if (scaled !== source) scaled.recycle()
+  if (scaledCandidate !== scaled && scaledCandidate !== source) scaledCandidate.recycle()
+  if (
+    readableSource !== scaled &&
+    readableSource !== scaledCandidate &&
+    readableSource !== source
+  ) {
+    readableSource.recycle()
+  }
   return processed
 }
 
@@ -246,14 +235,19 @@ private fun Bitmap?.palette(): ArtworkPalette {
   if (this == null || width <= 0 || height <= 0) {
     return ArtworkPalette(Color(0xFF23658A), Color(0xFF553C78))
   }
+  val readable = if (config == Bitmap.Config.HARDWARE) {
+    copy(Bitmap.Config.ARGB_8888, false)
+  } else {
+    this
+  } ?: return ArtworkPalette(Color(0xFF23658A), Color(0xFF553C78))
   val samples = ArrayList<Color>(144)
-  val stepX = (width / 12).coerceAtLeast(1)
-  val stepY = (height / 12).coerceAtLeast(1)
+  val stepX = (readable.width / 12).coerceAtLeast(1)
+  val stepY = (readable.height / 12).coerceAtLeast(1)
   var y = stepY / 2
-  while (y < height) {
+  while (y < readable.height) {
     var x = stepX / 2
-    while (x < width) {
-      val pixel = getPixel(x, y)
+    while (x < readable.width) {
+      val pixel = readable.getPixel(x, y)
       samples += Color(
         android.graphics.Color.red(pixel) / 255f,
         android.graphics.Color.green(pixel) / 255f,
@@ -263,12 +257,20 @@ private fun Bitmap?.palette(): ArtworkPalette {
     }
     y += stepY
   }
+  if (readable !== this) readable.recycle()
   if (samples.isEmpty()) return ArtworkPalette(Color(0xFF23658A), Color(0xFF553C78))
   val vivid = samples.sortedByDescending { color ->
     max(color.red, max(color.green, color.blue)) - minOf(color.red, color.green, color.blue)
   }
   return ArtworkPalette(vivid.first().lift(), vivid.getOrElse(vivid.size / 3) { vivid.first() }.lift())
 }
+
+/** Keeps white lyrics readable even when the sampled album colour is bright. */
+private fun Color.performanceSolidColor(): Color = Color(
+  red = red * 0.42f,
+  green = green * 0.42f,
+  blue = blue * 0.42f,
+)
 
 private fun Color.lift(): Color = Color(
   red = (red * 0.78f + 0.16f).coerceIn(0f, 1f),

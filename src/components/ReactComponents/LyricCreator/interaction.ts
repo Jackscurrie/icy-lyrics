@@ -7,7 +7,22 @@ type ClosestTarget = {
 const EDITABLE_SELECTOR =
   "input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']";
 const TEXT_EDITING_SELECTOR =
-  "textarea, input:not([type]), input[type='text'], input[type='search'], input[type='email'], input[type='url'], input[type='password'], [contenteditable]:not([contenteditable='false']), [role='textbox']";
+  "textarea, input:not([type]), input[type='text'], input[type='number'], input[type='search'], input[type='email'], input[type='url'], input[type='password'], [contenteditable]:not([contenteditable='false']), [role='textbox']";
+
+type CreatorShortcutEvent = Pick<KeyboardEvent, "code" | "repeat" | "isComposing" | "target"> &
+  Partial<Pick<KeyboardEvent, "key" | "keyCode" | "which" | "altKey" | "ctrlKey" | "metaKey">>;
+
+function isCreatorSpaceKey(event: CreatorShortcutEvent): boolean {
+  const key = event.key?.toLowerCase();
+  // Embedded/native keyboard paths can still use legacy Spacebar or only VK32.
+  return event.code === "Space" || key === " " || key === "spacebar" || key === "space" ||
+    ((!event.code || event.code === "Unidentified") && (event.keyCode === 32 || event.which === 32));
+}
+
+function shortcutIsEditableOrModified(event: CreatorShortcutEvent): boolean {
+  return Boolean(event.isComposing || event.altKey || event.ctrlKey || event.metaKey ||
+    isCreatorTextEditingTarget(event.target));
+}
 
 /**
  * Spotify installs document-level keyboard shortcuts. Creator editing controls
@@ -32,9 +47,9 @@ export function isCreatorTextEditingTarget(target: EventTarget | null): boolean 
 }
 
 export function creatorTimingActionFromKeyboardEvent(
-  event: Pick<KeyboardEvent, "code" | "repeat" | "isComposing" | "target"> & { key?: string }
+  event: CreatorShortcutEvent
 ): TimingAction | null {
-  if (event.repeat || event.isComposing || isCreatorTextEditingTarget(event.target)) return null;
+  if (event.repeat || shortcutIsEditableOrModified(event)) return null;
   const key = event.key?.toLocaleLowerCase();
   if (event.code === "KeyF" || key === "f") return "start";
   if (event.code === "KeyG" || key === "g") return "end-and-next";
@@ -42,14 +57,18 @@ export function creatorTimingActionFromKeyboardEvent(
   return null;
 }
 
+export function isCreatorTimingAdvanceShortcut(event: CreatorShortcutEvent): boolean {
+  return !event.repeat && !shortcutIsEditableOrModified(event) &&
+    (isCreatorSpaceKey(event) || event.code === "KeyJ" || event.key?.toLowerCase() === "j");
+}
+
 export function isCreatorPlaybackShortcut(
-  event: Pick<KeyboardEvent, "code" | "repeat" | "isComposing" | "target">
+  event: CreatorShortcutEvent
 ): boolean {
   return (
-    event.code === "Space" &&
+    isCreatorSpaceKey(event) &&
     !event.repeat &&
-    !event.isComposing &&
-    !isCreatorTextEditingTarget(event.target)
+    !shortcutIsEditableOrModified(event)
   );
 }
 

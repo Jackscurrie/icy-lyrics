@@ -17,6 +17,7 @@ import {
   type LyricsSyllable,
   type LyricsType,
   getLyricsBetweenShow,
+  readLyricsClock,
 } from "../Lyrics/lyrics.ts";
 import { ScrollIntoCenterViewCSS } from "../ScrollIntoView/Center.ts";
 import { ScrollIntoTopViewCSS } from "../ScrollIntoView/Top.ts";
@@ -28,6 +29,9 @@ import {
   setLyricsPresentationMode,
 } from "../Lyrics/LyricsVirtualizer.ts";
 import { getLyricsAnimationPosition } from "../Lyrics/Animator/Shared.ts";
+import { setFrameClass, setFrameStyle } from "../DOM/FrameWrites.ts";
+import { DeferredLyricsScroll, resolveLyricsScrollRequest } from "./ScrollRequest.ts";
+import { ScrollEventBindings } from "./ScrollEventBindings.ts";
 import {
   FULLSCREEN_OUTRO_POP_DURATION_MS,
   FullscreenLineTransitionTracker,
@@ -63,11 +67,8 @@ const USER_SCROLL_COOLDOWN = 750; // 0.75 second cooldown
 let forceScrollQueued = false;
 let smoothForceScrollQueued = false;
 
-// --- NEW: Module variables for cleanup ---
-let currentSimpleBarInstance: any | null = null;
-let wheelHandler: (() => void) | null = null;
-let touchMoveHandler: (() => void) | null = null;
-// --- END NEW ---
+const scrollEventBindings = new ScrollEventBindings();
+const deferredLyricsScroll = new DeferredLyricsScroll();
 
 const wasDrasticPositionChange = (lastPosition: number, newPosition: number) => {
   const positionChange = Math.abs(newPosition - lastPosition);
@@ -79,11 +80,6 @@ const handleWindowResize = () => {
   ResetLastLine();
   invalidateFullscreenRevealFits();
 };
-
-// Add focus event listener to reset state when window is focused
-window.addEventListener("focus", handleWindowFocus);
-// Add resize event listener to reset state when window is resized
-window.addEventListener("resize", handleWindowResize);
 
 // Create ResizeObserver to monitor LyricsContent container dimensions
 const lyricsContentObserver = new ResizeObserver(() => {
@@ -123,26 +119,14 @@ function handleUserScroll(ScrollSimplebar: any | null) {
 // Initialization function for scroll events and observers
 export function InitializeScrollEvents(ScrollSimplebar: any) {
   if (!$lyricsContainerExists.get()) return;
-  // --- NEW: Store instance and define handlers ---
-  currentSimpleBarInstance = ScrollSimplebar;
-  wheelHandler = () => handleUserScroll(currentSimpleBarInstance);
-  touchMoveHandler = () => handleUserScroll(currentSimpleBarInstance);
-  // --- END NEW ---
-
-  // Setup the observer
   setupLyricsContentObserver();
-
-  // Add scroll event listener
-  const scrollElement = ScrollSimplebar?.getScrollElement();
-  if (scrollElement && wheelHandler && touchMoveHandler) {
-    // Check handlers exist
-    // Remove potential old listeners first (optional, but safer if called multiple times)
-    scrollElement.removeEventListener("wheel", wheelHandler);
-    scrollElement.removeEventListener("touchmove", touchMoveHandler);
-    // Add new listeners
-    scrollElement.addEventListener("wheel", wheelHandler);
-    scrollElement.addEventListener("touchmove", touchMoveHandler);
-  }
+  scrollEventBindings.bind(
+    window,
+    ScrollSimplebar?.getScrollElement() ?? null,
+    handleWindowFocus,
+    handleWindowResize,
+    () => handleUserScroll(ScrollSimplebar)
+  );
 }
 
 /**
@@ -231,7 +215,10 @@ const ScrollTo = (
   type: "Center" | "Top" = "Center",
   lineIndex?: number
 ) => {
-  if (PageContainer?.classList.contains("FullscreenView--lyrics")) return;
+  if (
+    PageContainer?.classList.contains("FullscreenView--lyrics") ||
+    PageContainer?.classList.contains("FullscreenViewTransitioning")
+  ) return;
   if (lineIndex !== undefined && getLyricsVirtualizer()) {
     // instantScroll is effectively always true in the virtualizer path
     // (we set scrollTop directly), but passing the flag keeps the intent
@@ -302,6 +289,10 @@ const fullscreenLineTransitionKindClasses = [
 ] as const;
 
 const fullscreenLineTransitionTracker = new FullscreenLineTransitionTracker();
+const presentedFocusLines = new Set<HTMLElement>();
+let outroLine: HTMLElement | null = null;
+let focusIndexLines: LyricsLine[] | LyricsSyllable[] | null = null;
+let focusIndices = new Map<HTMLElement, number>();
 
 const IsLyricsFocusMode = () =>
   PageContainer?.classList.contains("FullscreenView--lyrics") === true;
@@ -479,18 +470,17 @@ const GetAttachedBackgroundLines = (
 };
 
 const clearOutroState = () => {
+  if (!outroLine) return;
   const page = PageContainer;
   page?.classList.remove("FullscreenOutroActive", "FullscreenOutroPopping");
   page?.style.removeProperty("--fullscreen-outro-progress");
   page?.style.removeProperty("--fullscreen-outro-pop-progress");
-  page?.querySelectorAll<HTMLElement>(".FullscreenOutroLine").forEach((line) => {
-    line.classList.remove("FullscreenOutroLine");
-    line.style.removeProperty("--fullscreen-outro-rotation");
-    line.style.removeProperty("--fullscreen-outro-scale");
-    line.style.removeProperty("--fullscreen-outro-opacity");
-    line.style.removeProperty("--fullscreen-outro-progress");
-    line.style.removeProperty("--fullscreen-outro-pop-progress");
-  });
+  const line = outroLine;
+  line.classList.remove("FullscreenOutroLine");
+  line.style.removeProperty("--fullscreen-outro-rotation");
+  line.style.removeProperty("--fullscreen-outro-scale");
+  line.style.removeProperty("--fullscreen-outro-opacity");
+  outroLine = null;
 };
 
 const syncLineTransitionState = (
@@ -499,32 +489,14 @@ const syncLineTransitionState = (
 ) => {
   const page = PageContainer;
   const isActive = state?.active === true && state.direction !== 0;
-  page?.classList.toggle("FullscreenLineTransitionActive", isActive);
   if (!page) return;
+  setFrameClass(page, "FullscreenLineTransitionActive", isActive);
   fullscreenLineTransitionKindClasses.forEach((className) => {
-    page.classList.toggle(className, isActive && className === `FullscreenLineTransition--${kind}`);
+    setFrameClass(page, className, isActive && className === `FullscreenLineTransition--${kind}`);
   });
-  if (!isActive || !state) {
-    page.style.removeProperty("--fullscreen-line-transition-progress");
-    page.style.removeProperty("--fullscreen-line-transition-direction");
-    page
-      .querySelectorAll<HTMLElement>(
-        ".FocusTransitionDeparting, .FocusTransitionIncoming, .FocusTransitionOutgoing, .FocusTransitionEntering"
-      )
-      .forEach((line) => {
-        line.classList.remove(
-          "FocusTransitionDeparting",
-          "FocusTransitionIncoming",
-          "FocusTransitionOutgoing",
-          "FocusTransitionEntering"
-        );
-        line.style.removeProperty("--fullscreen-line-transition-progress");
-        line.style.removeProperty("--fullscreen-line-transition-direction");
-      });
-    return;
-  }
-  page.style.setProperty("--fullscreen-line-transition-progress", state.progress.toFixed(4));
-  page.style.setProperty("--fullscreen-line-transition-direction", String(state.direction));
+  // Progress belongs to the handful of moving lines, not the page. Updating an
+  // inherited page variable invalidated styles for every mounted word/letter.
+  // setFocusLineState reconciles transition classes when a line settles.
 };
 
 function invalidateFullscreenRevealFits() {
@@ -536,8 +508,8 @@ function invalidateFullscreenRevealFits() {
 
 const syncRevealLineFit = (element: HTMLElement, enabled: boolean) => {
   if (!enabled || element.classList.contains("musical-line")) {
-    delete element.dataset.fullscreenRevealFitReady;
-    element.style.removeProperty("--fullscreen-reveal-fit");
+    if (element.dataset.fullscreenRevealFitReady) delete element.dataset.fullscreenRevealFitReady;
+    setFrameStyle(element, "--fullscreen-reveal-fit", null);
     return;
   }
   if (element.dataset.fullscreenRevealFitReady === "true") return;
@@ -575,38 +547,42 @@ const syncRevealLineFit = (element: HTMLElement, enabled: boolean) => {
 
 const setFocusLineState = (element: HTMLElement, state: FocusLineState | null) => {
   for (const role of focusRoleClasses) {
-    element.classList.toggle(role, state?.role === role);
+    setFrameClass(element, role, state?.role === role);
   }
-  element.classList.toggle("FocusBackgroundLine", state?.isBackground === true);
-  element.classList.toggle("FocusRevealCurrentLine", state?.isRevealCurrent === true);
-  element.classList.toggle("FocusTransitionDeparting", state?.transition === "departing");
-  element.classList.toggle("FocusTransitionIncoming", state?.transition === "incoming");
-  element.classList.toggle("FocusTransitionOutgoing", state?.transition === "outgoing");
-  element.classList.toggle("FocusTransitionEntering", state?.transition === "entering");
+  setFrameClass(element, "FocusBackgroundLine", state?.isBackground === true);
+  setFrameClass(element, "FocusRevealCurrentLine", state?.isRevealCurrent === true);
+  setFrameClass(element, "FocusTransitionDeparting", state?.transition === "departing");
+  setFrameClass(element, "FocusTransitionIncoming", state?.transition === "incoming");
+  setFrameClass(element, "FocusTransitionOutgoing", state?.transition === "outgoing");
+  setFrameClass(element, "FocusTransitionEntering", state?.transition === "entering");
   syncRevealLineFit(element, state?.isRevealCurrent === true);
   if (state?.isBackground) {
-    element.style.setProperty("--focus-bg-offset", `${10 + (state.backgroundIndex ?? 0) * 5.2}cqh`);
+    setFrameStyle(element, "--focus-bg-offset", `${10 + (state.backgroundIndex ?? 0) * 5.2}cqh`);
   } else {
-    element.style.removeProperty("--focus-bg-offset");
+    setFrameStyle(element, "--focus-bg-offset", null);
   }
   if (state?.transition && state.transitionDirection) {
-    element.style.setProperty(
+    setFrameStyle(element,
       "--fullscreen-line-transition-progress",
       (state.transitionProgress ?? 1).toFixed(4)
     );
-    element.style.setProperty(
+    setFrameStyle(element,
       "--fullscreen-line-transition-direction",
       String(state.transitionDirection)
     );
   } else {
-    element.style.removeProperty("--fullscreen-line-transition-progress");
-    element.style.removeProperty("--fullscreen-line-transition-direction");
+    setFrameStyle(element, "--fullscreen-line-transition-progress", null);
+    setFrameStyle(element, "--fullscreen-line-transition-direction", null);
   }
 };
 
 export const ResetFullscreenLyricsPresentation = (deferVirtualizerRemeasure = false) => {
   fullscreenLineTransitionTracker.reset();
   syncLineTransitionState(null);
+  // Include detached animator nodes; a page query alone misses them on a
+  // song/page ownership handoff and can leave stale focus styling on re-entry.
+  presentedFocusLines.forEach((line) => setFocusLineState(line, null));
+  presentedFocusLines.clear();
   PageContainer?.querySelectorAll<HTMLElement>(
     ".FocusPreviousLine, .FocusCurrentLine, .FocusNextLine, .FocusBackgroundLine, .FocusRevealCurrentLine, .FocusTransitionDeparting, .FocusTransitionIncoming, .FocusTransitionOutgoing, .FocusTransitionEntering, .FullscreenOutroLine"
   ).forEach((line) => {
@@ -680,19 +656,16 @@ const updateOutro = (
     role: "FocusCurrentLine",
     isRevealCurrent: reveal,
   });
-  finalLine.element.classList.add("FullscreenOutroLine");
-  finalLine.element.style.setProperty("--fullscreen-outro-rotation", `${state.rotationDeg}deg`);
-  finalLine.element.style.setProperty("--fullscreen-outro-scale", state.scale.toFixed(4));
-  finalLine.element.style.setProperty("--fullscreen-outro-opacity", state.opacity.toFixed(4));
-  finalLine.element.style.setProperty("--fullscreen-outro-progress", state.spinProgress.toFixed(4));
-  finalLine.element.style.setProperty(
-    "--fullscreen-outro-pop-progress",
-    state.popProgress.toFixed(4)
-  );
-  PageContainer?.classList.add("FullscreenOutroActive");
-  PageContainer?.classList.toggle("FullscreenOutroPopping", state.popProgress > 0);
-  PageContainer?.style.setProperty("--fullscreen-outro-progress", state.spinProgress.toFixed(4));
-  PageContainer?.style.setProperty("--fullscreen-outro-pop-progress", state.popProgress.toFixed(4));
+  if (outroLine && outroLine !== finalLine.element) clearOutroState();
+  outroLine = finalLine.element;
+  setFrameClass(outroLine, "FullscreenOutroLine", true);
+  setFrameStyle(outroLine, "--fullscreen-outro-rotation", `${state.rotationDeg}deg`);
+  setFrameStyle(outroLine, "--fullscreen-outro-scale", state.scale.toFixed(4));
+  setFrameStyle(outroLine, "--fullscreen-outro-opacity", state.opacity.toFixed(4));
+  if (PageContainer) {
+    setFrameClass(PageContainer, "FullscreenOutroActive", true);
+    setFrameClass(PageContainer, "FullscreenOutroPopping", state.popProgress > 0);
+  }
   return true;
 };
 
@@ -885,17 +858,25 @@ const UpdateFullscreenLyricsPresentation = (
   const outroActive = updateOutro(lines, rawPosition, desired, reveal);
   if (outroActive) syncLineTransitionState(null);
 
+  if (focusIndexLines !== lines) {
+    focusIndexLines = lines;
+    focusIndices = new Map(lines.map((line, index) => [line.HTMLElement, index] as const));
+  }
   const indices = [...desired.keys()]
-    .map((element) => lines.findIndex((line) => line.HTMLElement === element))
-    .filter((index) => index >= 0);
+    .map((element) => focusIndices.get(element))
+    .filter((index): index is number => index !== undefined);
   setLyricsPresentationIndices(indices);
 
-  PageContainer?.querySelectorAll<HTMLElement>(
-    ".FocusPreviousLine, .FocusCurrentLine, .FocusNextLine, .FocusBackgroundLine, .FocusRevealCurrentLine, .FocusTransitionDeparting, .FocusTransitionIncoming, .FocusTransitionOutgoing, .FocusTransitionEntering"
-  ).forEach((line) => {
-    if (!desired.has(line)) setFocusLineState(line, null);
+  presentedFocusLines.forEach((line) => {
+    if (!desired.has(line)) {
+      setFocusLineState(line, null);
+      presentedFocusLines.delete(line);
+    }
   });
-  desired.forEach((state, line) => setFocusLineState(line, state));
+  desired.forEach((state, line) => {
+    setFocusLineState(line, state);
+    presentedFocusLines.add(line);
+  });
 };
 
 /**
@@ -935,6 +916,13 @@ export const PrepareFullscreenLyricsPresentationExit = (knownIndex?: number): nu
 
 const UpdateFullscreenLyricsFrame = (position: number, rawPosition: number) => {
   if (!Number.isFinite(position) || !Number.isFinite(rawPosition)) return;
+  if (!IsLyricsFocusMode()) {
+    if (PageContainer?.classList.contains("FullscreenViewTransitioning")) return;
+    if (presentedFocusLines.size || PageContainer?.classList.contains("FullscreenLyricsPresenting")) {
+      ResetFullscreenLyricsPresentation();
+    }
+    return;
+  }
   const currentType = $currentLyricsType.get() as LyricsType;
   if (currentType !== "Line" && currentType !== "Syllable") return;
   const lines = LyricsObject.Types[currentType].Lines as LyricsLine[] | LyricsSyllable[];
@@ -1003,11 +991,14 @@ export const GetFullscreenLyricsTransitionTargets = (): HTMLElement[] => {
 };
 
 const resetPlaybackDrivenPresentationState = () => {
+  deferredLyricsScroll.cancel();
   fullscreenLineTransitionTracker.reset();
   syncLineTransitionState(null);
   clearOutroState();
   fullscreenVocalTimingCache = undefined;
   fullscreenInterludeSilenceCache = new WeakMap();
+  focusIndexLines = null;
+  focusIndices.clear();
 };
 
 Global.Event.listen("lyrics:frame", UpdateFullscreenLyricsFrame);
@@ -1042,6 +1033,15 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
   // them. Fullscreen.ts queues one smooth reconciliation after the landing.
   if (PageContainer?.classList.contains("FullscreenViewTransitioning")) return;
 
+  // The focus stage owns scrolling while active; leave queued list handoffs
+  // intact for exit instead of scanning every lyric in a second timer loop.
+  if (IsLyricsFocusMode()) {
+    // Keep the discontinuity anchor fresh: elapsed focus playback is not a
+    // seek and must not turn the queued smooth list landing into a snap.
+    lastPosition = SpotifyPlayer.GetPosition();
+    return;
+  }
+
   const currentType = $currentLyricsType.get() as LyricsType;
   const Lines = LyricsObject.Types[currentType]?.Lines as LyricsLine[] | LyricsSyllable[];
   if (!Lines) return;
@@ -1051,7 +1051,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
   const isSmoothForceScrollQueued = smoothForceScrollQueued;
 
   //if (Spicetify.Platform.History.location.pathname === "/IcyLyrics") {
-  const Position = SpotifyPlayer.GetPosition();
+  const { positionMs: Position, isPlaying } = readLyricsClock();
   const PositionOffset = 0;
   const ProcessedPosition =
     getLyricsAnimationPosition(Position, $simpleLyricsMode.get()) + PositionOffset;
@@ -1062,17 +1062,15 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
   const sungLines = Lines.filter((line: any) => line.Status === "Sung");
   const oneActiveNoSung = activeLines.length === 1 && sungLines.length === 0;
   const allLinesSung = Lines.every((line: any) => line.Status === "Sung");
-  // An explicit smooth handoff (used after lyrics-focus FLIP) must win even if
-  // the user reversed views before focus mode had one frame to seed lastLine.
-  // Otherwise that rapid path falls into the null-line force branch and turns
-  // the requested smooth landing into the same one-frame scrollTop snap.
-  const shouldForceScroll = isForceScrollQueued || (lastLine == null && !isSmoothForceScrollQueued);
+  const scrollRequest = resolveLyricsScrollRequest({
+    forceQueued: isForceScrollQueued,
+    smoothQueued: isSmoothForceScrollQueued,
+    lastLineMissing: lastLine === null,
+    pausedPositionChanged: !isPlaying && lastPosition !== Position,
+    drasticPositionChange: lastPosition !== 0 && wasDrasticPositionChange(lastPosition, Position),
+  });
 
-  if (
-    shouldForceScroll ||
-    (!SpotifyPlayer.IsPlaying && lastPosition !== Position) ||
-    (lastPosition !== 0 && wasDrasticPositionChange(lastPosition ?? 0, Position))
-  ) {
+  if (scrollRequest) {
     if (!allowForceScrolling) return;
     const container = ScrollSimplebar?.getScrollElement() as HTMLElement;
     if (!container) return;
@@ -1081,42 +1079,25 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
       ? Lines[Lines.length - 1]?.HTMLElement
       : currentLine?.HTMLElement;
     if (!scrollToLine) return;
+    deferredLyricsScroll.cancel();
     lastLine = scrollToLine;
     const forceScrollLineIndex = allLinesSung ? Lines.length - 1 : currentLine?._LineIndex;
     ScrollTo(
       container,
       scrollToLine,
-      shouldForceScroll ||
-        (lastPosition !== 0 && wasDrasticPositionChange(lastPosition ?? 0, Position)),
+      scrollRequest === "instant",
       GetScrollType(),
       forceScrollLineIndex
     );
-    if (forceScrollQueued) {
-      forceScrollQueued = false; // Reset the queue after using it
-    }
+    // A successful handoff consumes both queues. Keeping the superseded force
+    // request would cause an instant second scroll on the following tick.
+    forceScrollQueued = false;
+    smoothForceScrollQueued = false;
     lastPosition = Position;
     return;
   }
 
   lastPosition = Position;
-
-  if (isSmoothForceScrollQueued) {
-    if (!allowForceScrolling) return;
-    const container = ScrollSimplebar?.getScrollElement() as HTMLElement;
-    if (!container) return;
-    isUserScrolling = false;
-    const scrollToLine = allLinesSung
-      ? Lines[Lines.length - 1]?.HTMLElement
-      : currentLine?.HTMLElement;
-    if (!scrollToLine) return;
-    lastLine = scrollToLine;
-    const smoothScrollLineIndex = allLinesSung ? Lines.length - 1 : currentLine?._LineIndex;
-    ScrollTo(container, scrollToLine, false, GetScrollType(), smoothScrollLineIndex);
-    if (smoothForceScrollQueued) {
-      smoothForceScrollQueued = false; // Reset the queue after using it
-    }
-    return;
-  }
 
   if (!Lines) return;
 
@@ -1273,9 +1254,9 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
         isUserScrolling = false;
         // Remove HideLineBlur class ONLY if we were user scrolling
         //if (wasUserScrolling) {
-        const lyricsContent = PageContainer?.querySelector(".LyricsContainer .LyricsContent");
+        const lyricsContent = PageContainer?.querySelector<HTMLElement>(".LyricsContainer .LyricsContent");
         if (lyricsContent) {
-          lyricsContent.classList.remove("HideLineBlur");
+          setFrameClass(lyricsContent, "HideLineBlur", false);
         } else {
           console.warn(
             "IcyLyrics: Could not find .LyricsContent in ScrollToActiveLine to remove HideLineBlur."
@@ -1284,6 +1265,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
         //}
         // Scroll if the line is different from the last auto-scrolled line
         if (!isSameLine) {
+          deferredLyricsScroll.cancel();
           lastLine = LineElem;
           const Scroll = () => {
             ScrollTo(container, LineElem, false, GetScrollType(), currentLine._LineIndex);
@@ -1294,7 +1276,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
             Lines[currentLine._LineIndex - 1] &&
             Lines[currentLine._LineIndex - 1].DotLine === true
           ) {
-            setTimeout(Scroll, 240);
+            deferredLyricsScroll.schedule(Scroll, 240);
           } else {
             Scroll();
           }
@@ -1316,6 +1298,7 @@ export function QueueSmoothForceScroll() {
 }
 
 export function ResetLastLine() {
+  deferredLyricsScroll.cancel();
   lastLine = null;
   lastViewportLine = null;
   lastViewportContainer = null;
@@ -1334,28 +1317,10 @@ export function ResetLastLine() {
 
 // --- NEW: Cleanup Function ---
 export function CleanupScrollEvents() {
-  // Remove scroll listeners
-  const scrollElement = currentSimpleBarInstance?.getScrollElement();
-  if (scrollElement) {
-    if (wheelHandler) {
-      scrollElement.removeEventListener("wheel", wheelHandler);
-    }
-    if (touchMoveHandler) {
-      scrollElement.removeEventListener("touchmove", touchMoveHandler);
-    }
-  }
-
+  deferredLyricsScroll.cancel();
+  scrollEventBindings.dispose();
   // Disconnect observer
   lyricsContentObserver?.disconnect();
-
-  // Remove window listeners
-  window.removeEventListener("focus", handleWindowFocus);
-  window.removeEventListener("resize", handleWindowResize);
-
-  // Reset module variables
-  currentSimpleBarInstance = null;
-  wheelHandler = null;
-  touchMoveHandler = null;
   forceScrollQueued = false; // Reset force scroll queue
   smoothForceScrollQueued = false;
   scrolledToLastLine = false;

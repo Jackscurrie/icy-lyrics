@@ -1,4 +1,5 @@
 <resources>
   <string name="app_name">Icy Lyrics</string>
   <string name="notification_listener_label">Icy Lyrics now playing access</string>
+  <string name="lyric_creator_name">Lyric Creator</string>
 </resources>
