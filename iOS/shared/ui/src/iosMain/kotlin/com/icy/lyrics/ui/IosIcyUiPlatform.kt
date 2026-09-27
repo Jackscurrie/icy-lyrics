@@ -130,6 +130,7 @@ class IosIcyUiPlatform(
 
   @Composable override fun Background(
     artwork: ImageBitmap?, enabled: Boolean, style: BackgroundStyle, isPlaying: Boolean,
-    modifier: Modifier, content: @Composable () -> Unit,
+    performanceBackground: TvPerformanceBackground?, modifier: Modifier,
+    content: @Composable () -> Unit,
   ) = IosArtworkBackground(artwork, enabled, style, isPlaying, modifier, content)
 }
