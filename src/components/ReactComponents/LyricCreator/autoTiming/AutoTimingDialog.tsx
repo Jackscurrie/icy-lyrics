@@ -6,10 +6,9 @@ import { lineText, type CreatorProject } from "../model.ts";
 import { creatorProjectCheckpoint } from "../sourceSwitch.ts";
 import type { DecodedAutoTimingAudio } from "./audio.ts";
 import {
-  applyAutoTimingCandidate,
-  buildAutoTimingCandidate,
   summarizeAutoTimingCandidate,
 } from "./alignment.ts";
+import { applyAutoTimingCandidateWithOffset, buildAutoTimingCandidateWithOffset } from "./projectOffset.ts";
 import { autoTimingModelRepository } from "./modelRepository.ts";
 import { transcribeAutoTimingAudio } from "./workerClient.ts";
 import { CreatorTaskScope, type CreatorTask } from "./session.ts";
@@ -30,6 +29,7 @@ interface Props {
   audioName: string;
   audio: DecodedAutoTimingAudio;
   expectedDurationMs?: number;
+  timingOffsetMs?: number;
   onSeek: (timeMs: number) => void;
   onTogglePlayback: () => void;
   onApply: (project: CreatorProject, previous: CreatorProject) => void;
@@ -62,6 +62,7 @@ export default function AutoTimingDialog({
   audioName,
   audio,
   expectedDurationMs,
+  timingOffsetMs = 0,
   onSeek,
   onTogglePlayback,
   onApply,
@@ -203,7 +204,7 @@ export default function AutoTimingDialog({
       reportProgress({ phase: "aligning", progress: 0, message: "Aligning the transcript to your lyrics…" });
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       task.throwIfCancelled();
-      const nextCandidate = buildAutoTimingCandidate({
+      const nextCandidate = buildAutoTimingCandidateWithOffset({
         project: projectSnapshot,
         projectFingerprint,
         modelId: requestedModel,
@@ -211,7 +212,7 @@ export default function AutoTimingDialog({
         durationMs: audio.durationMs,
         words: transcription.words,
         energyFrames: audio.energyFrames,
-      });
+      }, timingOffsetMs);
       const supportedLines = new Set(nextCandidate.supportedLineIds);
       if (Object.keys(nextCandidate.fragments).length === 0 || supportedLines.size === 0) {
         throw new Error("No usable timings matched these lyrics. Check the lyrics and matching audio, then try again.");
@@ -257,10 +258,16 @@ export default function AutoTimingDialog({
       setError("Confirm that existing timings may be replaced before applying.");
       return;
     }
-    const next = applyAutoTimingCandidate(project, candidate, {
-      mode: applyMode,
-      includedLineIds,
-    });
+    let next: CreatorProject;
+    try {
+      next = applyAutoTimingCandidateWithOffset(project, candidate, {
+        mode: applyMode,
+        includedLineIds,
+      }, timingOffsetMs);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not apply automatic timings.");
+      return;
+    }
     if (creatorProjectCheckpoint(next) === creatorProjectCheckpoint(project)) {
       setError(applyMode === "missing"
         ? "There are no missing timings to fill in the selected lines. Select other lines or choose Replace all timings."

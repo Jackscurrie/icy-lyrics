@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { $isGlobalNav } from "../../utils/uiState";
 import Logger from "../../utils/Logger";
+import { getSpotifyPlaybar } from "../../utils/SpotifyPlaybarHost";
 
 const toasterLogger = new Logger("Toaster");
 
@@ -11,12 +12,10 @@ export default function IcyLyricsToaster() {
   const isGlobalNav = useStore($isGlobalNav);
 
   useEffect(() => {
-    const targetElement = document.querySelector<HTMLElement>(
-      ".Root__now-playing-bar",
-    );
+    const targetElement = getSpotifyPlaybar();
 
     if (!targetElement) {
-      toasterLogger.warn("Could not find '.Root__now-playing-bar' in the DOM");
+      toasterLogger.warn("Could not find Spotify's now-playing bar in the DOM");
       return;
     }
 

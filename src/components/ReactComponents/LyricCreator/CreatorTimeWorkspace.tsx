@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   autoFollowCreatorTimingTarget,
   classifyCreatorTimingTarget,
@@ -11,6 +11,7 @@ import {
 import type { CreatorProject } from "./model.ts";
 import { CreatorPlaybackTime, useCreatorPlaybackActivity, type CreatorPlaybackClock } from "./useCreatorPlayback.tsx";
 import { CREATOR_LUCIDA_URL, type CreatorAudioHandoffResult } from "./localAudioHandoff.ts";
+import { attachCreatorTimingTransfer, canCopyCreatorFragmentTiming } from "./timingTransfer.ts";
 
 interface CreatorTimeWorkspaceProps {
   project: CreatorProject;
@@ -19,6 +20,7 @@ interface CreatorTimeWorkspaceProps {
   playbackClock: CreatorPlaybackClock;
   options: CreatorTimingOptions;
   onOptionsChange: (options: CreatorTimingOptions) => void;
+  onCopyTiming: (sourceFragmentId: string, targetFragmentId: string) => void;
   onAutoTime: () => void;
   onUndoAutoTiming?: () => void;
   onOpenLucida: () => void;
@@ -59,6 +61,7 @@ export default function CreatorTimeWorkspace({
   playbackClock,
   options,
   onOptionsChange,
+  onCopyTiming,
   onAutoTime,
   onUndoAutoTiming,
   onOpenLucida,
@@ -71,6 +74,10 @@ export default function CreatorTimeWorkspace({
   );
   const activeTarget = targets[targetIndex];
   const sheetRef = useRef<HTMLDivElement>(null);
+  const [offsetInput, setOffsetInput] = useState(String(options.offsetMs));
+  const offsetEditingRef = useRef(false);
+  const transferRef = useRef({ project, onCopyTiming });
+  transferRef.current = { project, onCopyTiming };
   const targetIndexByFragment = useMemo(
     () => new Map(targets.map((target, index) => [target.fragment.id, index])),
     [targets]
@@ -88,6 +95,21 @@ export default function CreatorTimeWorkspace({
     if (targets.length === 0 || targetIndex < targets.length) return;
     onTargetIndex(Math.max(0, targets.length - 1));
   }, [onTargetIndex, targetIndex, targets.length]);
+
+  useEffect(() => {
+    if (!offsetEditingRef.current) setOffsetInput(String(options.offsetMs));
+  }, [options.offsetMs]);
+
+  useEffect(() => {
+    if (!sheetRef.current) return;
+    return attachCreatorTimingTransfer(sheetRef.current, {
+      getFragment: (id) => transferRef.current.project.lines
+        .flatMap((line) => line.tokens.flatMap((token) => token.fragments))
+        .find((fragment) => fragment.id === id),
+      onCopyTiming: (sourceId, targetId) => transferRef.current.onCopyTiming(sourceId, targetId),
+      formatTime: displayTime,
+    });
+  }, []);
 
   useEffect(() => {
     if (!options.autoFollow) return;
@@ -177,16 +199,27 @@ export default function CreatorTimeWorkspace({
               <input
                 type="number"
                 step={10}
-                value={options.offsetMs}
-                onChange={(event) =>
-                  updateOption("offsetMs", Number(event.currentTarget.value) || 0)
-                }
+                value={offsetInput}
+                onFocus={() => { offsetEditingRef.current = true; }}
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setOffsetInput(value);
+                  // Empty / partially typed negative values are editing states,
+                  // not a request to move every lyric back to zero offset.
+                  if (value.trim() !== "" && Number.isFinite(Number(value))) {
+                    updateOption("offsetMs", Number(value));
+                  }
+                }}
+                onBlur={() => {
+                  offsetEditingRef.current = false;
+                  setOffsetInput(String(options.offsetMs));
+                }}
                 aria-label="Timing offset in milliseconds"
               />
               <span>ms</span>
             </span>
           </label>
-          <small>Applied when F, G, or H is pressed</small>
+          <small>Shifts all song timings immediately, including the preview</small>
         </div>
 
         <div className="il-creator-timing-toolbar__group il-creator-timing-options">
@@ -287,6 +320,11 @@ export default function CreatorTimeWorkspace({
                           aria-label={`${fragment.text || "Empty fragment"}, start ${displayTime(fragment.startTimeMs)}, end ${displayTime(fragment.endTimeMs)}`}
                           className={`il-creator-timing-cell is-${state}${isLive ? " is-playing" : ""}`}
                           data-time-state={state}
+                          data-creator-timing-fragment={fragment.id}
+                          data-timing-copyable={canCopyCreatorFragmentTiming(fragment)}
+                          title={canCopyCreatorFragmentTiming(fragment)
+                            ? "Drag to another word to copy these timings"
+                            : "Select this word to set its timing"}
                           onClick={() => onTargetIndex(index)}
                           key={fragment.id}
                         >

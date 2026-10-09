@@ -61,6 +61,7 @@ import Logger from "../../utils/Logger.ts";
 import { ApplyExperimentClasses, onExperimentChange } from "../../utils/experiments.ts";
 import { triggerRemeasureLV } from "../../utils/Lyrics/LyricsVirtualizer.ts";
 import { FULLSCREEN_VIEW_TOOLBAR_HTML } from "../../utils/FullscreenViewNavigation.ts";
+import { requireConnectedPageHost, resolveSpotifyPageHost } from "../../utils/SpotifyPageHost.ts";
 
 const pageLogger = new Logger("Page View");
 const controlsLogger = new Logger("View Controls");
@@ -96,23 +97,7 @@ const PageView = {
   IsTippyCapable: true,
 };
 
-export const GetPageRoot = () =>
-  /* document.querySelector<HTMLElement>(".QdB2YtfEq0ks5O4QbtwX .WRGTOibB8qNEkgPNtMxq") ?? */
-  document.querySelector<HTMLElement>(
-    ".Root__main-view .main-view-container div[data-overlayscrollbars-viewport]"
-  ) ??
-  (() => {
-    const child = document.querySelector<HTMLElement>(
-      ".Root__main-view .main-view-container .main-view-container__scroll-node-child"
-    );
-    return child?.parentElement as HTMLElement | null;
-  })() ??
-  document.querySelector<HTMLElement>(
-    ".Root__main-view .main-view-container .os-host"
-  ) ??
-  document.querySelector<HTMLElement>(
-    ".Root__main-view .main-view-container .uGZUPBPcDpzSYqKcQT8r > div"
-  );
+export const GetPageRoot = () => resolveSpotifyPageHost();
 
 let PageResizeListener: ResizeObserver | null = null;
 export let PageContainer: HTMLElement | null = null;
@@ -139,6 +124,10 @@ async function OpenPage(
   }
 
   if (PageView.IsOpened) return;
+
+  // A missing Spotify mount used to allocate a detached page and permanently
+  // set IsOpened=true, leaving both the route and fullscreen controls blank.
+  const pageHost = requireConnectedPageHost(AppendTo ?? GetPageRoot());
 
   IsCardMode = cardMode;
   const isPreviewMode = previewMode;
@@ -266,11 +255,7 @@ async function OpenPage(
     }
   }
 
-  if (AppendTo !== undefined) {
-    AppendTo?.appendChild(elem);
-  } else {
-    GetPageRoot()?.appendChild(elem);
-  }
+  pageHost.appendChild(elem);
 
   addLinesEvListener();
 
@@ -317,7 +302,7 @@ async function OpenPage(
 
   if (AppendTo === undefined) {
     const legacyPage = document.querySelector<HTMLElement>(
-      ".Root__main-view .main-view-container .os-host"
+      ".main-view-container .os-host"
     );
     if (legacyPage) {
       legacyPage.style.containerType = "inline-size";
@@ -389,7 +374,7 @@ async function DestroyPage() {
   DestroyAllLyricsContainers();
 
   const legacyPage = document.querySelector<HTMLElement>(
-    ".Root__main-view .main-view-container .os-host"
+    ".main-view-container .os-host"
   );
   if (legacyPage) {
     legacyPage.style.containerType = "";

@@ -53,10 +53,10 @@
   display: none !important;
 }
 
-.Root__main-view:has(#IcyLyricsPage) .main-view-container__scroll-node-child,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container__scroll-node-child-spacer,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container__scroll-node-child,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container__scroll-node-child-spacer {
+/* Only cover native route content while this container owns the Icy page.
+ * A legacy host may live inside the content node: never hide our own ancestor. */
+.main-view-container:has(#IcyLyricsPage) .main-view-container__scroll-node-child:not(:has(#IcyLyricsPage)),
+.main-view-container:has(#IcyLyricsPage) .main-view-container__scroll-node-child-spacer:not(:has(#IcyLyricsPage)) {
   display: none;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .Root:not(.global-nav)
-  .Root__main-view
+  .main-view-container
   #IcyLyricsPage.ViewControlsPosition_Top:not(.Fullscreen)
   .ViewControls {
   bottom: 36px;
@@ -380,16 +380,15 @@ button:has(#IcyLyricsPageSvg):not(
 }
 
 /* "Page Not Visible" fix */
-.Root__main-view:has(#IcyLyricsPage),
-.Root__main-view:has(#IcyLyricsPage) .KL8t9WB65UfUEPuTFAhO,
-.Root__main-view:has(#IcyLyricsPage) .main-content-view,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container__scroll-node,
-.Root__main-view:has(#IcyLyricsPage) .main-view-container .div[data-overlayscrollbars-viewport] {
+.Root__main-view:has(.main-view-container #IcyLyricsPage),
+.main-content-view:has(.main-view-container #IcyLyricsPage),
+.main-view-container:has(#IcyLyricsPage),
+.main-view-container:has(#IcyLyricsPage) .main-view-container__scroll-node:has(#IcyLyricsPage),
+.main-view-container:has(#IcyLyricsPage) [data-overlayscrollbars-viewport]:has(#IcyLyricsPage) {
   height: 100% !important;
 }
 
-body:not(:has(.Root__main-view-overlay #IcyLyricsPage:is(.Fullscreen)))
+body:not(:has(#IcyLyricsPage.Fullscreen))
   #IcyLyrics_FullscreenButton {
   scale: 1.25;
 }
@@ -736,8 +735,8 @@ icy-lyrics-modal.IcyLyricsModal .il-modal .il-modal-container {
   overflow-x: hidden;
 }
 
-.Root.global-nav .Root__main-view:has(#IcyLyricsPage) > header,
-.Root.global-nav .Root__main-view:has(#IcyLyricsPage) > .main-topBar-container {
+.Root.global-nav :has(> .main-view-container #IcyLyricsPage) > header:not(:has(#IcyLyricsPage)),
+.Root.global-nav :has(> .main-view-container #IcyLyricsPage) > .main-topBar-container:not(:has(#IcyLyricsPage)) {
   display: none !important;
 }
 

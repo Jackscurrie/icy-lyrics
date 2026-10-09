@@ -4,12 +4,14 @@ import {
   createEmptyProject,
   createLine,
   createToken,
+  creatorProjectToLyrics,
   syncLineTiming,
   type CreatorLine,
   type CreatorProject,
 } from "../src/components/ReactComponents/LyricCreator/model.ts";
 import {
   CreatorValidationError,
+  creatorProjectToTTMLResult,
   parseCreatorTTML,
   serializeCreatorTTML,
   validateCreatorProject,
@@ -174,25 +176,84 @@ describe("Lyric Creator TTML codec", () => {
     expect(() => serializeCreatorTTML(project, generatorOptions)).toThrow(CreatorValidationError);
   });
 
-  it("rejects stale or forward background attachments", () => {
+  it("keeps explicit background attachments when their rows move above the lead", () => {
     const project = createEmptyProject();
-    const background = timedLine("Back", 0, 500, { background: true });
-    const laterLead = timedLine("Lead", 500, 1000);
+    const background = timedLine("Back", 0, 500, { background: true, secondSpeaker: true });
+    const firstLead = timedLine("First lead", 0, 1000);
+    const laterLead = timedLine("Later lead", 500, 1000);
     background.attachedToLineId = laterLead.id;
-    project.lines = [background, laterLead];
+    project.lines = [background, firstLead, laterLead];
 
-    expect(validateCreatorProject(project)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("earlier lead") }),
-      ])
-    );
+    expect(validateCreatorProject(project)).toEqual([]);
+    const preview = creatorProjectToLyrics(project);
+    expect(preview.Content).toHaveLength(2);
+    expect(preview.Content[0].Lead.Syllables[0].Text).toBe("First lead");
+    expect(preview.Content[0].Background).toBeUndefined();
+    expect(preview.Content[1].Lead.Syllables[0].Text).toBe("Later lead");
+    expect(preview.Content[1].Background[0]).toMatchObject({
+      StartTime: 0,
+      EndTime: 0.5,
+      OppositeAligned: true,
+      Syllables: [expect.objectContaining({ Text: "Back" })],
+    });
 
+    const parsed = parseCreatorTTML(serializeCreatorTTML(project, generatorOptions), parserOptions);
+    expect(parsed.lines.map((line) => line.tokens[0].fragments[0].text)).toEqual([
+      "First lead", "Later lead", "Back",
+    ]);
+    expect(parsed.lines[2]).toMatchObject({
+      isBackground: true,
+      isSecondSpeaker: true,
+      attachedToLineId: parsed.lines[1].id,
+      startTimeMs: 0,
+      endTimeMs: 500,
+    });
+  });
+
+  it("rejects stale, self, and background-to-background attachments", () => {
+    const project = leadAndBackground(false, false);
+    const background = project.lines[1];
     background.attachedToLineId = "line-missing";
     expect(validateCreatorProject(project)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("earlier lead") }),
+        expect.objectContaining({ message: expect.stringContaining("must reference a lead") }),
       ])
     );
+    expect(() => creatorProjectToTTMLResult(project)).toThrow(CreatorValidationError);
+
+    background.attachedToLineId = background.id;
+    expect(validateCreatorProject(project)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("must reference a lead") }),
+      ])
+    );
+    expect(() => creatorProjectToTTMLResult(project)).toThrow(CreatorValidationError);
+
+    const anotherBackground = timedLine("Another background", 100, 300, { background: true });
+    anotherBackground.attachedToLineId = project.lines[0].id;
+    project.lines.push(anotherBackground);
+    background.attachedToLineId = anotherBackground.id;
+    expect(validateCreatorProject(project)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("must reference a lead") }),
+      ])
+    );
+    expect(() => creatorProjectToTTMLResult(project)).toThrow(CreatorValidationError);
+  });
+
+  it("keeps implicit backgrounds attached only to the preceding lead", () => {
+    const project = leadAndBackground(false, true);
+    const [lead, background] = project.lines;
+    background.attachedToLineId = null;
+    expect(validateCreatorProject(project)).toEqual([]);
+    expect(creatorProjectToTTMLResult(project).lines[0].backgroundVocal?.text).toBe("Back");
+    expect(creatorProjectToLyrics(project).Content[0].Background[0].Syllables[0].Text).toBe("Back");
+
+    project.lines = [background, lead];
+    expect(validateCreatorProject(project)[0].message).toContain("not attached");
+    expect(() => creatorProjectToTTMLResult(project)).toThrow(CreatorValidationError);
+    // Unattached rows remain visible in the editor preview until fixed.
+    expect(creatorProjectToLyrics(project).Content).toHaveLength(2);
   });
 
   it("explicitly rejects multiple background rows for one lead", () => {

@@ -20,6 +20,7 @@ import {
   type CreatorProject,
   type CreatorToken,
 } from "./model.ts";
+import { analyzeCreatorBackgroundAttachments } from "./backgroundAttachments.ts";
 
 export interface CreatorValidationIssue {
   lineIndex: number;
@@ -36,40 +37,8 @@ export class CreatorValidationError extends Error {
 }
 
 export function validateCreatorProject(project: CreatorProject): CreatorValidationIssue[] {
-  const issues: CreatorValidationIssue[] = [];
-  const backgroundsByLead = new Map<string, number>();
-  const earlierLeadIds = new Set<string>();
-  let lastLeadId: string | null = null;
+  const issues: CreatorValidationIssue[] = analyzeCreatorBackgroundAttachments(project).issues;
   project.lines.forEach((line, lineIndex) => {
-    if (line.isBackground) {
-      const targetId = line.attachedToLineId ?? lastLeadId;
-      if (!targetId) {
-        issues.push({
-          lineIndex,
-          message: `Background line ${lineIndex + 1} is not attached to a lead line.`,
-        });
-      } else if (!earlierLeadIds.has(targetId)) {
-        issues.push({
-          lineIndex,
-          message: `Background line ${lineIndex + 1} must reference an earlier lead line.`,
-        });
-      } else {
-        const count = (backgroundsByLead.get(targetId) ?? 0) + 1;
-        backgroundsByLead.set(targetId, count);
-        if (count > 1) {
-          issues.push({
-            lineIndex,
-            message:
-              `Line ${lineIndex + 1} is a second background row for the same lead. ` +
-              "Split the lead into another line before exporting.",
-          });
-        }
-      }
-    } else {
-      lastLeadId = line.id;
-      earlierLeadIds.add(line.id);
-    }
-
     line.tokens.forEach((token, tokenIndex) => {
       token.fragments.forEach((fragment, fragmentIndex) => {
         if (!fragment.text) return;
@@ -185,26 +154,28 @@ export function creatorProjectToTTMLResult(project: CreatorProject): TTMLResult 
   const leadById = new Map<string, LyricLine>();
 
   project.lines.forEach((line, index) => {
-    const base = creatorLineToBase(line);
-    const backgroundTarget = line.attachedToLineId ? leadById.get(line.attachedToLineId) : lastLead;
-    if (line.isBackground && backgroundTarget) {
-      mergeBackground(backgroundTarget, base);
-      return;
-    }
-    if (line.isBackground) {
-      throw new CreatorValidationError([
-        { lineIndex: index, message: `Background line ${index + 1} has no valid lead line.` },
-      ]);
-    }
-
+    if (line.isBackground) return;
     const lyricLine: LyricLine = {
-      ...base,
+      ...creatorLineToBase(line),
       id: `L${index + 1}`,
       agentId: line.isSecondSpeaker ? "v2" : "v1",
     };
     lines.push(lyricLine);
-    lastLead = lyricLine;
     leadById.set(line.id, lyricLine);
+  });
+
+  project.lines.forEach((line, index) => {
+    if (!line.isBackground) {
+      lastLead = leadById.get(line.id)!;
+      return;
+    }
+    const backgroundTarget = line.attachedToLineId ? leadById.get(line.attachedToLineId) : lastLead;
+    if (!backgroundTarget) {
+      throw new CreatorValidationError([
+        { lineIndex: index, message: `Background line ${index + 1} has no valid lead line.` },
+      ]);
+    }
+    mergeBackground(backgroundTarget, creatorLineToBase(line));
   });
 
   return { metadata: metadataToTTML(project.metadata), lines };
@@ -227,7 +198,7 @@ export function serializeCreatorTTML(project: CreatorProject, options?: Generato
   }
   // TTMLGenerator writes paragraphs in lead order, which can differ from the
   // editor row order when a background row is explicitly attached to an
-  // earlier lead. Match x-bg spans to that output order, not global BG order.
+  // lead elsewhere in the list. Match x-bg spans to output order, not BG order.
   const backgroundLines = project.lines
     .filter((line) => !line.isBackground)
     .map((line) => backgroundByLead.get(line.id))

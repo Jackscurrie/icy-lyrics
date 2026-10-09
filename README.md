@@ -4,7 +4,22 @@ PUBLIC GOOGLE PLAY STORE RELEASE COMING SOON!! Currently in closed testing
  
 Icy Lyrics is a fork of the popular Spicetify lyrics extension "Spicy Lyrics" by Spikerko with multiple fullscreen modes, a lyric creator, and more
 
-Icy Lyrics 1.3.0 is the current desktop build, following the original 1.0.0 public release. The desktop extension auto-updates on startup from jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails. Building or staging 1.3.0 locally does not publish it or its optional timing modules.
+Icy Lyrics 1.3.1 is the desktop release. The desktop extension auto-updates on startup from jackscurrie.com and falls back to the installed build whenever the website is unavailable or verification fails. Optional Auto-time modules are downloaded separately through Icy Lyrics settings.
+
+## 1.3.1 highlights
+
+- Lyrics and fullscreen entry use Spotify's stable content markers instead of retired outer classes, with bounded, cancellable opening requests.
+- Missing optional artwork or tooltips no longer prevent route setup. Native controls are retained except those explicitly replaced by Icy.
+- Move complete lines in Edit, duplicate lines with their timings, and drag-copy word or fragment timings in Time with grab/drop feedback.
+- Song-wide timing offset updates existing timings immediately, including preview and export. Auto-time application preserves the same offset without shifting retained manual timings twice.
+- Invalid background attachments stay editable and are marked in red, with controls to select a different lead or convert the row into a lead. Drafts can still be saved while corrections are in progress.
+- Removed the word gap input and duplicate text painting behind animated words and intro/interlude dots.
+
+### Compatibility and release notes
+
+Use a Spotify version supported by your installed Spicetify release. At publication, [Spicetify 2.45.3](https://github.com/spicetify/cli/releases/tag/v2.45.3) declares support through Spotify **1.3.3 on Windows/macOS** and **1.2.96 on Linux**. Spotify 1.3.4 is outside that range. Native 1.3.4 tests used separate local repairs; they do not establish clean-install support. Icy Lyrics does not patch Spotify internals, repair third-party themes, or disable your Marketplace snippets.
+
+See [Desktop 1.3.1 release notes](docs/releases/desktop-1.3.1.md). The updater accepts only higher version numbers: replace an older local test build already labelled 1.3.1 manually. Saved TTML and drafts are retained by normal extension updates; export important work before clearing or reinstalling Spotify.
 
 ## 1.3.0 Highlights
 
@@ -35,7 +50,7 @@ Lyric Creator's Auto source follows the same order, and its source dropdown can 
 
 Before making another network request, the extension reuses lyric results cached under the exact complete Spotify URI. Remote results are retained in the expiring cache for up to seven days, concurrent automatic requests for one URI are coalesced, and recent in-session resolutions and Icy database outcomes use bounded 128-entry caches. This reduces repeat downloads when Spotify rebuilds a view or returns to a recently played song, while exact-URI keys prevent different tracks—especially local tracks—from sharing a cache entry. Explicit refreshes and expired entries can be resolved again.
 
-The public Icy Lyrics version and the Spicy API compatibility version are deliberately separate. Icy Lyrics identifies this desktop release as `1.3.0`, while requests to the Spicy service continue to send `SpicyLyrics-Version: 6.3.12`, `client.version: 6.3.12`, and `X-mode: 2`. The Icy release number must not replace that upstream compatibility value.
+The public Icy Lyrics version and the Spicy API compatibility version are deliberately separate. Icy Lyrics identifies this desktop release as `1.3.1`, while requests to the Spicy service continue to send `SpicyLyrics-Version: 6.3.12`, `client.version: 6.3.12`, and `X-mode: 2`. The Icy release number must not replace that upstream compatibility value.
 
 ## Optional Auto-time modules
 

@@ -3,6 +3,7 @@ import GetProgress, {
   _DEPRECATED___GetProgress,
   GetRawProgress,
 } from "../../utils/Gets/GetProgress.ts";
+import { getSpotifyPlaybarControls } from "../../utils/SpotifyPlaybarHost.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 //type ArtworkSize = "s" | "l" | "xl" | "d";
@@ -316,9 +317,7 @@ export const SpotifyPlayer = {
     }
 
     (function waitForPlaybarMounted() {
-      rightContainer =
-        document.querySelector<HTMLElement>(".main-nowPlayingBar-right > div") ??
-        document.querySelector<HTMLElement>(".main-nowPlayingBar-extraControls");
+      rightContainer = getSpotifyPlaybarControls();
       if (!rightContainer) {
         setTimeout(waitForPlaybarMounted, 300);
         return;

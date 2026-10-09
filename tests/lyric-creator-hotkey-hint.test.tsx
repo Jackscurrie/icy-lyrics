@@ -18,6 +18,7 @@ describe("Lyric Creator timing hotkey hints", () => {
         project={createEmptyProject()}
         targetIndex={0}
         onTargetIndex={() => {}}
+        onCopyTiming={() => {}}
         playbackClock={{} as CreatorPlaybackClock}
         options={DEFAULT_CREATOR_TIMING_OPTIONS}
         onOptionsChange={() => {}}

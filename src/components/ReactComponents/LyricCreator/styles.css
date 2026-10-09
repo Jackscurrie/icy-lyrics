@@ -1921,6 +1921,33 @@ body.IcyLyricCreatorOpen {
   box-shadow: inset 3px 0 var(--creator-accent);
 }
 
+.il-creator-line-card.is-line-dragging {
+  opacity: 0.5;
+}
+
+.il-creator-line-card.is-line-drop-before {
+  box-shadow: inset 0 3px var(--creator-accent);
+}
+
+.il-creator-line-card.is-line-drop-after {
+  box-shadow: inset 0 -3px var(--creator-accent);
+}
+
+.il-creator-root .il-creator-line-drag-handle {
+  min-height: 24px;
+  padding: 2px 0;
+  border: 0;
+  color: var(--creator-accent);
+  background: transparent;
+  font-size: 10px;
+  text-align: left;
+  cursor: grab;
+}
+
+.il-creator-line-drag-handle:active {
+  cursor: grabbing;
+}
+
 .il-creator-line-card > header {
   grid-row: 1 / 3;
   grid-column: 1;
@@ -2809,6 +2836,75 @@ body.IcyLyricCreatorOpen {
 
 .il-creator-timing-line.is-background.is-second-speaker .il-creator-timing-line__number small {
   color: #e7c48f;
+}
+
+.il-creator-line-card.has-validation-error {
+  border-color: #ff7189;
+}
+
+.il-creator-line-card.is-background {
+  grid-template-rows: auto minmax(76px, auto) auto;
+}
+
+.il-creator-line-card.is-background.has-validation-error {
+  grid-template-rows: auto auto minmax(76px, auto) auto;
+}
+
+.il-creator-line-card.is-background > header {
+  grid-row: 1 / -1;
+}
+
+.il-creator-line-card.has-validation-error.is-active {
+  box-shadow: inset 3px 0 #ff7189;
+}
+
+.il-creator-line-card.has-validation-error > header {
+  border-left-color: #ff7189;
+}
+
+.il-creator-background-attachment {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 0;
+  font-size: 11px;
+}
+
+.il-creator-background-attachment select {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--creator-border);
+  border-radius: 6px;
+  color: var(--creator-text);
+  background: var(--creator-surface-1);
+}
+
+.il-creator-background-attachment select[aria-invalid="true"] {
+  border-color: #ff7189;
+  color: #ff9bad;
+}
+
+.il-creator-background-attachment button {
+  padding: 6px 8px;
+  border: 1px solid var(--creator-border);
+  border-radius: 6px;
+  background: var(--creator-surface-1);
+}
+
+.il-creator-line-warning {
+  grid-column: 2;
+  margin: 10px 12px 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 113, 137, 0.45);
+  border-radius: 6px;
+  color: #ff9bad;
+  background: rgba(255, 89, 119, 0.09);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .il-creator-fragmentation-prompt {

@@ -357,6 +357,15 @@ function projectHasPreviewTiming(project: CreatorProject): boolean {
   });
 }
 
+function previewLineVocal(line: CreatorLine): Record<string, any> {
+  return {
+    StartTime: (line.startTimeMs ?? 0) / 1000,
+    EndTime: (line.endTimeMs ?? line.startTimeMs ?? 0) / 1000,
+    Syllables: lineSyllables(line),
+    ...(line.isSecondSpeaker ? { OppositeAligned: true } : {}),
+  };
+}
+
 export function creatorProjectToLyrics(project: CreatorProject): Record<string, any> {
   if (!projectHasPreviewTiming(project)) {
     return {
@@ -374,25 +383,28 @@ export function creatorProjectToLyrics(project: CreatorProject): Record<string, 
   let lastLead: Record<string, any> | null = null;
   const leadById = new Map<string, Record<string, any>>();
 
+  // Resolve explicit attachments independently of editor row order. Dragging
+  // a background above its lead must not turn it into a separate lead vocal.
   for (const line of project.lines) {
-    const vocal = {
-      StartTime: (line.startTimeMs ?? 0) / 1000,
-      EndTime: (line.endTimeMs ?? line.startTimeMs ?? 0) / 1000,
-      Syllables: lineSyllables(line),
-      ...(line.isSecondSpeaker ? { OppositeAligned: true } : {}),
-    };
+    if (line.isBackground) continue;
+    const group: Record<string, any> = { Type: "Vocal", Lead: previewLineVocal(line) };
+    if (line.isSecondSpeaker) group.OppositeAligned = true;
+    leadById.set(line.id, group);
+  }
 
+  for (const line of project.lines) {
     const backgroundTarget = line.attachedToLineId ? leadById.get(line.attachedToLineId) : lastLead;
     if (line.isBackground && backgroundTarget) {
-      (backgroundTarget.Background ??= []).push(vocal);
+      (backgroundTarget.Background ??= []).push(previewLineVocal(line));
       continue;
     }
 
-    const group: Record<string, any> = { Type: "Vocal", Lead: vocal };
+    // Incomplete orphan background rows remain visible while editing. Export
+    // validation still requires them to reference a real lead.
+    const group = leadById.get(line.id) ?? { Type: "Vocal", Lead: previewLineVocal(line) };
     if (line.isSecondSpeaker) group.OppositeAligned = true;
     content.push(group);
     lastLead = group;
-    leadById.set(line.id, group);
   }
 
   const result: Record<string, any> = {

@@ -72,7 +72,10 @@
   --gradient-offset: 30% !important;
 }
 
-#IcyLyricsPage.IcyRenderer .LyricsContainer .LyricsContent .line.Active,
+/* Give each glyph one fill owner. A parent background clipped to descendant
+   text paints a second, untransformed copy while words/letters animate in
+   their own compositor layers. Plain line-synced text still owns its fill. */
+#IcyLyricsPage.IcyRenderer .LyricsContainer .LyricsContent .line.Active:not(:has(.word, .letter)),
 #IcyLyricsPage.IcyRenderer .LyricsContainer .LyricsContent .line.Active .word,
 #IcyLyricsPage.IcyRenderer .LyricsContainer .LyricsContent .line.Active .letter,
 #IcyLyricsPage.IcyRenderer .LyricsContainer .LyricsContent .line.static {

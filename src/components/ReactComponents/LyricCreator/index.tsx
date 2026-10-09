@@ -34,6 +34,11 @@ import {
 } from "./model.ts";
 import PreviewStage from "./PreviewStage.tsx";
 import CreatorTimeWorkspace from "./CreatorTimeWorkspace.tsx";
+import { duplicateCreatorLine, moveCreatorLine } from "./lineEditing.ts";
+import { analyzeCreatorBackgroundAttachments, repairCreatorBackgroundAttachment } from "./backgroundAttachments.ts";
+import { attachCreatorLineDragging } from "./lineDragging.ts";
+import { applyCreatorProjectOffset } from "./projectOffset.ts";
+import { copyCreatorFragmentTiming } from "./timingTransfer.ts";
 import CreatorDraftLibrary from "./CreatorDraftLibrary.tsx";
 import IcyLogo from "./IcyLogo.tsx";
 import {
@@ -228,6 +233,7 @@ function EditWorkspace({
   playbackClock: CreatorPlaybackClock;
 }) {
   const [fragmentationProposal, setFragmentationProposal] = useState<CreatorFragmentationProposal | null>(null);
+  const lineEditorRef = useRef<HTMLDivElement>(null);
   const [draggedToken, setDraggedToken] = useState<{
     lineIndex: number;
     tokenIndex: number;
@@ -236,6 +242,15 @@ function EditWorkspace({
     null
   );
   const playbackActivity = useCreatorPlaybackActivity(project, playbackClock);
+  const backgroundAttachments = useMemo(() => analyzeCreatorBackgroundAttachments(project), [project.lines]);
+  const backgroundIssues = useMemo(
+    () => new Map(backgroundAttachments.issues.map((issue) => [issue.lineId, issue])),
+    [backgroundAttachments]
+  );
+  const leadOptions = useMemo(() => project.lines.flatMap((line, lineIndex) => line.isBackground ? [] : [{
+    id: line.id,
+    label: `Line ${lineIndex + 1} — ${(lineText(line) || "Empty line").slice(0, 80)}`,
+  }]), [project.lines]);
   const mutate = (updater: (draft: CreatorProject) => void) => {
     setProject((current) => {
       const draft = cloneCreatorProject(current);
@@ -256,6 +271,23 @@ function EditWorkspace({
     setProject(result.project);
     setFragmentationProposal(result.proposal);
   };
+
+  const moveLine = (sourceId: string, targetId: string, placement: "before" | "after") => {
+    const next = moveCreatorLine(project, sourceId, targetId, placement);
+    if (next) {
+      setProject(next);
+      setActiveLine(next.lines.findIndex((candidate) => candidate.id === sourceId));
+    }
+  };
+  const moveLineRef = useRef(moveLine);
+  moveLineRef.current = moveLine;
+  useEffect(() => {
+    if (!lineEditorRef.current) return;
+    return attachCreatorLineDragging(lineEditorRef.current, {
+      onMove: (sourceId, targetId, placement) => moveLineRef.current(sourceId, targetId, placement),
+      onGrab: () => { setDraggedToken(null); setDropToken(null); },
+    });
+  }, []);
 
   const attachBackground = (line: CreatorLine, lineIndex: number, enabled: boolean) => {
     line.isBackground = enabled;
@@ -297,18 +329,36 @@ function EditWorkspace({
         </button>
       </details>
 
-      <div className="il-creator-line-editor">
+      <div ref={lineEditorRef} className="il-creator-line-editor">
         {project.lines.map((line, lineIndex) => (
           <article
             id={`il-creator-line-${line.id}`}
             key={line.id}
-            className={`il-creator-line-card${activeLine === lineIndex ? " is-active" : ""}${line.isBackground ? " is-background" : ""}${line.isSecondSpeaker ? " is-second-speaker" : ""}`}
+            data-creator-line-id={line.id}
+            className={`il-creator-line-card${activeLine === lineIndex ? " is-active" : ""}${line.isBackground ? " is-background" : ""}${line.isSecondSpeaker ? " is-second-speaker" : ""}${backgroundIssues.has(line.id) ? " has-validation-error" : ""}`}
+            tabIndex={-1}
+            aria-describedby={backgroundIssues.has(line.id) ? `il-creator-line-warning-${line.id}` : undefined}
             onFocus={() => setActiveLine(lineIndex)}
             onPointerDown={() => setActiveLine(lineIndex)}
           >
             <header>
               <div>
-                <span>Line {lineIndex + 1}</span>
+                <button
+                  type="button"
+                  className="il-creator-line-drag-handle"
+                  data-creator-line-handle=""
+                  aria-label={`Move line ${lineIndex + 1}`}
+                  title="Drag to reorder this line, or press Alt + Up/Down"
+                  onKeyDown={(event) => {
+                    if (!event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+                    event.preventDefault();
+                    const direction = event.key === "ArrowUp" ? -1 : 1;
+                    const target = project.lines[lineIndex + direction];
+                    if (target) moveLine(line.id, target.id, direction < 0 ? "before" : "after");
+                  }}
+                >
+                  <span aria-hidden="true">⠿</span> Line {lineIndex + 1}
+                </button>
                 <strong>{lineText(line) || "Empty line"}</strong>
               </div>
               <div className="il-creator-line-flags">
@@ -340,6 +390,45 @@ function EditWorkspace({
                 </label>
               </div>
             </header>
+
+            {line.isBackground && (
+              <div className="il-creator-background-attachment">
+                <label htmlFor={`il-creator-background-target-${line.id}`}>Attached to lead</label>
+                <select
+                  id={`il-creator-background-target-${line.id}`}
+                  aria-label={`Lead for background line ${lineIndex + 1}`}
+                  aria-invalid={backgroundIssues.has(line.id)}
+                  aria-describedby={backgroundIssues.has(line.id) ? `il-creator-line-warning-${line.id}` : undefined}
+                  value={leadOptions.some((lead) => lead.id === backgroundAttachments.targetByLineId.get(line.id))
+                    ? backgroundAttachments.targetByLineId.get(line.id) ?? ""
+                    : ""}
+                  onChange={(event) => {
+                    const targetId = event.currentTarget.value;
+                    setProject((current) => repairCreatorBackgroundAttachment(current, line.id, targetId) ?? current);
+                  }}
+                >
+                  <option value="" disabled>Choose a lead line</option>
+                  {leadOptions.map((lead) => (
+                    <option key={lead.id} value={lead.id}>
+                      {lead.label}{backgroundAttachments.backgroundsByLeadId.get(lead.id)?.some((id) => id !== line.id)
+                        ? " (already has background)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setProject((current) => repairCreatorBackgroundAttachment(current, line.id, null) ?? current)}
+                >
+                  Make lead line
+                </button>
+              </div>
+            )}
+            {backgroundIssues.has(line.id) && (
+              <p className="il-creator-line-warning" id={`il-creator-line-warning-${line.id}`} role="status">
+                <strong>Needs attention:</strong> {backgroundIssues.get(line.id)!.message}{" "}
+                Your lyrics and timings are kept, and you can still edit or save a draft.
+              </p>
+            )}
 
             <div className="il-creator-token-row">
               {line.tokens.map((token, tokenIndex) => (
@@ -452,19 +541,6 @@ function EditWorkspace({
                     >
                       + fragment
                     </button>
-                    <label title="Exact separator written after this word">
-                      gap
-                      <input
-                        value={token.boundaryAfter}
-                        aria-label={`Separator after word ${tokenIndex + 1}`}
-                        onChange={(event) => {
-                          const value = event.currentTarget.value;
-                          mutate((draft) => {
-                            draft.lines[lineIndex].tokens[tokenIndex].boundaryAfter = value;
-                          });
-                        }}
-                      />
-                    </label>
                     <button
                       type="button"
                       aria-label={`Remove word ${tokenIndex + 1}`}
@@ -506,6 +582,17 @@ function EditWorkspace({
                 }
               >
                 + Line below
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const result = duplicateCreatorLine(project, line.id);
+                  if (!result) return;
+                  setProject(result.project);
+                  setActiveLine(result.project.lines.findIndex((candidate) => candidate.id === result.lineId));
+                }}
+              >
+                Duplicate line
               </button>
               <button
                 type="button"
@@ -563,6 +650,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   const [sourcePreference, setSourcePreference] = useState<CreatorLyricsSourcePreference>("auto");
   const [selectedTrack, setSelectedTrack] = useState<CreatorTrack | null>(null);
   const [actionStatus, setActionStatus] = useState("Ready");
+  const [validationFocus, setValidationFocus] = useState<{ lineId: string } | null>(null);
   const [draftId, setDraftId] = useState<string | undefined>();
   const [drafts, setDrafts] = useState<CreatorDraftRecord[]>([]);
   const [draftLibraryOpen, setDraftLibraryOpen] = useState(false);
@@ -576,6 +664,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   const [autoTimingUndo, setAutoTimingUndo] = useState<{
     previous: CreatorProject;
     appliedFingerprint: string;
+    offsetMs: number;
   } | null>(null);
   const [speed, setSpeed] = useState(1);
   const [speedMessage, setSpeedMessage] = useState("Spotify music timing uses 1× playback.");
@@ -618,6 +707,16 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
   timingOptionsRef.current = timingOptions;
   modeRef.current = mode;
   modalOpenRef.current = autoTimingOpen || metadataDraft !== null || draftLibraryOpen;
+
+  // Saved/exported timestamps already include any applied offset. Starting or
+  // loading a project establishes a fresh baseline rather than applying it twice.
+  const replaceProject = (next: CreatorProject) => {
+    projectRef.current = next;
+    setProject(next);
+    const nextOptions = { ...timingOptionsRef.current, offsetMs: 0 };
+    timingOptionsRef.current = nextOptions;
+    setTimingOptions(nextOptions);
+  };
 
   const currentWorkflowStep = workflowStep;
   const draftGroups = useMemo(() => groupCreatorDraftsBySong(drafts), [drafts]);
@@ -784,7 +883,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
         raw: next.metadata.raw,
       };
       projectCheckpointRef.current = creatorProjectCheckpoint(next);
-      setProject(next);
+      replaceProject(next);
       setAutoTimingUndo(null);
       setDraftId(undefined);
       setTargetIndex(0);
@@ -852,7 +951,17 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       toast.success("TTML downloaded.");
     } catch (error) {
       if (error instanceof CreatorValidationError) {
-        const message = `${error.message} Save a draft if timing is not finished.`;
+        const attachmentIssue = error.issues.find((issue) => issue.lineIndex >= 0 && issue.tokenIndex === undefined);
+        const line = attachmentIssue ? project.lines[attachmentIssue.lineIndex] : undefined;
+        if (line) {
+          setActiveLine(attachmentIssue!.lineIndex);
+          setMode("edit");
+          setWorkflowStep(2);
+          setValidationFocus({ lineId: line.id });
+        }
+        const message = line
+          ? `${attachmentIssue!.message} Your lyrics are kept. Fix the red warning or save a draft.`
+          : `${error.message} Save a draft if timing is not finished.`;
         setActionStatus(message);
         toast.error(message);
       } else {
@@ -871,7 +980,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       const next = parseCreatorTTML(await readCreatorTextFile(file));
       clearLocalTimingAudio();
       projectCheckpointRef.current = creatorProjectCheckpoint(next);
-      setProject(next);
+      replaceProject(next);
       setAutoTimingUndo(null);
       setSelectedTrack(null);
       programmaticSearchValueRef.current = "";
@@ -1140,6 +1249,9 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     }
     projectRef.current = autoTimingUndo.previous;
     setProject(autoTimingUndo.previous);
+    const restoredOptions = { ...timingOptionsRef.current, offsetMs: autoTimingUndo.offsetMs };
+    timingOptionsRef.current = restoredOptions;
+    setTimingOptions(restoredOptions);
     setAutoTimingUndo(null);
     setActionStatus("Undid the last automatic timing update.");
     toast.success("Auto-time changes undone.");
@@ -1152,7 +1264,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     lyricsAbortRef.current?.abort();
     const next = createEmptyProject();
     projectCheckpointRef.current = creatorProjectCheckpoint(next);
-    setProject(next);
+    replaceProject(next);
     setAutoTimingUndo(null);
     setSourcePreference("auto");
     setDraftId(undefined);
@@ -1184,7 +1296,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
       if (requestId !== draftOpenRequestRef.current) return;
       clearLocalTimingAudio();
       projectCheckpointRef.current = creatorProjectCheckpoint(loaded.project);
-      setProject(loaded.project);
+      replaceProject(loaded.project);
       setAutoTimingUndo(null);
       setDraftId(loaded.record.id);
       setSelectedTrack(playback.track);
@@ -1315,6 +1427,16 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
     });
     return () => cancelAnimationFrame(frame);
   }, [activeLine, currentWorkflowStep, mode, project.lines, targetIndex]);
+
+  useEffect(() => {
+    if (!validationFocus || currentWorkflowStep !== 2 || mode !== "edit") return;
+    const frame = requestAnimationFrame(() => {
+      const row = document.getElementById(`il-creator-line-${validationFocus.lineId}`);
+      row?.scrollIntoView({ block: "center", behavior: "auto" });
+      (row?.querySelector<HTMLElement>("select[aria-invalid='true']") ?? row)?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [validationFocus, currentWorkflowStep, mode]);
 
   const openMetadataEditor = () => {
     setMetadataDraft({
@@ -1611,10 +1733,33 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
             playbackClock={playbackClock}
             options={timingOptions}
             onOptionsChange={(nextOptions) => {
-              setTimingOptions(nextOptions);
-              if (nextOptions.ignoreBackground !== timingOptions.ignoreBackground) {
+              const previousOptions = timingOptionsRef.current;
+              const offset = applyCreatorProjectOffset(
+                projectRef.current, previousOptions.offsetMs, nextOptions.offsetMs
+              );
+              const appliedOptions = { ...nextOptions, offsetMs: offset.offsetMs };
+              timingOptionsRef.current = appliedOptions;
+              setTimingOptions(appliedOptions);
+              if (offset.project !== projectRef.current) {
+                projectRef.current = offset.project;
+                setProject(offset.project);
+              }
+              if (nextOptions.offsetMs !== previousOptions.offsetMs) {
+                setActionStatus(offset.limited
+                  ? `Song offset limited to ${offset.offsetMs} ms to keep timings within the valid range.`
+                  : `Song timing offset: ${offset.offsetMs} ms. Preview and export are updated.`);
+              }
+              if (nextOptions.ignoreBackground !== previousOptions.ignoreBackground) {
+                targetIndexRef.current = 0;
                 setTargetIndex(0);
               }
+            }}
+            onCopyTiming={(sourceId, targetId) => {
+              const next = copyCreatorFragmentTiming(projectRef.current, sourceId, targetId);
+              if (!next) return;
+              projectRef.current = next;
+              setProject(next);
+              setActionStatus("Timings copied. The original word is unchanged.");
             }}
             onAutoTime={openAutoTiming}
             onUndoAutoTiming={autoTimingUndo ? undoLastAutoTiming : undefined}
@@ -1742,6 +1887,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
           audioName={localAudioName}
           audio={decodedAutoTimingAudio}
           expectedDurationMs={selectedTrack?.durationMs || durationMs || undefined}
+          timingOffsetMs={timingOptions.offsetMs}
           onSeek={seekPlayback}
           onTogglePlayback={togglePlayback}
           onApply={(next, previous) => {
@@ -1750,6 +1896,7 @@ export default function LyricCreator({ onClose }: LyricCreatorProps) {
             setAutoTimingUndo({
               previous,
               appliedFingerprint: creatorProjectCheckpoint(next),
+              offsetMs: timingOptionsRef.current.offsetMs,
             });
             setActionStatus("Automatic timings applied. Review or edit them normally in Time mode.");
           }}
