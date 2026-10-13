@@ -64,9 +64,9 @@ Downloads use immutable model-revision URLs and a per-install file inventory. In
 
 ## Android repositories
 
-The supported public Android app lives in [`android-v2`](android-v2). Its `play` flavor is the self-contained version intended for public source builds and Play Store releases. The earlier `android` prototype is retained only as a local reference and is excluded from this repository.
+The Android app lives in [`android-v2`](android-v2), with two public phone release channels: **GitHub** (`github`, includes Android Auto) and **Play Store** (`play`, no Android Auto). Both use the same shared phone features, version name, and version code, and every future phone update is built and verified for both channels together. The Lyric Creator, overlay, lyrics sources, renderer, and settings are not separate forks.
 
-Personal-only Android functionality lives in a separate private repository as the optional `:local-private-feature` module. A local `personal` build can locate that sibling checkout with the `icyLyrics.privateFeaturePath` Gradle property or the `ICY_LYRICS_PRIVATE_FEATURE_PATH` environment variable. Private source, signing material, and machine-specific paths must never be copied into this public tree; the public `play` build does not depend on them.
+Android Auto is isolated in the checked-in `:android-auto` module and GitHub-only app source set. Play and the separate TV device flavor cannot depend on it. The former external personal checkout is no longer needed; signing keys, credentials, caches, and machine-specific paths still stay out of public source. See the [Android build and migration guide](android-v2/README.md). The earlier `android` prototype remains only a local reference and is excluded from this repository.
 
 ## Local Build
 

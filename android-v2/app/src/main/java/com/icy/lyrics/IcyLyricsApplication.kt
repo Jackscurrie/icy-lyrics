@@ -27,7 +27,14 @@ class IcyLyricsApplication : Application() {
 }
 
 class AppContainer(context: Context) {
-  private val icyDatabaseConfig = IcyLyricsDatabaseConfig()
+  // The phone activity and its opt-in floating window share one resolver/clock.
+  // Opening or collapsing the overlay must not create another lyrics request.
+  private val phoneSession = PhoneSession(context.applicationContext as Application)
+  val phoneViewModel get() = phoneSession.viewModel
+  fun acquirePhoneSession() = phoneSession.acquire()
+  private val icyDatabaseConfig = IcyLyricsDatabaseConfig(
+    userAgent = "IcyLyricsAndroid/${BuildConfig.VERSION_NAME} (+https://jackscurrie.com/icy-lyrics)",
+  )
   val services: AppServices = AppServices.create(
     context = context,
     spotifyClientId = BuildConfig.SPOTIFY_CLIENT_ID,

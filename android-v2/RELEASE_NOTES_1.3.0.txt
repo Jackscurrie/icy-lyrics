@@ -1,0 +1,26 @@
+Icy Lyrics Android 1.3.0 (version code 11)
+
+Two public phone releases, one shared app:
+- GitHub includes Android Auto.
+- Play Store has the same phone features without Android Auto.
+- Both channels receive all future phone features and fixes together.
+
+Included in both:
+- Improved Icy Lyrics Database connection handling, including fast IPv4 fallback when IPv6 is unreachable.
+- Optional floating lyrics overlay over Spotify, with an independently configurable background, artwork, and titles.
+- Slightly smaller movable circular button with rotating album artwork, an optional spin switch, and Icy logo fallback.
+- Vertical-only panel resizing using the bottom-right grip.
+- Shared Lyric Creator, renderer, sources, timing settings, and diagnostics.
+
+GitHub installation:
+This is a newly release-signed app (com.icy.lyrics.github), not an update to the old debug-signed personal package.
+It can be installed alongside the old app. Keep the old installation until important TTML files and creator work have been exported and transferred.
+Android Auto still controls driving presentation; the full custom renderer remains parked-only. Head-unit behavior must be confirmed on hardware.
+
+Play Store:
+Upload only the -Play.aab artifact. The GitHub package must never be uploaded to Play.
+The Play package identity remains com.icy.lyrics. Google Play may re-sign delivered APKs with its app-signing key; the locally supplied Play APK is upload-key signed.
+
+Source and checksums:
+Corresponding source is the GitHub android-v1.3.0 tag, including android-v2 and its iOS/shared source dependencies.
+Each release pair includes a versioned SHA256SUMS.txt. Keys, credentials, caches, and device data are excluded.

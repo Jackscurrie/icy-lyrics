@@ -122,7 +122,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.math.roundToInt
 
-/** Phone-only Lyric Creator shared by the Play and personal distributions. */
+/** Phone-only Lyric Creator shared by the Play and GitHub distributions. */
 class LyricCreatorActivity : ComponentActivity() {
   private val viewModel: LyricCreatorViewModel by viewModels()
 

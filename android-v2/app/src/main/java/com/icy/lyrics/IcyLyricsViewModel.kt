@@ -38,6 +38,7 @@ class IcyLyricsViewModel(application: Application) : AndroidViewModel(applicatio
     }
   }
   fun refreshPermissions(bluetoothPermissionGranted: Boolean) {
+    refreshDiagnosticEnvironment()
     container.mediaTracker.start()
     services.bluetoothRouteMonitor.refreshPermission()
     mutableState.update {
@@ -56,7 +57,10 @@ class IcyLyricsViewModel(application: Application) : AndroidViewModel(applicatio
 
   fun setLandscape(isLandscape: Boolean) { controller.setLandscape(isLandscape) }
   fun stepLandscape(direction: Int) { controller.stepLandscape(direction) }
-  fun navigate(destination: AppDestination) { controller.navigate(destination) }
+  fun navigate(destination: AppDestination) {
+    if (destination == AppDestination.DEBUG) refreshDiagnosticEnvironment()
+    controller.navigate(destination)
+  }
   fun seekTo(positionMs: Long) { controller.seekTo(positionMs) }
   fun setGlobalTimingOffset(value: Int) { controller.setGlobalTimingOffset(value) }
   fun setBluetoothTimingOffset(value: Int?) { controller.setBluetoothTimingOffset(value) }
@@ -80,7 +84,19 @@ class IcyLyricsViewModel(application: Application) : AndroidViewModel(applicatio
   fun playPause() { controller.playPause() }
   fun previous() { controller.previous() }
   fun next() { controller.next() }
-  fun reloadLyrics() { controller.reloadLyrics() }
+  fun reloadLyrics() {
+    refreshDiagnosticEnvironment()
+    controller.reloadLyrics()
+  }
+  fun diagnosticReport(): String {
+    refreshDiagnosticEnvironment()
+    val current = state.value
+    return current.diagnostics.asText(current.diagnosticsEnvironment)
+  }
+  private fun refreshDiagnosticEnvironment() {
+    val environment = AndroidDiagnosticEnvironment.snapshot(getApplication())
+    mutableState.update { it.copy(diagnosticsEnvironment = environment) }
+  }
   fun clearDiagnostics() { controller.clearDiagnostics() }
   fun clearTransientMessage() { controller.clearTransientMessage() }
 

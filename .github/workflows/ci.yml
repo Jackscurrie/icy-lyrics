@@ -46,12 +46,10 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  android-play:
-    name: Android Play distribution
+  android-phone:
+    name: Android phone releases (GitHub + Play)
     if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
     runs-on: ubuntu-latest
-    env:
-      ICY_LYRICS_PRIVATE_FEATURE_PATH: ''
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -59,16 +57,21 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: gradle
-      - name: Verify and build only the public Play flavor
+      - name: Verify and build both phone channels together
         working-directory: android-v2
         run: >-
           ./gradlew --no-daemon
-          :core:lyrics:testDebugUnitTest
-          :core:platform:testDebugUnitTest
-          testPlayDebugUnitTest
-          lintPlayDebug
-          verifyPlayDistributionBoundary
-          bundlePlayRelease
+          :app:assemblePhoneReleasePair
+          :app:verifyTvDistributionBoundary
+      - name: Upload paired build reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-phone-checks
+          path: |
+            android-v2/app/build/reports/
+            android-v2/core/*/build/reports/
+          if-no-files-found: warn
 
   ios-sideload:
     name: iPhone simulator and resignable IPA

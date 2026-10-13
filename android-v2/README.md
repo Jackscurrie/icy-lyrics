@@ -10,9 +10,10 @@ A clean Android rewrite of Icy Lyrics for Android 13+ phones and Android 11+ Goo
 - Desktop lyric behavior for static, line-synced, and syllable-synced lyrics: timing gradients, analytic word/letter springs, held-word letter emphasis, Reveal, interludes, background vocals, duet lanes, RTL text, transliterations, focus transitions, and tap-to-seek.
 - Desktop-style Kawarp artwork background using an Android runtime shader. The background can be animated, held as a static blurred image with no scheduled frames, or turned off for plain black.
 - Durable per-track TTML import and a local library for viewing/removing saved lyrics. Full `spotify:local:` URIs are preserved as keys.
-- A built-in mobile Lyric Creator in both Play and personal builds for editing, word timing with **Start**, **Commit**, and **End**, safe unfinished previews, local saves, recoverable drafts, and TTML export.
+- A built-in mobile Lyric Creator in both GitHub and Play Store builds for editing, word timing with **Start**, **Commit**, and **End**, safe unfinished previews, local saves, recoverable drafts, and TTML export.
 - Global lyric timing from -5000 ms through +5000 ms in 10 ms increments, plus an overriding remembered value for each active Bluetooth output device.
 - Privacy-safe diagnostics with provider attempts, selected source/sync type, errors, copy/share/clear actions, a 200-event limit, and seven-day retention.
+- Optional floating lyrics overlay over Spotify, with its own appearance settings, rotating album-art button, and vertical resize grip.
 
 ## Lyric lookup order
 
@@ -25,7 +26,7 @@ Strict priority (the default) uses:
 
 Each source has its own settings toggle. The optional **Prefer better sync** policy keeps local TTML absolute, then checks enabled remote sources sequentially and chooses the highest timing resolution returned. It stops as soon as a source supplies syllable timing.
 
-The Icy Lyrics Database adapter anonymously sends only the complete Spotify track URI in an exact-match POST. It parses the returned TTML locally so word timing is preserved. The app performs that request only when a different song is loaded or the user explicitly reloads lyrics. Concurrent app/personal-car surfaces share a serialized cache lookup, successful results remain in the on-device cache for 30 days, and misses remain cached for one hour. Rate limits and server errors fall through without automatic Icy retries. The dedicated TV build has one additional fallback: if Spotify TV omits its track ID, it sends the displayed song title to the public Icy catalog and accepts a URI only for one unambiguous exact title/artist match. Album, duration, and ISRC must also agree whenever both sides provide them. This fallback is disabled with the Icy source switch and is not enabled in the Play phone, personal, or iOS builds.
+The Icy Lyrics Database adapter anonymously sends only the complete Spotify track URI in an exact-match POST. It parses the returned TTML locally so word timing is preserved. The app performs that request only when a different song is loaded or the user explicitly reloads lyrics. Concurrent app/overlay/car surfaces share a serialized cache lookup, successful results remain in the on-device cache for 30 days, and misses remain cached for one hour. Rate limits and server errors fall through without automatic Icy retries. The dedicated TV build has one additional fallback: if Spotify TV omits its track ID, it sends the displayed song title to the public Icy catalog and accepts a URI only for one unambiguous exact title/artist match. Album, duration, and ISRC must also agree whenever both sides provide them. This fallback is disabled with the Icy source switch and is not enabled in either phone release or the iOS build.
 
 LRCLIB removes known Spotify quality badges from artist metadata, validates exact responses, tries album/artist/broad/title-only searches, handles reordered or featured artist credits with album/duration corroboration, prefers synchronized representations at equal match confidence, and versions away cache rows written by the older matching policy. Static hits are rechecked for newly available timing, and rejected identities are not negative-cached.
 
@@ -50,43 +51,43 @@ Authorization requests only `user-read-currently-playing` and uses Code + PKCE, 
 
 ## Build
 
-The Android app has two distribution flavors:
+The Android phone app has two public release channels built from the same source and the same version name/code:
 
-- `play` is the complete public/Play Store app. It always uses `com.icy.lyrics` and cannot depend on the private feature.
-- `personal` is a separately installable build with application id `com.icy.lyrics.personal`. If a private feature repository is configured, that Android library is added only to this flavor.
+- **GitHub release** (`github`, `com.icy.lyrics.github`): every shared phone feature, plus Android Auto. The `:android-auto` module and its projected-display integration are included only here.
+- **Play Store release** (`play`): every shared phone feature, without any Android Auto module or car manifest declarations. The existing application id remains `com.icy.lyrics`.
 
-From this directory, validate and build the public app with:
+All future phone updates must build and verify both channels together. The Lyric Creator, overlay, database fixes, renderer, settings, and other phone features live in shared source sets; they must not be developed as separate copies. Only Android Auto belongs in the GitHub-only source set/module. Android TV remains its separate `tv` device flavor and is not replaced by this phone-channel split.
 
-```powershell
-.\gradlew.bat testPlayDebugUnitTest lintPlayDebug verifyPlayDistributionBoundary assemblePlayDebug
-```
-
-The debug APK is written to `app/build/outputs/apk/play/debug/app-play-debug.apk`. Build the Play Store bundle only with:
+From this directory, validate both phone channels with:
 
 ```powershell
-.\gradlew.bat verifyPlayDistributionBoundary bundlePlayRelease
+.\gradlew.bat :app:testPlayDebugUnitTest :app:testGithubDebugUnitTest :app:lintPlayDebug :app:lintGithubDebug :app:verifyPlayDistributionBoundary :app:verifyPhoneDistributionParity
 ```
 
-The release bundle is written to `app/build/outputs/bundle/playRelease/app-play-release.aab`. Do not use a personal task for Play Store uploads.
-
-### Separate private feature repository
-
-Keep private Android code in a separate private repository cloned beside (not inside) this public repository. Its root must be an Android library module with a `build.gradle.kts` or `build.gradle` file. Gradle includes it locally as `:local-private-feature`. Do not add it as a Git submodule, copy it anywhere inside the public repository, or commit its path to this repository.
-
-Point Gradle at the external checkout using either the `icyLyrics.privateFeaturePath` Gradle property or `ICY_LYRICS_PRIVATE_FEATURE_PATH` environment variable. For example:
+Build the release pair together with:
 
 ```powershell
-$env:ICY_LYRICS_PRIVATE_FEATURE_PATH = "C:\path\outside\icy-lyrics\icy-lyrics-private-android"
-.\gradlew.bat testPersonalDebugUnitTest assemblePersonalDebug
+.\gradlew.bat :app:assemblePhoneReleasePair
 ```
 
-Or store the machine-specific absolute path in your user-level Gradle file at `%USERPROFILE%\.gradle\gradle.properties` (never the project's tracked `gradle.properties`):
+This verifies the distribution boundary and matching phone versions, then builds the GitHub release APK and Play Store release AAB. For an individual diagnostic build, the underlying tasks are `:app:assembleGithubRelease` and `:app:bundlePlayRelease`; a shipped phone update still requires the complete pair.
 
-```properties
-icyLyrics.privateFeaturePath=C:/path/outside/icy-lyrics/icy-lyrics-private-android
-```
+Release outputs are:
 
-When neither setting is present, Gradle does not load the private repository and both `play` and `personal` still build; the personal build simply has no private feature. If a configured path is missing, is not a Gradle module, or resolves inside the public repository, configuration fails before anything is built.
+- GitHub APK: `app/build/outputs/apk/github/release/app-github-release.apk`
+- Play Store AAB: `app/build/outputs/bundle/playRelease/app-play-release.aab`
+
+Never upload a GitHub APK/AAB to the Play Store. Check the final merged manifest and package identity, APK/AAB signatures, and SHA-256 checksums before publishing. Release signing is configured by the ignored `signing.properties` file; signing keys, passwords, local SDK paths, caches, and device data must never be committed or included in public source archives. A source build without release signing configured is not a signed public release.
+
+On Windows, `./scripts/package-phone-release.ps1` runs the paired build and these binary/signature checks, then writes both channel APKs, the Play AAB, and versioned checksums into the repository's ignored `builds/` directory. It refuses test labels, debug signatures, unsigned outputs, or overwriting different artifacts. Public CI runs paired build/test/lint checks without access to release signing keys; it does not automatically upload to Google Play.
+
+### Moving from the old personal build
+
+The former `personal` flavor is now the GitHub release. Its Android Auto source is part of this repository as `android-auto/`, not an optional external/private checkout. The old `icyLyrics.privateFeaturePath` and `ICY_LYRICS_PRIVATE_FEATURE_PATH` setup is no longer required.
+
+Existing Play installs keep their package identity. The previous personal test APKs were debug-signed under `com.icy.lyrics.personal`; changing to a release signing key or a different package is not an in-place data migration. Keep that test installation until its TTML files and important creator work have been exported and transferred. Do not uninstall it just to try the GitHub release.
+
+The GitHub release remains subject to Android Auto platform restrictions: the custom four-mode renderer is a parked display, while driving uses the host-controlled media interface. Public availability does not unlock unrestricted driving layouts or remove head-unit compatibility requirements.
 
 ## First run
 
@@ -100,7 +101,8 @@ Installing v2 over the old prototype deliberately performs a fresh start: the le
 ## Project layout
 
 - `app/` — Android UI, MediaSession tracking, fullscreen/player behavior, and app integration.
-- `app/src/main/java/com/icy/lyrics/creator/` — the shared mobile Lyric Creator used by both Play and personal builds.
+- `app/src/main/java/com/icy/lyrics/creator/` — the shared mobile Lyric Creator used by both GitHub and Play Store builds.
+- `android-auto/` and the app's GitHub-only source set — Android Auto integration, never included in the Play Store or TV artifacts.
 - `core/lyrics/` — normalized models, parsers, provider orchestration, playback clock, and desktop animation/focus math.
 - `core/platform/` — Room/DataStore persistence, providers, PKCE, Bluetooth timing, and diagnostics.
 

@@ -147,7 +147,11 @@ data class LyricsDiagnosticsUi(
   val events: List<DiagnosticEventUi> = emptyList(),
   val error: String? = null,
 ) {
-  fun asText(): String = buildString {
+  fun asText(environment: String = ""): String = buildString {
+    if (environment.isNotBlank()) {
+      appendLine(environment.safeDiagnosticText())
+      appendLine()
+    }
     appendLine("Track key hash: ${trackUri?.safeDiagnosticText() ?: "none"}")
     appendLine("Source: ${selectedSource?.name ?: "none"}")
     appendLine("Sync: ${selectedSyncKind?.name ?: "none"}")
@@ -204,6 +208,8 @@ data class IcyLyricsUiState(
   val lyrics: LyricsUiStatus = LyricsUiStatus.Idle,
   val settings: AppSettings = AppSettings(),
   val diagnostics: LyricsDiagnosticsUi = LyricsDiagnosticsUi(),
+  // Platform-owned, privacy-safe snapshot; retained independently of lyric-request resets.
+  val diagnosticsEnvironment: String = "",
   val library: List<SavedLyricsUi> = emptyList(),
   val spotifyAuthAvailable: Boolean = false,
   val spotifyConnected: Boolean = false,

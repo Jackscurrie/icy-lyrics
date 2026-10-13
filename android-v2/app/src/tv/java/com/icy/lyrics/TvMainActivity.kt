@@ -97,7 +97,7 @@ class TvMainActivity : ComponentActivity() {
       val uiPlatform = rememberAndroidIcyUiPlatform()
       CompositionLocalProvider(
         LocalIcyUiPlatform provides uiPlatform,
-        // The TV distribution never loads the personal mixed-mode renderer or
+        // The TV distribution never loads the Android Auto mixed-mode renderer or
         // the public phone-only Lyric Creator settings entry.
         LocalOptionalMixedModePresentation provides null,
       ) {

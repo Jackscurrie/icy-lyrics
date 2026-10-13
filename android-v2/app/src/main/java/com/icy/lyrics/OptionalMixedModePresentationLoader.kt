@@ -11,7 +11,7 @@ private const val OPTIONAL_MIXED_MODE_PRESENTATION =
 internal fun loadOptionalMixedModePresentation(
   activity: ComponentActivity,
 ): OptionalMixedModePresentation {
-  if (!BuildConfig.PRIVATE_FEATURE_INCLUDED) return CreatorSettingsPresentation(activity)
+  if (!BuildConfig.ANDROID_AUTO_INCLUDED) return CreatorSettingsPresentation(activity)
   val className = runCatching {
     activity.packageManager
       .getApplicationInfo(activity.packageName, PackageManager.GET_META_DATA)

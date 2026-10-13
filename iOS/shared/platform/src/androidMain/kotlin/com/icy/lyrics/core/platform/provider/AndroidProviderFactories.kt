@@ -4,8 +4,11 @@ package com.icy.lyrics.core.platform.provider
 
 import com.icy.lyrics.core.lyrics.provider.LyricsProviderId
 import com.icy.lyrics.core.platform.diagnostics.DiagnosticSink
+import com.icy.lyrics.core.platform.diagnostics.DiagnosticInput
+import com.icy.lyrics.core.platform.diagnostics.DiagnosticSeverity
 import com.icy.lyrics.core.platform.network.HttpUrl.Companion.toHttpUrl
 import com.icy.lyrics.core.platform.network.OkHttpTransport
+import com.icy.lyrics.core.platform.network.icyDatabaseHttpClient
 import com.icy.lyrics.core.platform.storage.LyricsCacheRepository
 import com.icy.lyrics.core.platform.storage.TrackAliasRepository
 import kotlinx.coroutines.delay
@@ -98,7 +101,15 @@ fun IcyLyricsDatabaseProvider(
   online: () -> Boolean = { true },
   diagnostics: DiagnosticSink = DiagnosticSink.NONE,
 ): IcyLyricsDatabaseProvider = IcyLyricsDatabaseProvider(
-  client = OkHttpTransport(client),
+  client = OkHttpTransport(icyDatabaseHttpClient(client), singleSubmission = true) { report ->
+    diagnostics.record(DiagnosticInput(
+      severity = DiagnosticSeverity.INFO,
+      component = "icy-connection",
+      code = "response",
+      provider = LyricsProviderId.ICY_DATABASE,
+      message = report,
+    ))
+  },
   cache = cache,
   config = config,
   enabled = enabled,

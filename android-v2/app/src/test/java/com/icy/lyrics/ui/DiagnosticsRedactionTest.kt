@@ -6,6 +6,16 @@ import org.junit.Test
 
 class DiagnosticsRedactionTest {
   @Test
+  fun `environment appears in copy and share output and is redacted defensively`() {
+    val exported = LyricsDiagnosticsUi().asText(
+      "Build: play/release [test2]\nNetwork: Wi-Fi; access_token=unexpected-secret",
+    )
+    assertTrue(exported.startsWith("Build: play/release [test2]"))
+    assertTrue(exported.contains("Track key hash: none"))
+    assertFalse(exported.contains("unexpected-secret"))
+  }
+
+  @Test
   fun `export redacts secrets from live provider attempts and errors`() {
     val diagnostics = LyricsDiagnosticsUi(
       attempts = listOf(

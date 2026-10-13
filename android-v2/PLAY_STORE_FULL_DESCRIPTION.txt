@@ -1,24 +1,27 @@
-Icy Lyrics turns Spotify playback into a polished, full-screen lyrics experience for Android 13 and later.
+Icy Lyrics turns Spotify playback into a polished, full-screen lyrics experience on Android phones and Google TV.
 
 Follow synchronized lyrics in portrait or switch between four focused landscape layouts: album artwork, artwork with titles, a mixed artwork-and-lyrics view, or lyrics only. Smooth line, word, and syllable timing keeps the current lyric easy to follow, with support for background vocals, duet lanes, transliterations, right-to-left text, Reveal mode, and tap-to-seek.
 
 HIGHLIGHTS
 • Beautiful animated or static blurred artwork backgrounds, plus a plain-black option.
 • Playback controls and a responsive seek bar driven by Spotify’s Android media session.
+• Optional TV Performance and Ultra modes prioritize lyric smoothness with static backgrounds, a solid seek bar, and low-motion timed highlighting.
 • Adjustable global lyric timing from -5000 ms to +5000 ms.
 • Optional remembered timing offsets for individual Bluetooth audio devices.
 • Import TTML files and keep them in a durable on-device local lyrics library.
+• Create, edit, time, preview, save, and export word-synced TTML directly on your phone with the built-in Lyric Creator.
 • Four individually controlled lyric sources in a clear order: saved local TTML, the Icy Lyrics Database, LRCLIB, then an optional Apple Music-backed fallback.
 • Portrait, split-screen, and landscape layouts designed for phones and larger displays.
 • Privacy-safe diagnostics with copy, share, and clear controls.
+• Optional floating lyrics over Spotify, with a movable spinning album-cover button and a vertically resizable lyrics panel. Overlay artwork, titles, and background can be adjusted independently.
 
 REQUIREMENTS
-Icy Lyrics requires Android 13 or later and the Spotify Android app for now-playing detection and transport controls. On first use, Android asks you to grant notification-listener access so Icy Lyrics can read Spotify’s media session. Nearby-device permission is optional and is used only to identify the active Bluetooth output for per-device timing.
+The phone version requires Android 13 or later. The dedicated, landscape-only Google TV version supports Android 11 or later. Both require the corresponding Spotify Android app for now-playing detection and transport controls. On first use, Android asks you to grant notification-listener access so Icy Lyrics can read Spotify’s media session. Nearby-device permission is optional and is used only to identify the active Bluetooth output for per-device timing.
 
 A Spotify account connection is optional. Local TTML, the Icy Lyrics Database, and LRCLIB work without it. A connection is used only if you enable the Apple Music-backed fallback, or if Spotify's notification omits the exact track ID needed for lookup. The Apple Music fallback is provided through Spicy Lyrics; Icy Lyrics explains this and asks for consent before sharing a short-lived Spotify access token for that lyric request.
 
 PRIVACY
-Imported TTML is stored locally on your device. When enabled, the Icy Lyrics Database receives only the exact Spotify track URI and does not receive your Spotify access token. It is contacted when a song is loaded or you explicitly reload it, then the result is cached on your device to avoid repeated requests. Spotify credentials use Android Keystore-backed encryption. Diagnostics redact credentials and track identifiers, keep at most 200 events, and expire after seven days. Icy Lyrics does not treat Spotify as a direct lyrics endpoint. See the privacy policy for full details.
+Imported TTML, Lyric Creator drafts, and exported lyrics are stored or written locally on your device. When enabled, the Icy Lyrics Database normally receives only the exact Spotify track URI and never receives your Spotify access token. If Spotify TV omits that ID, the TV build may send the displayed song title to the public Icy catalog and accepts a URI only for one unambiguous exact title-and-artist match. That fallback is disabled with the Icy source switch. Lookups happen when a song is loaded or you explicitly reload it, and successful results are cached on your device to avoid repeated requests. Spotify credentials use Android Keystore-backed encryption. Diagnostics redact credentials and track identifiers, keep at most 200 events, and expire after seven days. Icy Lyrics does not treat Spotify as a direct lyrics endpoint. See the privacy policy for full details.
 
 Lyrics availability, accuracy, and timing depend on the selected third-party or local source. Some tracks may have no synchronized lyrics.
 

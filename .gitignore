@@ -131,9 +131,8 @@ Desktop.ini
 *.apks
 *.aar
 
-# The optional personal flavor is supplied by a separate private repository.
-# These guards prevent an accidentally copied private module/source set from
-# entering the public repository.
+# Legacy private checkouts stay excluded. The reviewed public Android Auto
+# module now lives at android-v2/android-auto, used only by the github flavor.
 /local-private-feature/
 /android-v2/local-private-feature/
 /android-v2/private/

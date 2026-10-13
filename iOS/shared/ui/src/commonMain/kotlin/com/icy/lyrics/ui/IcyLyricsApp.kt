@@ -190,6 +190,8 @@ fun IcyLyricsApp(
   tvLandscapeChrome: TvLandscapeChrome? = null,
   onTvPerformanceMode: ((TvPerformanceMode) -> Unit)? = null,
   onTvPerformanceBackground: ((TvPerformanceBackground) -> Unit)? = null,
+  additionalSettings: (@Composable () -> Unit)? = null,
+  playerBottomBanner: @Composable () -> Unit = {},
 ) {
   val snackbarHost = remember { SnackbarHostState() }
   val reducedMotion = rememberReducedMotionEnabled()
@@ -249,6 +251,11 @@ fun IcyLyricsApp(
       containerColor = Color.Black,
       contentWindowInsets = WindowInsets(0, 0, 0, 0),
       snackbarHost = { SnackbarHost(snackbarHost) },
+      bottomBar = {
+        if (state.destination == AppDestination.PLAYER &&
+          state.notificationAccess && entryPhase == AppEntryExperiencePhase.CONTENT
+        ) playerBottomBanner()
+      },
     ) { scaffoldPadding ->
       Box(Modifier.fillMaxSize().padding(scaffoldPadding)) {
         when (state.destination) {
@@ -283,6 +290,7 @@ fun IcyLyricsApp(
             tvPerformanceBackground = tvLandscapeChrome?.performanceBackground,
             onTvPerformanceMode = onTvPerformanceMode,
             onTvPerformanceBackground = onTvPerformanceBackground,
+            additionalSettings = additionalSettings,
           )
           AppDestination.LIBRARY -> LibraryScreen(
             items = state.library,
@@ -292,6 +300,7 @@ fun IcyLyricsApp(
           )
           AppDestination.DEBUG -> DebugScreen(
             diagnostics = state.diagnostics,
+            environment = state.diagnosticsEnvironment,
             onBack = { onNavigate(AppDestination.SETTINGS) },
             onReload = onReload,
             onShare = onShareDiagnostics,
@@ -2282,6 +2291,7 @@ private fun SettingsScreen(
   tvPerformanceBackground: TvPerformanceBackground?,
   onTvPerformanceMode: ((TvPerformanceMode) -> Unit)?,
   onTvPerformanceBackground: ((TvPerformanceBackground) -> Unit)?,
+  additionalSettings: (@Composable () -> Unit)?,
 ) {
   val settings = state.settings
   val uriHandler = LocalUriHandler.current
@@ -2301,6 +2311,7 @@ private fun SettingsScreen(
       modifier = Modifier.fillMaxSize(),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+      if (additionalSettings != null) item { additionalSettings() }
       item {
         SettingsCard("Local lyrics") {
           Text(
@@ -2704,13 +2715,14 @@ private fun LibraryScreen(
 @Composable
 private fun DebugScreen(
   diagnostics: LyricsDiagnosticsUi,
+  environment: String,
   onBack: () -> Unit,
   onReload: () -> Unit,
   onShare: () -> Unit,
   onClear: () -> Unit,
 ) {
   val platform = LocalIcyUiPlatform.current
-  val text = diagnostics.asText()
+  val text = diagnostics.asText(environment)
   Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = 18.dp)) {
     ScreenHeader("Diagnostics", onBack) {
       IconButton(onClick = onReload) { Icon(Icons.Default.Refresh, "Reload lyrics") }

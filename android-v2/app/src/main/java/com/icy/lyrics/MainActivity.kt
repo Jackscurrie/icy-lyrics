@@ -11,8 +11,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -22,18 +22,31 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.icy.lyrics.core.platform.auth.SpotifyAuthorizationLaunch
 import com.icy.lyrics.ui.IcyLyricsApp
 import com.icy.lyrics.ui.LocalIcyUiPlatform
 import com.icy.lyrics.ui.LocalOptionalMixedModePresentation
 import com.icy.lyrics.ui.rememberAndroidIcyUiPlatform
+import com.icy.lyrics.overlay.LyricsOverlayService
+import com.icy.lyrics.overlay.OverlayPreferences
+import com.icy.lyrics.overlay.OverlaySettingsEntry
+import com.icy.lyrics.overlay.OverlayIntroBanner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-  private val viewModel: IcyLyricsViewModel by viewModels()
+  private val phoneSession: PhoneSessionLease by viewModels {
+    object : ViewModelProvider.Factory {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T =
+        (application as IcyLyricsApplication).container.acquirePhoneSession() as T
+    }
+  }
+  private val viewModel get() = phoneSession.viewModel
   private var spotifyAuthorizationJob: Job? = null
   private var spotifyAuthorizationLaunch: SpotifyAuthorizationLaunch? = null
 
@@ -112,11 +125,15 @@ class MainActivity : ComponentActivity() {
           onCancelSpotifyAuthorization = ::cancelSpotifyAuthorization,
           onDisconnectSpotify = viewModel::disconnectSpotify,
           onLrclibEnabled = viewModel::setLrclibEnabled,
-          onShareDiagnostics = { shareDiagnostics(state.diagnostics.asText()) },
+          onShareDiagnostics = { shareDiagnostics(viewModel.diagnosticReport()) },
           onClearDiagnostics = viewModel::clearDiagnostics,
           onDeleteSavedLyrics = viewModel::deleteSavedLyrics,
           onDismissMessage = viewModel::clearTransientMessage,
           launchExperienceEnabled = true,
+          additionalSettings = { OverlaySettingsEntry(this@MainActivity) },
+          playerBottomBanner = {
+            OverlayIntroBanner(onSetup = { viewModel.navigate(com.icy.lyrics.ui.AppDestination.SETTINGS) })
+          },
         )
       }
     }
@@ -125,6 +142,12 @@ class MainActivity : ComponentActivity() {
   override fun onResume() {
     super.onResume()
     viewModel.refreshPermissions(hasBluetoothPermission())
+    // Only restart an already opted-in overlay while a phone activity is visible.
+    // Never request permission or launch a background service on first startup.
+    OverlayPreferences(this).let { preferences ->
+      if (preferences.options.value.enabled) LyricsOverlayService.start(this)
+      preferences.close()
+    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

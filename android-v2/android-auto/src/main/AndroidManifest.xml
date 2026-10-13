@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+  <!--
+    Android Auto can put a phone activity on the head unit only through its
+    parked-app launcher. This module is linked only by the GitHub flavor; the Play and TV
+    distributions never receive the car launcher or service declarations.
+
+    The launched component is the existing Icy Lyrics MainActivity. Android
+    Auto supplies the head-unit display/configuration, so the app uses its real
+    landscape player, including all four modes and the left/right edge taps.
+  -->
+  <application android:appCategory="game">
+    <meta-data
+      android:name="com.icy.lyrics.OPTIONAL_MIXED_MODE_PRESENTATION"
+      android:value="com.icy.lyrics.androidauto.AndroidAutoMixedModePresentation" />
+    <meta-data
+      android:name="com.google.android.gms.car.application"
+      android:resource="@xml/automotive_app_desc" />
+    <meta-data
+      android:name="androidx.car.app.TintableAttributionIcon"
+      android:resource="@drawable/ic_auto_attribution" />
+
+    <!--
+      Android Auto keeps media browser services available while driving and
+      renders their metadata and controls in its own distraction-safe UI. The
+      service mirrors the user's current Spotify session; the unrestricted
+      Icy Lyrics activity below remains parked-only.
+    -->
+    <service
+      android:name="com.icy.lyrics.androidauto.IcyLyricsCarMediaService"
+      android:exported="true"
+      android:label="@string/icy_lyrics_auto_service_name"
+      tools:ignore="MissingClass,ExportedService">
+      <intent-filter>
+        <action android:name="android.media.browse.MediaBrowserService" />
+      </intent-filter>
+    </service>
+
+    <activity
+      android:name="com.icy.lyrics.MainActivity"
+      android:exported="true"
+      android:resizeableActivity="true"
+      tools:ignore="MissingClass">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.CAR_LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+  </application>
+</manifest>

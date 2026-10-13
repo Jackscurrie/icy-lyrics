@@ -32,7 +32,7 @@ internal interface OptionalMixedModePresentation {
    * Optional distribution-owned content for the app's settings list.
    *
    * Android distributions use this hook for the shared Lyric Creator entry.
-   * Private distributions can add their own presentation without adding car
+   * The GitHub distribution can add its presentation without adding car
    * destinations, resources, or implementation to the shared navigation model.
    */
   @Composable
