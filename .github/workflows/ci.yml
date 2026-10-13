@@ -46,7 +46,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  android-phone:
+  # Keep the job ID stable for workflow consumers; this now verifies BOTH channels.
+  android-play:
     name: Android phone releases (GitHub + Play)
     if: github.event_name != 'workflow_dispatch' || inputs.font_backend_only != true
     runs-on: ubuntu-latest
